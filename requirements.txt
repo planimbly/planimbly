@@ -8,3 +8,6 @@ sqlparse==0.4.2
 tzdata==2021.5
 whitenoise==6.0.0
 django-crispy-forms==1.14.0
+django-widget-tweaks==1.4.12
+
+

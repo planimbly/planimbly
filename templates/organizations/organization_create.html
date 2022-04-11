@@ -1,13 +1,28 @@
+
 {% extends 'base.html' %}
 
-{% load crispy_forms_tags %}
+{% load widget_tweaks%}
+{% load static %}
 
 {% block content %}
-    <form action="" method="post">
-        {% csrf_token %}
-        {{ manager_create_form|crispy  }}
-        {{ organization_create_form|crispy }}
-        <input type="submit" value="Stwórz">
-    </form>
+<img src="{% static 'img/Logo-Main-Big2.svg' %}" alt="Main Logo" class="large--logo--center">
+
+    <div class="text-center">
+        <form method="post" class="form--input--style">
+            {% csrf_token %}
+            <h3 class="mb-3 font-weight-normal">Create a new organization:</h3>
+
+            {% render_field manager_create_form.email class+="form-control mb-1" placeholder="E-mail" %}  <!-- template variables can be used as attribute values -->
+            {% render_field manager_create_form.username class+="form-control mb-1" placeholder="Username" %}
+            {% render_field manager_create_form.first_name class+="form-control mb-1" placeholder="First Name" %}
+            {% render_field manager_create_form.last_name class+="form-control mb-4" placeholder="Last Name" %}
+
+            {% render_field organization_create_form.name class+="form-control mb-1" placeholder="Organization Name" %}
+            <div class="mt-4">
+                <input type="submit" class="btn btn-lg btn-primary btn-block">
+            </div>
+
+        </form>
+    </div>
 
 {% endblock content %}

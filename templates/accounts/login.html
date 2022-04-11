@@ -1,16 +1,36 @@
-<!--users/templates/registration/login.html-->
+
+
 {% extends 'base.html' %}
 
+
+{% load widget_tweaks%}
+{% load static %}
+
 {% block content %}
-<h2>Login</h2>
+<img src="{% static 'img/Logo-Main-Big2.svg' %}" alt="Main Logo" class="large--logo--center">
 {% if user.is_authenticated %}
-    Zalogowany
+    <h3 class="mb-3 font-weight-normal text-center">Logged in</h3>
+
 {% else %}
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <input type="submit" value="Login">
-    </form>
+    <div class="text-center">
+        <form method="post" class="form--input--style">
+            {% csrf_token %}
+            <h3 class="mb-3 font-weight-normal">Please log in:</h3>
+
+
+
+            {% render_field form.username class+="form-control mb-1" placeholder="Username" %}  <!-- template variables can be used as attribute values -->
+
+
+            <!--<input type="login" id="login-input" placeholder="Login" class="form-control mb-1" required autofocus>
+
+            <input type="password" id="password-input" placeholder="Password" class="form-control">-->
+            {% render_field form.password class+="form-control mb-1" placeholder="Password" %}
+            <div class="mt-4">
+                <input type="submit" class="btn btn-lg btn-primary btn-block">
+            </div>
+
+        </form>
+    </div>
 {% endif %}
-<a href="{% url 'home' %}">Back to dashboard</a>
-{% endblock %}
+{% endblock content %}
