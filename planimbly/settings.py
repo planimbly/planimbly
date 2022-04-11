@@ -47,11 +47,8 @@ INSTALLED_APPS = [
 
     # External
     'crispy_forms',
-<<<<<<< HEAD
     'widget_tweaks'
-=======
-    'widget_tweaks',
->>>>>>> 8a1e423e908af6730938f02ace3b9c01feea5b44
+
 ]
 
 MIDDLEWARE = [
