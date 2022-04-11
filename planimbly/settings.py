@@ -29,8 +29,7 @@ SECRET_KEY = env.str("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DEBUG", default=False)
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost',]
-
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', ]
 
 # Application definition
 
@@ -42,10 +41,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    #Internal
+    # Internal
     'apps.accounts',
+    'apps.organizations',
 
-    #External
+    # External
+    'crispy_forms'
 ]
 
 MIDDLEWARE = [
@@ -78,14 +79,12 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'planimbly.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
 DATABASES = {
     'default': env.dj_db_url("DATABASE_URL", default="sqlite:///db.sqlite3")
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
@@ -105,7 +104,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
@@ -116,7 +114,6 @@ TIME_ZONE = 'Europe/Warsaw'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
@@ -136,8 +133,8 @@ AUTHENTICATION_BACKENDS = (
 )
 
 # Authorization
-AUTH_USER_MODEL = 'accounts.User'
-
+AUTH_USER_MODEL = 'accounts.Employee'
+LOGIN_REDIRECT_URL = "home"
 # SSL
 if env.bool("ENABLE_SSL", default=True):
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -149,3 +146,9 @@ if env.bool("ENABLE_SSL", default=True):
 DATE_INPUT_FORMATS = [
     *django.conf.global_settings.DATE_INPUT_FORMATS,
 ]
+
+# Email backend
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+#Crispy config
+CRISPY_TEMPLATE_PACK = 'bootstrap'
