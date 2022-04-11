@@ -46,7 +46,8 @@ INSTALLED_APPS = [
     'apps.organizations',
 
     # External
-    'crispy_forms'
+    'crispy_forms',
+    'widget_tweaks'
 ]
 
 MIDDLEWARE = [
