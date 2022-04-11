@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        Select image to upload:
+            <input type="file" name="employeesList" id="employeesList">
+        <input type="submit" value="Login">
+    </form>
+{% endblock content %}
