@@ -14,7 +14,7 @@ class MyAccountManager(BaseUserManager):
             raise ValueError("Users must have a name")
         if not last_name:
             raise ValueError("Users must have a surname")
-
+        #TODO automatyczne tworzenie username
         user = self.model(email=self.normalize_email(email), username=username, first_name=first_name,
                           last_name=last_name, user_org=user_org, is_supervisor=is_supervisor)
         user.set_password(password)
