@@ -23,6 +23,10 @@ Existing schedules for given employees
         -id_workplace
         -active_days
 
+Dates for the schedule to be made
+    -date_start
+    -date_end
+
 ## OUTPUT
 
 Schedule for given workplace:
