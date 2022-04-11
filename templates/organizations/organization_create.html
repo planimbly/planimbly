@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% load crispy_forms_tags %}
+
+{% block content %}
+    <form action="" method="post">
+        {% csrf_token %}
+        {{ manager_create_form|crispy  }}
+        {{ organization_create_form|crispy }}
+        <input type="submit" value="Stwórz">
+    </form>
+
+{% endblock content %}

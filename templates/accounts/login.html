@@ -1,0 +1,16 @@
+<!--users/templates/registration/login.html-->
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Login</h2>
+{% if user.is_authenticated %}
+    Zalogowany
+{% else %}
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="Login">
+    </form>
+{% endif %}
+<a href="{% url 'home' %}">Back to dashboard</a>
+{% endblock %}
