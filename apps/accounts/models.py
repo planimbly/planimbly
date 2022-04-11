@@ -41,3 +41,8 @@ class Employee(AbstractUser):
     job_time = models.IntegerField(verbose_name="Wymiar etatu", default=0)
     is_supervisor = models.BooleanField(default=False)
     user_org = models.ForeignKey(Organization, on_delete=models.CASCADE, blank=True, null=True)
+
+    objects = MyAccountManager()
+
+    def __str__(self):
+        return self.username
