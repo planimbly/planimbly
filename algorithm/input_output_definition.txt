@@ -1,0 +1,61 @@
+## INPUT
+
+List of employees of specific workplace
+    Employee:
+        -id
+        -job_time
+
+Existing schedules for given employees
+    Schedule:
+        -id
+        -date_start
+        -date_end
+    Shift:
+        -id
+        -id_employee
+        -id_schedule
+        -date
+        -shift_type
+    Shift_type
+        -id
+        -hour_start
+        -hour_end
+        -id_workplace
+        -active_days
+
+## OUTPUT
+
+Schedule for given workplace:
+    Schedule:
+        -id
+        -date_start
+        -date_end
+    Shift:
+        -id
+        -id_employee
+        -id_schedule
+        -date
+        -shift_type
+    Shift_type
+        -id
+        -hour_start
+        -hour_end
+        -id_workplace
+        -active_days
+
+
+schedule =
+{
+    'id': id #schedule_id
+    'date_start': date_start
+    'date_end': date_end
+    'shifts': [
+            {
+                'id': id #shift_id
+                'id_employee': employee
+                'date': date
+                'shift_type': id #shift_type_id
+            }
+    ]
+
+}
