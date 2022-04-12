@@ -47,7 +47,8 @@ INSTALLED_APPS = [
 
     # External
     'crispy_forms',
-    'widget_tweaks'
+    'widget_tweaks',
+    'rest_framework',
 
 ]
 
@@ -133,6 +134,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ]
+}
 
 # Authorization
 AUTH_USER_MODEL = 'accounts.Employee'

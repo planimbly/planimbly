@@ -41,6 +41,7 @@ def send_user_activation_mail(user, request):
     email.send()
 
 
+# TODO mixins + view safety
 class OrganizationCreateView(TemplateView):
     template_name = 'organizations/organization_create.html'
 
@@ -89,3 +90,7 @@ class EmployeesImportView(TemplateView):
             send_user_activation_mail(employee, self.request)
 
         return HttpResponseRedirect(reverse('employees_import'))
+
+
+class EmployeesManageView(TemplateView):
+    template_name = 'organizations/employees_manage.html'

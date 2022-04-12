@@ -1,8 +1,4 @@
-
-
 {% extends 'base.html' %}
-
-
 {% load widget_tweaks%}
 {% load static %}
 
@@ -16,15 +12,7 @@
         <form method="post" class="form--input--style">
             {% csrf_token %}
             <h3 class="mb-3 font-weight-normal">Please log in:</h3>
-
-
-
-            {% render_field form.username class+="form-control mb-1" placeholder="Username" %}  <!-- template variables can be used as attribute values -->
-
-
-            <!--<input type="login" id="login-input" placeholder="Login" class="form-control mb-1" required autofocus>
-
-            <input type="password" id="password-input" placeholder="Password" class="form-control">-->
+            {% render_field form.username class+="form-control mb-1" placeholder="Username" %}
             {% render_field form.password class+="form-control mb-1" placeholder="Password" %}
             <div class="mt-4">
                 <input type="submit" class="btn btn-lg btn-primary btn-block">
