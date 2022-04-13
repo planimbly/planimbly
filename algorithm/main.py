@@ -1,5 +1,6 @@
 from sqlite3 import Date, Time
 from classes import *
+from dummy_data import *
 
 # function for preparing data for the algorithm
 def gather_data():
@@ -13,6 +14,8 @@ def gather_data():
     employees.append(e)
 
     d = data(employees, schedules)
+
+    data1 = return_dummy_data()
 
     return d
 
