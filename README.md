@@ -1,3 +1,5 @@
+![Tests](https://github.com/SaluSL/planimbly/actions/workflows/tests.yml/badge.svg)
+
 <h1>Konfiguracja projektu:</h1>
 
 1. Tworzymy folder planimbly
