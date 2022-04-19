@@ -4,20 +4,11 @@ from dummy_data import *
 
 # function for preparing data for the algorithm
 def gather_data():
-    employees = [] # employee list
-    schedules = [] # already existing schedules
+    
+    #receive dummy data form outside file
+    dummy_data = return_dummy_data()
 
-    # gathering data from the server
-
-    # sample data
-    e = employee(1, 8)
-    employees.append(e)
-
-    d = data(employees, schedules)
-
-    data1 = return_dummy_data()
-
-    return d
+    return dummy_data
 
 # schedule making function
 def make_schedule(data : data):
