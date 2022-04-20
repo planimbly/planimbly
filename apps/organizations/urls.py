@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.urls import path
 
-from views import EmployeesImportView, OrganizationCreateView, EmployeesManageView
+from .views import EmployeesImportView, OrganizationCreateView, EmployeesManageView
 
 urlpatterns = [
     path('create/', OrganizationCreateView.as_view(template_name='organizations/organization_create.html'),
