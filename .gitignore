@@ -23,3 +23,11 @@ venv/
 venv
 
 /.vscode/
+.vscode
+.vscode/
+
+htmlcov
+htmlcov/
+/htmlcov/
+
+.coverage
