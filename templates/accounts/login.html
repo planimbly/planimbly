@@ -3,14 +3,17 @@
 {% load static %}
 
 {% block content %}
-    <img src="{% static 'img/Logo-Main-Big2.svg' %}" alt="Main Logo" class="large--logo--center">
-    {% if user.is_authenticated %}
-        <h3 class="mb-3 font-weight-normal text-center">Logged in</h3>
 
-    {% else %}
-        <div class="row">
-            <div class="col">
-                <div class="text-center">
+    <img src="{% static 'img/Logo-Main-Big2.svg' %}" alt="Main Logo" class="large--logo--center">
+    <div class="row">
+        <div class="col">
+            <div class="text-center">
+                {% if user.is_authenticated %}
+                    <h3 class="mb-3 font-weight-normal text-center">Logged in</h3>
+                    <div class="mt-4">
+                        <a class="btn btn-lg btn-primary" href="{% url 'home' %}" role="button"> Home page </a>
+                    </div>
+                {% else %}
                     <form method="post" class="form--input--style">
                         {% csrf_token %}
                         <h3 class="mb-3 font-weight-normal">Please log in:</h3>
@@ -20,9 +23,9 @@
                             <input type="submit" class="btn btn-lg btn-primary btn-block">
                         </div>
                     </form>
-                </div>
+                {% endif %}
             </div>
         </div>
+    </div>
 
-    {% endif %}
 {% endblock content %}

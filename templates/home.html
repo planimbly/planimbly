@@ -1,19 +1,33 @@
 {% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+
 {% block content %}
 
+    <img src="{% static 'img/Logo-Main-Big2.svg' %}" alt="Main Logo" class="large--logo--center">
+    <div class="row">
+        <div class="col">
+            <div class="text-center">
 
-    {% if user.is_authenticated %}
-        <ul>
-            <li><a href="{% url 'logout' %}">Logout</a></li>
-            <li><a href="{% url 'password_change' %}">Password change</a></li>
-            <li><a href="{% url 'password_reset' %}">Password reset</a></li>
-            <li><a href="{% url 'organization_create' %}">Organization create</a></li>
-            <li><a href="{% url 'employees_import' %}">Employees import</a></li>
-            <li><a href="{% url 'employees_manage' %}">Employees manage</a></li>
-        </ul>
+                {% if user.is_authenticated %}
+                    <div class="btn-group-vertical">
+                        <a class="btn btn-lg btn-primary" href="{% url 'logout' %}" role="button"> Log out </a>
+                        <a class="btn btn-lg btn-primary" href="{% url 'password_change' %}" role="button"> Change password </a>
+                        <a class="btn btn-lg btn-primary" href="{% url 'password_reset' %}" role="button"> Reset password </a>
+                    </div>
 
-    {% else %}
-        <a href="{% url 'login' %}">Login</a>
-    {% endif %}
+                    <div class="btn-group-vertical">
+                        <a class="btn btn-lg btn-primary" href="{% url 'organization_create' %}" role="button"> Create organization </a>
+                        <a class="btn btn-lg btn-primary" href="{% url 'employees_import' %}" role="button"> Import employees </a>
+                        <a class="btn btn-lg btn-primary" href="{% url 'employees_manage' %}" role="button"> Manage employees </a>
+                    </div>
+
+                {% else %}
+                    <a class="btn btn-lg btn-primary" href="{% url 'login' %}" role="button"> Log in </a>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
 
 {% endblock %}
