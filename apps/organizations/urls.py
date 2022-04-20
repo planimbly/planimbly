@@ -20,5 +20,5 @@ urlpatterns = [
     path('create/', OrganizationCreateView.as_view(template_name='organizations/organization_create.html'),
          name='organization_create'),
     path('employees_import', EmployeesImportView.as_view(), name='employees_import'),
-    path('employees_manage',EmployeesManageView.as_view(), name='employees_manage'),
+    path('employees_manage', EmployeesManageView.as_view(), name='employees_manage'),
 ]

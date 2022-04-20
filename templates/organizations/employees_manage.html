@@ -1,7 +1,156 @@
 {% extends 'base.html' %}
-{% load widget_tweaks%}
+{% load widget_tweaks %}
 {% load static %}
-
 {% block content %}
-A
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script>
+        axios.defaults.xsrfCookieName = 'csrftoken';
+        axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
+    </script>
+
+    <ul>
+        <li><a href="{% url 'employee-list' %}">Employees list</a></li>
+    </ul>
+    <div id="vue-app">
+        <h2>Dodaj pracownika</h2>
+        <form @submit.prevent="add_employee">
+            <input type="text" v-model="email">
+            <input type="text" v-model="username">
+            <input type="text" v-model="first_name">
+            <input type="text" v-model="last_name">
+            <button>dodaj</button>
+        </form>
+        <p v-for="(field, index) in response">
+            [[ index ]] : [[ field.join('') ]]
+        </p>
+        <h2>Lista pracowników</h2>
+        <div v-for="(employee, i) in employee_list" :key="employee.id">
+            <span>[[ employee.id ]]</span>
+            <input type="text" v-model="employee.email">
+            <input type="text" v-model="employee.username">
+            <input type="text" v-model="employee.first_name">
+            <input type="text" v-model="employee.last_name">
+            <button @click="remove_employee(employee.id)">-</button>
+            <button @click="change_employee(i)">zapisz</button>
+        </div>
+    </div>
+    <script>
+        var app = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-app',
+            data() {
+                return {
+                    email: '',
+                    username: '',
+                    first_name: '',
+                    last_name: '',
+                    employee_list: null,
+                    response: null,
+                    base_url: '{% url 'employee-list' %}',
+
+                }
+            },
+            methods: {
+                fetch_data() {
+                    axios
+                        .get(this.base_url)
+                        .then(response => (this.employee_list = response.data))
+                },
+                add_employee() {
+                    swal({
+                        title: "Potwierdź dodanie pracownika",
+                        icon: "info",
+                        buttons: true,
+                        //dangerMode: true,
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
+
+                                axios
+                                    .post(this.base_url,
+                                        {
+                                            email: this.email, username: this.username,
+                                            first_name: this.first_name, last_name: this.last_name
+                                        }
+                                    )
+                                    .then(
+                                        this.fetch_data
+                                    )
+                                    .catch(error => {
+                                            this.response = error.response.data
+                                        }
+                                    )
+                                this.email = ''
+                                this.username = ''
+                                this.first_name = ''
+                                this.last_name = ''
+                            }
+                        });
+                },
+                remove_employee(id) {
+                    swal({
+                        title: "Czy na pewno chcesz usunąć pracownika?",
+                        icon: "warning",
+                        buttons: true,
+                        dangerMode: true,
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
+                                url = this.base_url + id + '/'
+                                axios
+                                    .delete(url,
+                                        {
+                                            id: id
+                                        }
+                                    )
+                                    .then(
+                                        this.fetch_data
+                                    )
+                                    .catch(error => {
+                                            this.response = error.response.data
+                                        }
+                                    )
+                            }
+                        });
+
+                },
+                change_employee(i) {
+                    url = this.base_url + this.employee_list[i].id + '/'
+                    swal({
+                        title: "Czy chcesz zatwierdzić zmiany",
+                        icon: "info",
+                        buttons: true,
+                        //dangerMode: true,
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
+                                axios
+                                    .put(url,
+                                        {
+                                            email: this.employee_list[i].email,
+                                            username: this.employee_list[i].username,
+                                            first_name: this.employee_list[i].first_name,
+                                            last_name: this.employee_list[i].last_name
+                                        }
+                                    )
+                                    .then(
+                                        this.fetch_data
+                                    )
+                                    .catch(error => {
+                                            this.response = error.response.data
+                                        }
+                                    )
+
+                            }
+                        });
+
+                }
+            },
+            mounted() {
+                this.fetch_data()
+            }
+        })
+    </script>
 {% endblock content %}

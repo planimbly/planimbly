@@ -1,24 +1,28 @@
 {% extends 'base.html' %}
-{% load widget_tweaks%}
+{% load widget_tweaks %}
 {% load static %}
 
 {% block content %}
-<img src="{% static 'img/Logo-Main-Big2.svg' %}" alt="Main Logo" class="large--logo--center">
-{% if user.is_authenticated %}
-    <h3 class="mb-3 font-weight-normal text-center">Logged in</h3>
+    <img src="{% static 'img/Logo-Main-Big2.svg' %}" alt="Main Logo" class="large--logo--center">
+    {% if user.is_authenticated %}
+        <h3 class="mb-3 font-weight-normal text-center">Logged in</h3>
 
-{% else %}
-    <div class="text-center">
-        <form method="post" class="form--input--style">
-            {% csrf_token %}
-            <h3 class="mb-3 font-weight-normal">Please log in:</h3>
-            {% render_field form.username class+="form-control mb-1" placeholder="Username" %}
-            {% render_field form.password class+="form-control mb-1" placeholder="Password" %}
-            <div class="mt-4">
-                <input type="submit" class="btn btn-lg btn-primary btn-block">
+    {% else %}
+        <div class="row">
+            <div class="col">
+                <div class="text-center">
+                    <form method="post" class="form--input--style">
+                        {% csrf_token %}
+                        <h3 class="mb-3 font-weight-normal">Please log in:</h3>
+                        {% render_field form.username class+="form-control mb-1" placeholder="Username" %}
+                        {% render_field form.password class+="form-control mb-1" placeholder="Password" %}
+                        <div class="mt-4">
+                            <input type="submit" class="btn btn-lg btn-primary btn-block">
+                        </div>
+                    </form>
+                </div>
             </div>
+        </div>
 
-        </form>
-    </div>
-{% endif %}
+    {% endif %}
 {% endblock content %}
