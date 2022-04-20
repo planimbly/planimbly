@@ -1,8 +1,7 @@
-from multiprocessing import dummy
-from algorithm.classes import data, employee, shift_type
-from classes import *
-from sqlite3 import Date, Time5
 import random as rd
+
+from classes import *
+
 
 def return_dummy_data():
     shift_types = []
