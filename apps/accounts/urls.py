@@ -17,11 +17,13 @@ from django.urls import path, include
 from rest_framework import routers
 
 from . import views
-from .views import *
+from . import models
 from django.contrib.auth import views as auth_views
 
+from .models import Employee
+
 router = routers.DefaultRouter()
-router.register(r'employee', views.EmployeeViewSet)
+router.register(r'employee', views.EmployeeViewSet, basename='employee')
 
 urlpatterns = [
     path('login/', auth_views.LoginView.as_view(template_name='accounts/login.html'), name='login'),
