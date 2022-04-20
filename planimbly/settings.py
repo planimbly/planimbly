@@ -22,7 +22,7 @@ env = Env()
 env.read_env()
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env.str("SECRET_KEY")
+SECRET_KEY = env.str("SECRET_KEY", default='7^j)k2u*-6-omh)u2f#n@yldbnd=82@vvg5&o-td^4eo_96=#9')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DEBUG", default=False)
 
