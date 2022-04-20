@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.http import request
 from rest_framework import viewsets, permissions
 
 from apps.accounts.models import Employee

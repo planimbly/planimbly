@@ -1,6 +1,6 @@
 import random as rd
 
-from classes import *
+from classes import shift_type, Time, shift, employee, schedule, Date, data
 
 
 def return_dummy_data():

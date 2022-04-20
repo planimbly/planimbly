@@ -1,4 +1,4 @@
-from dummy_data import *
+from dummy_data import data, employee, return_dummy_data, shift_type, Time, Date
 
 
 # function for preparing data for the algorithm
