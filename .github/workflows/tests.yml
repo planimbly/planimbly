@@ -1,11 +1,8 @@
-name: test_app
+name: build
 
 on:
-  push:
-    branches: [master]
-
-  pull_request:
-    branches: [master]
+  - push
+  - pull_request
 
 jobs:
   build:
@@ -31,8 +28,12 @@ jobs:
           flake8
       - name: coverage reporting
         run: |
-          coverage run --omit '*venv*' manage.py test
+          coverage run -ma --source=./algorithm pytest algorithm
+          coverage run -a manage.py test
           coverage report
       - name: test django apps
         run: |
           python3 manage.py test
+      - name: test algorithm
+        run: |
+          pytest algorithm
