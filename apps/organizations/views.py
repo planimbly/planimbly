@@ -1,17 +1,15 @@
-import base64
-from _csv import reader
-
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
 from django.http import HttpResponseRedirect
-
 from django.urls import reverse
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.views.generic import TemplateView
-from .forms import *
+
+from .forms import ManagerCreateForm, OrganizationCreateForm
+from ..accounts.models import Employee
 
 
 def generate_passwd_reset_url(user, request):
@@ -73,6 +71,7 @@ class EmployeesImportView(TemplateView):
     template_name = 'organizations/employees_import.html'
 
     def post(self, request, *args, **kwargs):
+
         file = request.FILES['employeesList']
         org = self.request.user.user_org
         # TODO Sprawdzać kodowanie pliku, jak?
