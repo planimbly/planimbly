@@ -1,6 +1,13 @@
 {% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+
 {% block content %}
 
+    <img src="{% static 'img/Logo-Main-Big2.svg' %}" alt="Main Logo" class="large--logo--center">
+    <div class="row">
+        <div class="col">
+            <div class="text-center">
 
     {% if user.is_authenticated %}
         <ul>
@@ -30,7 +37,11 @@
 
 
     {% else %}
-        <a href="{% url 'login' %}">Login</a>
-    {% endif %}
+        <a class="btn btn-lg btn-primary" href="{% url 'login' %}" role="button"> Log in </a>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
 
 {% endblock %}
