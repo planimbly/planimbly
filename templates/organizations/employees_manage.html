@@ -9,7 +9,8 @@
         axios.defaults.xsrfCookieName = 'csrftoken';
         axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
     </script>
-
+    <a href="{% url 'home' %}">Home</a>
+    <h1>Zarządzenie pracownikami w ramach organizacji</h1>
     <ul>
         <li><a href="{% url 'employee-list' %}">Employees list</a></li>
     </ul>
@@ -62,8 +63,7 @@
                     swal({
                         title: "Potwierdź dodanie pracownika",
                         icon: "info",
-                        buttons: true,
-                        //dangerMode: true,
+                        buttons: true
                     })
                         .then((willAdd) => {
                             if (willAdd) {

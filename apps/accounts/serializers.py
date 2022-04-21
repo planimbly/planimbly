@@ -1,5 +1,5 @@
-from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from rest_framework import serializers
 
 
 class EmployeeSerializer(serializers.HyperlinkedModelSerializer):
@@ -9,6 +9,3 @@ class EmployeeSerializer(serializers.HyperlinkedModelSerializer):
         extra_kwargs = {
             'id': {'read_only': True}
         }
-
-    def create(self, validated_data):
-        print(self.request.user)
