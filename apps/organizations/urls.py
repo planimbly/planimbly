@@ -13,13 +13,26 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.urls import path
+from django.urls import path, include
+from rest_framework import routers
 
-from .views import EmployeesImportView, OrganizationCreateView, EmployeesManageView
+from .views import EmployeesImportView, OrganizationCreateView, EmployeesManageView, UnitsManageView, UnitViewSet, \
+    WorkplaceManageView, WorkplaceViewSet
+
+unit_router = routers.DefaultRouter()
+unit_router.register(r'unit', UnitViewSet, basename='unit')
+workplace_router = routers.DefaultRouter()
+workplace_router.register(r'workplace', WorkplaceViewSet, basename='workplace')
 
 urlpatterns = [
     path('create/', OrganizationCreateView.as_view(template_name='organizations/organization_create.html'),
          name='organization_create'),
-    path('employees_import', EmployeesImportView.as_view(), name='employees_import'),
-    path('employees_manage', EmployeesManageView.as_view(), name='employees_manage'),
+    path('employees_import/', EmployeesImportView.as_view(), name='employees_import'),
+    path('employees_manage/', EmployeesManageView.as_view(), name='employees_manage'),
+    path('units_manage/', UnitsManageView.as_view(), name='units_manage'),
+    path('<int:pk>/workplace_manage/', WorkplaceManageView.as_view(), name='workplace_manage'),
+
+    # API urls
+    path('api/', include(unit_router.urls)),
+    path('api/<int:pk>/', include(workplace_router.urls)),
 ]

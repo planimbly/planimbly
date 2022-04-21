@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
@@ -7,8 +8,11 @@ from django.urls import reverse
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.views.generic import TemplateView
+from rest_framework import viewsets, permissions
 
 from .forms import ManagerCreateForm, OrganizationCreateForm
+from .models import Unit, Workplace
+from .serializers import WorkplaceSerializer, UnitSerializer
 from ..accounts.models import Employee
 
 
@@ -93,3 +97,36 @@ class EmployeesImportView(TemplateView):
 
 class EmployeesManageView(TemplateView):
     template_name = 'organizations/employees_manage.html'
+
+
+class UnitsManageView(TemplateView):
+    template_name = 'organizations/units_manage.html'
+
+
+class WorkplaceManageView(UserPassesTestMixin, TemplateView):
+    template_name = 'organizations/workplace_manage.html'
+
+    def test_func(self):
+        pk = self.kwargs['pk']
+        test = Workplace.objects.filter(pk=pk).exists()
+        return test
+
+
+class UnitViewSet(viewsets.ModelViewSet):
+    serializer_class = UnitSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = Unit.objects.filter(unit_org=self.request.user.user_org)
+        return queryset
+
+    def perform_create(self, serializer):
+        v_data = serializer.validated_data
+        unit = Unit(name=v_data['name'], unit_org=self.request.user.user_org,
+                    allow_preferences=v_data['allow_preferences'])
+        unit.save()
+
+
+class WorkplaceViewSet(viewsets.ModelViewSet):
+    serializer_class = WorkplaceSerializer
+    permission_classes = [permissions.IsAuthenticated]

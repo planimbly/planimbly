@@ -17,10 +17,10 @@ from django.contrib.auth import views as auth_views
 from django.urls import path, include
 from rest_framework import routers
 
-from . import views
+from .views import EmployeeViewSet
 
 router = routers.DefaultRouter()
-router.register(r'employee', views.EmployeeViewSet, basename='employee')
+router.register(r'employee', EmployeeViewSet, basename='employee')
 
 urlpatterns = [
     path('login/', auth_views.LoginView.as_view(template_name='accounts/login.html'), name='login'),
@@ -40,6 +40,6 @@ urlpatterns = [
          name='password_reset_complete'),
 
     # API urls
-    path('', include(router.urls)),
+    path('api/', include(router.urls)),
 
 ]
