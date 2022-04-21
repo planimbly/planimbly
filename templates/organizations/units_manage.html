@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+{% block content %}
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script>
+        axios.defaults.xsrfCookieName = 'csrftoken';
+        axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
+    </script>
+    <a href="{% url 'home' %}">Home</a>
+    <h1>Tworzenie jednostek</h1>
+    <ul>
+        <li><a href="{% url 'unit-list' %}">Unit list</a></li>
+    </ul>
+    <div id="vue-app">
+        <h2>Dodaj jednoskę</h2>
+        <form @submit.prevent="add_unit">
+            <input type="text" v-model="name">
+            <input type="checkbox" v-model="allow_preferences">
+            <button>dodaj</button>
+        </form>
+        <p v-for="(field, index) in response">
+            [[ index ]] : [[ field.join('') ]]
+        </p>
+        <h2>Lista pracowników</h2>
+        <div v-for="(unit, i) in unit_list" :key="unit.id">
+            <span>[[ unit.id ]]</span>
+            <input type="text" v-model="unit.name">
+            <input type="checkbox" v-model="unit.allow_preferences">
+            <button @click="remove_unit(unit.id)">-</button>
+            <button @click="change_unit(i)">zapisz</button>
+        </div>
+    </div>
+    <script>
+        var app = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-app',
+            data() {
+                return {
+                    name: '',
+                    allow_preferences: true,
+                    unit_list: null,
+                    response: null,
+                    base_url: '{% url 'unit-list' %}',
+                }
+            },
+            methods: {
+                fetch_data() {
+                    axios
+                        .get(this.base_url)
+                        .then(response => (this.unit_list = response.data))
+                },
+                add_unit() {
+                    swal({
+                        title: "Potwierdź dodanie jednostki",
+                        icon: "info",
+                        buttons: true
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
+
+                                axios
+                                    .post(this.base_url,
+                                        {
+                                            name: this.name, allow_preferences: this.allow_preferences
+                                        }
+                                    )
+                                    .then(
+                                        this.fetch_data
+                                    )
+                                    .catch(error => {
+                                            this.response = error.response.data
+                                        }
+                                    )
+                                this.name = ''
+                                this.allow_preferences = ''
+                            }
+                        });
+                },
+                remove_unit(id) {
+                    swal({
+                        title: "Czy na pewno chcesz usunąć jednostkę?",
+                        icon: "warning",
+                        buttons: true,
+                        dangerMode: true,
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
+                                url = this.base_url + id + '/'
+                                axios
+                                    .delete(url,
+                                        {
+                                            id: id
+                                        }
+                                    )
+                                    .then(
+                                        this.fetch_data
+                                    )
+                                    .catch(error => {
+                                            this.response = error.response.data
+                                        }
+                                    )
+                            }
+                        });
+
+                },
+                change_unit(i) {
+                    url = this.base_url + this.unit_list[i].id + '/'
+                    swal({
+                        title: "Czy chcesz zatwierdzić zmiany",
+                        icon: "info",
+                        buttons: true
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
+                                axios
+                                    .put(url,
+                                        {
+                                            name: this.unit_list[i].name,
+                                            allow_preferences: this.unit_list[i].allow_preferences,
+                                        }
+                                    )
+                                    .then(
+                                        this.fetch_data
+                                    )
+                                    .catch(error => {
+                                            this.response = error.response.data
+                                        }
+                                    )
+
+                            }
+                        });
+
+                }
+            },
+            mounted() {
+                this.fetch_data()
+            }
+        })
+    </script>
+{% endblock content %}
