@@ -13,4 +13,5 @@
 9. activate.bat
 10. CD .. CD ..
 11. python -m pip install -r requirements.txt
-12. Ważna uwaga, pamiętajcie, że jeżeli instalujecie jakikolwiek pakiet, musicie dodać go do requirements.txt poprzez komendę: python -m pip freeze > requirements.txt
+12. python -m pip install -r requirements_dev.txt
+13. Ważna uwaga, pamiętajcie, że jeżeli instalujecie jakikolwiek pakiet, musicie dodać go do requirements.txt poprzez komendę: python -m pip freeze > requirements.txt
