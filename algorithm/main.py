@@ -1,7 +1,10 @@
-from dummy_data import data, employee, return_dummy_data, shift_type, Time, Date
-
+from dummy_data import return_dummy_data
+from sqlite3 import Date, Time
+from classes import data, employee, shift_type
 
 # function for preparing data for the algorithm
+
+
 def gather_data():
     # receive dummy data form outside file
     dummy_data = return_dummy_data()
