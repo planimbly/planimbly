@@ -7,8 +7,8 @@ def return_dummy_data():
     shift_types = []
 
     pierwsza_zmiana = shift_type(0, Time(6), Time(14), 0, '1111100')
-    druga_zmiana = shift_type(0, Time(14), Time(22), 0, '1111100')
-    trzecia_zmiana = shift_type(0, Time(22), Time(6), 0, '1111100')
+    druga_zmiana = shift_type(1, Time(14), Time(22), 0, '1111100')
+    trzecia_zmiana = shift_type(2, Time(22), Time(6), 0, '1111100')
 
     shift_types.append(pierwsza_zmiana)
     shift_types.append(druga_zmiana)
@@ -20,7 +20,7 @@ def return_dummy_data():
 
     for i in range(1):
         rand_id = rd.randint(0, 65500)
-        dummy_shifts.append(shift(rand_id, 3, 0, Date(2022, 0, 1), pierwsza_zmiana))
+        dummy_shifts.append(shift(rand_id, 3, 0, Date(2022, 4, 1), pierwsza_zmiana))
 
     dummy_schedule = schedule(0, Date(2022, 4, 1), Date(2022, 4, 30), dummy_shifts)
 
