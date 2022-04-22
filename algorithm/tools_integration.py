@@ -1,9 +1,8 @@
 from ortools.sat.python import cp_model
 from dummy_data import return_dummy_data
-#from patrial_solution_printer import PartialSolutionPrinter
+
 
 class PartialSolutionPrinter(cp_model.CpSolverSolutionCallback):
-    """Print intermediate solutions."""
 
     def __init__(self, shifts, num_workres, num_days, num_shifts, limit):
         cp_model.CpSolverSolutionCallback.__init__(self)
@@ -33,6 +32,7 @@ class PartialSolutionPrinter(cp_model.CpSolverSolutionCallback):
 
     def solution_count(self):
         return self._solution_count
+
 
 data = return_dummy_data()
 
