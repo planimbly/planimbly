@@ -1,6 +1,7 @@
 from dummy_data import return_dummy_data
 from sqlite3 import Date, Time
 from classes import data, employee, shift_type
+from tools_integration import generate_with_ortools
 
 # function for preparing data for the algorithm
 
@@ -15,6 +16,8 @@ def gather_data():
 # schedule making function
 def make_schedule(data: data):
     # placeholder code for now
+
+    generate_with_ortools(gather_data())
 
     # sample data
     emp: employee = data.employees[-1]
