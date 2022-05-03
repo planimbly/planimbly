@@ -217,12 +217,12 @@ def solve_shift_scheduling(params, output_proto):
     requests = [
         # Employee 3 does not want to work on the first Saturday (negative weight
         # for the Off shift).
-        #(3, 0, 5, -2),
+        # (3, 0, 5, -2),
         # Employee 5 wants a night shift on the second Thursday (negative weight).
-        #(5, 3, 10, -2),
+        # (5, 3, 10, -2),
         # Employee 2 does not want a night shift on the first Friday (positive
         # weight).
-        #(2, 3, 4, 4)
+        # (2, 3, 4, 4)
     ]
 
     # Shift constraints on continuous sequence :
