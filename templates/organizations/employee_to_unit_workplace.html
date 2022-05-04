@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+{% block head %}
+    <link rel="stylesheet" href="{% static 'css/organizations/employee_to_unit.css' %}">
+{% endblock head %}
+{% block content %}
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/sortablejs@1.8.4/Sortable.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/Vue.Draggable/2.20.0/vuedraggable.umd.min.js"></script>
+    <script>
+        axios.defaults.xsrfCookieName = 'csrftoken';
+        axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
+    </script>
+    <a href="{% url 'home' %}">Home</a>
+
+    <h1>Zarządzenie pracownikami w ramach
+        {% if model == 'unit' %}
+            jednostek
+        {% elif model == 'workplace' %}
+            działów
+        {% endif %}
+    </h1>
+    <div id="vue-app">
+        <h2>Lista pracowników</h2>
+        <draggable :list="employee_list" group="employee">
+            <div class="employee" v-for="(employee, i) in employee_list" :key="employee.id">
+                <span>[[ employee.id ]]</span>
+                <span>[[ employee.email ]]</span>
+                <span>[[ employee.username ]]</span>
+                <span>[[ employee.first_name ]]</span>
+                <span>[[ employee.last_name ]]</span>
+            </div>
+        </draggable>
+        <h2>Lista pracowników w
+            {% if model == 'unit' %}
+                jednostkach
+            {% elif model == 'workplace' %}
+                działach
+            {% endif %}
+        </h2>
+        <draggable :list="employee_list_unit" group="employee" @change="change_employee">
+            <div class="employee" v-for="(employee, i) in employee_list_unit" :key="employee.id">
+                <span>[[ employee.id ]]</span>
+                <span>[[ employee.email ]]</span>
+                <span>[[ employee.username ]]</span>
+                <span>[[ employee.first_name ]]</span>
+                <span>[[ employee.last_name ]]</span>
+            </div>
+        </draggable>
+    </div>
+    <script>
+        var app = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-app',
+            data() {
+                return {
+                    employee_list: null,
+                    employee_list_unit: null,
+                    response: null,
+                    base_url: {% if model == 'unit' %}
+                        '{% url 'employee_to_unit_api' unit_workplace_pk %}' {% elif model == 'workplace' %}
+                        '{% url 'employee_to_workplace_api' unit_workplace_pk %}' {% endif %},
+                }
+            },
+            methods: {
+                fetch_data() {
+                    axios
+                        .get(this.base_url)
+                        .then(response => (
+                            this.employee_list = response.data[0],
+                                this.employee_list_unit = response.data[1]
+                        ))
+                },
+                change_employee(evt) {
+                    if (evt.added) {
+                        axios
+                            .post(this.base_url,
+                                {
+                                    pk: evt.added.element.id,
+                                    action: 'add'
+                                }
+                            )
+                    } else if (evt.removed) {
+                        axios
+                            .post(this.base_url,
+                                {
+                                    pk: evt.removed.element.id,
+                                    action: 'delete'
+                                }
+                            )
+                    }
+                }
+            },
+            mounted() {
+                this.fetch_data()
+            }
+        })
+    </script>
+{% endblock content %}

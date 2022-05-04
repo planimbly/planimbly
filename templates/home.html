@@ -9,35 +9,39 @@
         <div class="col">
             <div class="text-center">
 
-    {% if user.is_authenticated %}
-        <ul>
-            <li><a href="{% url 'logout' %}">Logout</a></li>
-            <li><a href="{% url 'password_change' %}">Password change</a></li>
-            <li><a href="{% url 'password_reset' %}">Password reset</a></li>
-            <li><a href="{% url 'organization_create' %}">Tworzenie nowej organizacji (widok kierownika)</a></li>
-            Organizacja : {{ user.user_org }}
-            <li><a href="{% url 'employees_import' %}">Importowanie pracowników do organizacji: {{ user.user_org }}</a>
-            </li>
-            <li><a href="{% url 'employees_manage' %}">Zarządzanie pracownikami w ramach
-                organizacji: {{ user.user_org }}</a></li>
-        </ul>
-        <h2>Lista jednostek</h2>
+                {% if user.is_authenticated %}
+                    <ul>
+                        <li><a href="{% url 'logout' %}">Logout</a></li>
+                        <li><a href="{% url 'password_change' %}">Password change</a></li>
+                        <li><a href="{% url 'password_reset' %}">Password reset</a></li>
+                        <li><a href="{% url 'organization_create' %}">Tworzenie nowej organizacji (widok kierownika)</a>
+                        </li>
+                        Organizacja : {{ user.user_org }}
+                        <li><a href="{% url 'employees_import' %}">Importowanie pracowników do
+                            organizacji: {{ user.user_org }}</a>
+                        </li>
+                        <li><a href="{% url 'employees_manage' %}">Zarządzanie pracownikami w ramach
+                            organizacji: {{ user.user_org }}</a></li>
+                    </ul>
+                    <h2>Lista jednostek</h2>
 
-        <ul>
-            <li><a href="{% url 'units_manage' %}"> Zarządzanie jednostkami w organizacji</a></li>
-            {% for unit, workplace_list in workplace_dict.items %}
-                <li><a href="{% url 'workplace_manage' unit.pk %}">{{ unit.name }}</a></li>
-                <ul>
-                    {% for workplace in workplace_list %}
-                        <li>{{ workplace.name }}</li>
-                    {% endfor %}
-                </ul>
-            {% endfor %}
-        </ul>
+                    <ul>
+                        <li><a href="{% url 'units_manage' %}"> Zarządzanie jednostkami w organizacji</a></li>
+                        {% for unit, workplace_list in workplace_dict.items %}
+                            <li><a href="{% url 'workplace_manage' unit.pk %}">{{ unit.name }}</a> - <a
+                                    href="{% url 'employee_to_unit' unit.pk %}">Pracownicy</a></li>
+                            <ul>
+                                {% for workplace in workplace_list %}
+                                    <li>{{ workplace.name }} -
+                                        <a href="{% url 'employee_to_workplace' workplace.pk %}">Pracownicy</a></li>
+                                {% endfor %}
+                            </ul>
+                        {% endfor %}
+                    </ul>
 
 
-    {% else %}
-        <a class="btn btn-lg btn-primary" href="{% url 'login' %}" role="button"> Log in </a>
+                {% else %}
+                    <a class="btn btn-lg btn-primary" href="{% url 'login' %}" role="button"> Log in </a>
                 {% endif %}
 
             </div>

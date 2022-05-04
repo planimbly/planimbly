@@ -1,3 +1,138 @@
-{{ pk }}
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+{% block content %}
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script>
+        axios.defaults.xsrfCookieName = 'csrftoken';
+        axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
+    </script>
+    <a href="{% url 'home' %}">Home</a>
+    <h1>Tworzenie działów</h1>
+    <ul>
+        <li><a href="{% url 'workplace-list' unit_pk %}">Workplace list</a></li>
+    </ul>
+    <div id="vue-app">
+        <h2>Dodaj dział</h2>
+        <form @submit.prevent="add_workplace">
+            <input type="text" v-model="name">
+            <button>dodaj</button>
+        </form>
+        <p v-for="(field, index) in response">
+            [[ index ]] : [[ field.join('') ]]
+        </p>
+        <h2>Lista działów</h2>
+        <div v-for="(workplace, i) in workplace_list" :key="workplace.id">
+            <span>[[ workplace.id ]]</span>
+            <input type="text" v-model="workplace.name">
+            <button @click="remove_workplace(workplace.id)">-</button>
+            <button @click="change_workplace(i)">zapisz</button>
+        </div>
+    </div>
+    <script>
+        var app = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-app',
+            data() {
+                return {
+                    name: '',
+                    workplace_list: null,
+                    response: null,
+                    base_url: '{% url 'workplace-list' unit_pk %}',
+                }
+            },
+            methods: {
+                fetch_data() {
+                    axios
+                        .get(this.base_url)
+                        .then(response => (this.workplace_list = response.data))
+                },
+                add_workplace() {
+                    swal({
+                        title: "Potwierdź dodanie działu",
+                        icon: "info",
+                        buttons: true
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
 
-{% url 'workplace-list' pk %}
+                                axios
+                                    .post(this.base_url,
+                                        {
+                                            name: this.name
+                                        }
+                                    )
+                                    .then(
+                                        this.fetch_data
+                                    )
+                                    .catch(error => {
+                                            this.response = error.response.data
+                                        }
+                                    )
+                                this.name = ''
+                            }
+                        });
+                },
+                remove_workplace(id) {
+                    swal({
+                        title: "Czy na pewno chcesz usunąć dział?",
+                        icon: "warning",
+                        buttons: true,
+                        dangerMode: true,
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
+                                url = this.base_url + id + '/'
+                                axios
+                                    .delete(url,
+                                        {
+                                            id: id
+                                        }
+                                    )
+                                    .then(
+                                        this.fetch_data
+                                    )
+                                    .catch(error => {
+                                            this.response = error.response.data
+                                        }
+                                    )
+                            }
+                        });
+
+                },
+                change_workplace(i) {
+                    url = this.base_url + this.workplace_list[i].id + '/'
+                    swal({
+                        title: "Czy chcesz zatwierdzić zmiany",
+                        icon: "info",
+                        buttons: true
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
+                                axios
+                                    .put(url,
+                                        {
+                                            name: this.workplace_list[i].name
+                                        }
+                                    )
+                                    .then(
+                                        this.fetch_data
+                                    )
+                                    .catch(error => {
+                                            this.response = error.response.data
+                                        }
+                                    )
+
+                            }
+                        });
+
+                }
+            },
+            mounted() {
+                this.fetch_data()
+            }
+        })
+    </script>
+{% endblock content %}

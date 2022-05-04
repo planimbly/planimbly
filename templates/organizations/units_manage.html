@@ -24,7 +24,7 @@
         <p v-for="(field, index) in response">
             [[ index ]] : [[ field.join('') ]]
         </p>
-        <h2>Lista pracowników</h2>
+        <h2>Lista jednostek</h2>
         <div v-for="(unit, i) in unit_list" :key="unit.id">
             <span>[[ unit.id ]]</span>
             <input type="text" v-model="unit.name">
