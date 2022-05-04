@@ -2,7 +2,7 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from apps.organizations.models import Organization
+from apps.organizations.models import Organization, Workplace, Unit
 
 
 class MyAccountManager(BaseUserManager):
@@ -42,6 +42,8 @@ class Employee(AbstractUser):
     job_time = models.IntegerField(verbose_name="Wymiar etatu", default=0)
     is_supervisor = models.BooleanField(default=False)
     user_org = models.ForeignKey(Organization, on_delete=models.CASCADE, blank=True, null=True)
+    user_unit = models.ManyToManyField(Unit)
+    user_workplace = models.ManyToManyField(Workplace)
 
     objects = MyAccountManager()
 

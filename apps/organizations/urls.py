@@ -17,7 +17,8 @@ from django.urls import path, include
 from rest_framework import routers
 
 from .views import EmployeesImportView, OrganizationCreateView, EmployeesManageView, UnitsManageView, UnitViewSet, \
-    WorkplaceManageView, WorkplaceViewSet
+    WorkplaceManageView, WorkplaceViewSet, EmployeeToWorkplaceView, EmployeeToUnitApiView, EmployeeToWorkplaceApiView, \
+    EmployeeToUnitView
 
 unit_router = routers.DefaultRouter()
 unit_router.register(r'unit', UnitViewSet, basename='unit')
@@ -30,9 +31,16 @@ urlpatterns = [
     path('employees_import/', EmployeesImportView.as_view(), name='employees_import'),
     path('employees_manage/', EmployeesManageView.as_view(), name='employees_manage'),
     path('units_manage/', UnitsManageView.as_view(), name='units_manage'),
-    path('<int:pk>/workplace_manage/', WorkplaceManageView.as_view(), name='workplace_manage'),
+    path('<int:unit_pk>/workplace_manage/', WorkplaceManageView.as_view(), name='workplace_manage'),
+    path('<int:unit_workplace_pk>/employees_to_unit/', EmployeeToUnitView.as_view(), name='employee_to_unit'),
+    path('<int:unit_workplace_pk>/employees_to_workplace/', EmployeeToWorkplaceView.as_view(),
+         name='employee_to_workplace'),
 
     # API urls
     path('api/', include(unit_router.urls)),
-    path('api/<int:pk>/', include(workplace_router.urls)),
+    path('api/<int:unit_pk>/', include(workplace_router.urls)),
+    path('api/<int:unit_workplace_pk>/employees_to_unit/', EmployeeToUnitApiView.as_view(),
+         name='employee_to_unit_api'),
+    path('api/<int:unit_workplace_pk>/employees_to_workplace/', EmployeeToWorkplaceApiView.as_view(),
+         name='employee_to_workplace_api')
 ]
