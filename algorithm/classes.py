@@ -44,4 +44,4 @@ class data:
         self.schedules = schedules
         self.date_start = date_start
         self.date_end = date_end
-        self.shift_type = s_types
+        self.shift_types = s_types
