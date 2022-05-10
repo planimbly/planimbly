@@ -3,9 +3,6 @@
 {% load static %}
 {% block head %}
     <link rel="stylesheet" href="{% static 'css/organizations/employee_to_unit.css' %}">
-{% endblock head %}
-{% block content %}
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script src="//cdn.jsdelivr.net/npm/sortablejs@1.8.4/Sortable.min.js"></script>
@@ -14,6 +11,10 @@
         axios.defaults.xsrfCookieName = 'csrftoken';
         axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
     </script>
+{% endblock head %}
+
+{% block content %}
+
     <a href="{% url 'home' %}">Home</a>
 
     <h1>Zarządzenie pracownikami w ramach
@@ -41,7 +42,7 @@
                 działach
             {% endif %}
         </h2>
-        <draggable :list="employee_list_unit" group="employee" @change="change_employee">
+        <draggable :list="employee_list_unit" group="employee" v-on:change="change_employee">
             <div class="employee" v-for="(employee, i) in employee_list_unit" :key="employee.id">
                 <span>[[ employee.id ]]</span>
                 <span>[[ employee.email ]]</span>
@@ -51,7 +52,9 @@
             </div>
         </draggable>
     </div>
-    <script>
+{% endblock content %}
+{% block vue-content %}
+    <script type="application/javascript">
         var app = new Vue({
             delimiters: ["[[", "]]"],
             el: '#vue-app',
@@ -99,4 +102,4 @@
             }
         })
     </script>
-{% endblock content %}
+{% endblock vue-content %}

@@ -2,6 +2,11 @@
 {% load widget_tweaks %}
 {% load static %}
 
+{% block sidebar-items %}
+    <li class="sidebar-item"><a href="{% url 'logout' %}" class="del-def-style-a">Logout</a></li>
+    <li class="sidebar-item"><a href="{% url 'password_change' %}" class="del-def-style-a">Password change</a></li>
+    <li class="sidebar-item"><a href="{% url 'password_reset' %}" class="del-def-style-a">Password reset</a></li>
+{% endblock sidebar-items %}
 {% block content %}
 
     <img src="{% static 'img/Logo-Main-Big2.svg' %}" alt="Main Logo" class="large--logo--center">
@@ -11,9 +16,7 @@
 
                 {% if user.is_authenticated %}
                     <ul>
-                        <li><a href="{% url 'logout' %}">Logout</a></li>
-                        <li><a href="{% url 'password_change' %}">Password change</a></li>
-                        <li><a href="{% url 'password_reset' %}">Password reset</a></li>
+
                         <li><a href="{% url 'organization_create' %}">Tworzenie nowej organizacji (widok kierownika)</a>
                         </li>
                         Organizacja : {{ user.user_org }}
