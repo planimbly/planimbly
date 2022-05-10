@@ -40,12 +40,20 @@ class Employee(AbstractUser):
     first_name = models.CharField(max_length=50, verbose_name="Imię")
     last_name = models.CharField(max_length=50, verbose_name="Nazwisko")
     job_time = models.IntegerField(verbose_name="Wymiar etatu", default=0)
-    is_supervisor = models.BooleanField(default=False)
-    user_org = models.ForeignKey(Organization, on_delete=models.CASCADE, blank=True, null=True)
-    user_unit = models.ManyToManyField(Unit)
-    user_workplace = models.ManyToManyField(Workplace)
+    is_supervisor = models.BooleanField(verbose_name="Czy jest kierownikiem?", default=False)
+    user_org = models.ForeignKey(Organization, on_delete=models.CASCADE, blank=True, null=True,
+                                 verbose_name="Organizacja użytkownika")
+    user_unit = models.ManyToManyField(Unit, verbose_name="Jednostki użytkownika")
+    user_workplace = models.ManyToManyField(Workplace, verbose_name="Działy użytkownika")
 
     objects = MyAccountManager()
 
     def __str__(self):
         return self.username
+
+
+class Absence(models.Model):
+    start = models.DateField(verbose_name="Początek nieobecności")
+    end = models.DateField(verbose_name="Koniec nieobecności")
+    employee = models.ForeignKey(Employee, verbose_name="Pracownik", on_delete=models.CASCADE)
+    type = models.CharField(max_length=256)
