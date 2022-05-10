@@ -1,14 +1,17 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
 {% load static %}
-{% block content %}
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+{% block head %}
+    <script type="application/javascript" src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script type="application/javascript" src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script>
         axios.defaults.xsrfCookieName = 'csrftoken';
         axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
     </script>
+{% endblock head %}
+
+{% block content %}
     <a href="{% url 'home' %}">Home</a>
     <h1>Zarządzenie pracownikami w ramach organizacji</h1>
     <ul>
@@ -16,7 +19,7 @@
     </ul>
     <div id="vue-app">
         <h2>Dodaj pracownika</h2>
-        <form @submit.prevent="add_employee">
+        <form v-on:submit.prevent="add_employee">
             <input type="text" v-model="email">
             <input type="text" v-model="username">
             <input type="text" v-model="first_name">
@@ -33,11 +36,14 @@
             <input type="text" v-model="employee.username">
             <input type="text" v-model="employee.first_name">
             <input type="text" v-model="employee.last_name">
-            <button @click="remove_employee(employee.id)">-</button>
-            <button @click="change_employee(i)">zapisz</button>
+            <button v-on:click="remove_employee(employee.id)">-</button>
+            <button v-on:click="change_employee(i)">zapisz</button>
         </div>
     </div>
-    <script>
+{% endblock content %}
+
+{% block vue-content %}
+    <script type="application/javascript">
         var app = new Vue({
             delimiters: ["[[", "]]"],
             el: '#vue-app',
@@ -153,4 +159,4 @@
             }
         })
     </script>
-{% endblock content %}
+{% endblock vue-content %}
