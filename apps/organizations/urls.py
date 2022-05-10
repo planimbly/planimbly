@@ -17,8 +17,8 @@ from django.urls import path, include
 from rest_framework import routers
 
 from .views import EmployeesImportView, OrganizationCreateView, EmployeesManageView, UnitsManageView, UnitViewSet, \
-    WorkplaceManageView, WorkplaceViewSet, EmployeeToWorkplaceView, EmployeeToUnitApiView, EmployeeToWorkplaceApiView, \
-    EmployeeToUnitView
+    WorkplaceManageView, WorkplaceViewSet, EmployeeToWorkplaceView, EmployeeToUnitApiView, \
+    EmployeeToWorkplaceApiView, EmployeeToUnitView
 
 unit_router = routers.DefaultRouter()
 unit_router.register(r'unit', UnitViewSet, basename='unit')
