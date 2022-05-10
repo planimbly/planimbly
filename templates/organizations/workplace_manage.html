@@ -1,14 +1,17 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
 {% load static %}
-{% block content %}
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+{% block head %}
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script>
         axios.defaults.xsrfCookieName = 'csrftoken';
         axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
     </script>
+{% endblock head %}
+
+{% block content %}
     <a href="{% url 'home' %}">Home</a>
     <h1>Tworzenie działów</h1>
     <ul>
@@ -16,7 +19,7 @@
     </ul>
     <div id="vue-app">
         <h2>Dodaj dział</h2>
-        <form @submit.prevent="add_workplace">
+        <form v-on:submit.prevent="add_workplace">
             <input type="text" v-model="name">
             <button>dodaj</button>
         </form>
@@ -27,11 +30,13 @@
         <div v-for="(workplace, i) in workplace_list" :key="workplace.id">
             <span>[[ workplace.id ]]</span>
             <input type="text" v-model="workplace.name">
-            <button @click="remove_workplace(workplace.id)">-</button>
-            <button @click="change_workplace(i)">zapisz</button>
+            <button v-on:click="remove_workplace(workplace.id)">-</button>
+            <button v-on:click="change_workplace(i)">zapisz</button>
         </div>
     </div>
-    <script>
+{% endblock content %}
+{% block vue-content %}
+    <script type="application/javascript">
         var app = new Vue({
             delimiters: ["[[", "]]"],
             el: '#vue-app',
@@ -135,4 +140,4 @@
             }
         })
     </script>
-{% endblock content %}
+{% endblock vue-content %}

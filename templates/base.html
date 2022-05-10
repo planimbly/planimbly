@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@200;400;600&display=swap" rel="stylesheet">
     {#  vue.js v3  #}
-{#    <script src="https://unpkg.com/vue@3"></script>#}
+    {#    <script src="https://unpkg.com/vue@3"></script>#}
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     {% block head %}
 
@@ -70,23 +70,26 @@
 {% block navsidebar %}
     <div id="app">
         <nav class="navbar">
-            <img v-on:click="changeSidebarState" class="medium-icon" src="{% static 'img/menu.svg' %}" alt="Burger" id="burger" style="cursor: pointer;">
-            <img src="{% static 'img/Logo-Main-Big2.svg' %}" alt="Nav logo" class="medium-logo-nav" href="{% url 'home' %}">
+            <img v-on:click="changeSidebarState" class="medium-icon" src="{% static 'img/menu.svg' %}" alt="Burger"
+                 id="burger" style="cursor: pointer;">
+            <img src="{% static 'img/Logo-Main-Big2.svg' %}" alt="Nav logo" class="medium-logo-nav"
+                 href="{% url 'home' %}">
             <nav class="right-nav-menu">
-                <img src="{% static 'img/account_circle_FILL0_wght400_GRAD0_opsz48.svg' %}" alt="account" class="medium-icon" style="cursor: pointer; width: 32px;">
+                <img src="{% static 'img/account_circle_FILL0_wght400_GRAD0_opsz48.svg' %}" alt="account"
+                     class="medium-icon" style="cursor: pointer; width: 32px;">
             </nav>
         </nav>
         <div class="main">
             <div class="sidebar" id="sidebar" v-bind:style="`margin-left: ${moveSidebar};`">
                 <ul class="sidebar-list">
                     {% block sidebar-items %}
-                    <li class="sidebar-item">Organizacja</li>
-                    <li class="sidebar-item">Grafiki</li>
-                    <li class="sidebar-item">Ustawienia Główne</li>
+                        <li class="sidebar-item">Organizacja</li>
+                        <li class="sidebar-item">Grafiki</li>
+                        <li class="sidebar-item">Ustawienia Główne</li>
                     {% endblock sidebar-items %}
                 </ul>
             </div>
-            <div class="proper-main margin-remove" v-bind:style="`margin-left: ${moveMainWithSidebar};`">
+            <div class="proper-main margin-remove" v-bind:style="`margin-left: ${moveMainWithSidebar};`" v-pre>
                 {% block content %}
 
                 {% endblock content %}
@@ -95,56 +98,53 @@
 
     </div>
 
-
-
-
 {% endblock navsidebar %}
 
-<div class="container">
+{% comment %}<div class="container">
     {% block content-no-nav %}
 
     {% endblock %}
-</div>
+</div>{% endcomment %}
 
 
-<script>
+<script type="application/javascript">
 
-        new Vue({
-            el: '#app',
-
-            data: {
-                isSidebarHidden: false,
-            },
-            computed: {
-                moveSidebar(){
-                    if (this.isSidebarHidden){
-                        return "-15rem"
-                    }
-                    else{
-                        return 0
-                    }
-                },
-
-                moveMainWithSidebar(){
-                    if (this.isSidebarHidden){
-                        return "1rem";
-                    }
-                    else {
-                        return "16rem";
-                    }
-                },
-
-            },
-            methods: {
-                changeSidebarState() {
-                    this.isSidebarHidden = !this.isSidebarHidden;
-
+    var nav_app = new Vue({
+        delimiters: ["[[", "]]"],
+        el: '#app',
+        data: {
+            isSidebarHidden: false,
+        },
+        computed: {
+            moveSidebar() {
+                if (this.isSidebarHidden) {
+                    return "-15rem"
+                } else {
+                    return 0
                 }
             },
 
-        })
-</script>
+            moveMainWithSidebar() {
+                if (this.isSidebarHidden) {
+                    return "1rem";
+                } else {
+                    return "16rem";
+                }
+            },
 
+        },
+        methods: {
+            changeSidebarState() {
+                this.isSidebarHidden = !this.isSidebarHidden;
+
+            }
+        },
+
+    })
+
+</script>
+{% block vue-content %}
+{% endblock vue-content %}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
         crossorigin="anonymous"></script>
