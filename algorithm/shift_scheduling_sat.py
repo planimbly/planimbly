@@ -19,7 +19,7 @@ from absl import flags
 from google.protobuf import text_format
 from ortools.sat.python import cp_model
 
-from datetime import datetime
+# from datetime import datetime
 import calendar
 
 FLAGS = flags.FLAGS
@@ -211,9 +211,9 @@ def solve_shift_scheduling(year, month, params, output_proto):
 
     # Calendar data
     list_month = get_month_by_weeks(year, month)
-    num_weeks = len(list_month)
+    # num_weeks = len(list_month)
     num_days = list_month[-1][-1][0]
-    num_sundays = sum([x[1] == 6 for x in flatten(list_month)])
+    # num_sundays = sum([x[1] == 6 for x in flatten(list_month)])
 
     # Shift data
     shifts = ['-', 'M', 'A', 'N']
