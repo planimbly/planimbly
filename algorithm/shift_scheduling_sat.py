@@ -19,8 +19,11 @@ from absl import flags
 from google.protobuf import text_format
 from ortools.sat.python import cp_model
 
+from datetime import datetime
+import calendar
+
 FLAGS = flags.FLAGS
-flags.DEFINE_string('output_proto', 'algorithm/cp_model.proto',
+flags.DEFINE_string('output_proto', 'cp_model.proto',
                     'Output file to write the cp_model proto to.')
 flags.DEFINE_string('params', 'max_time_in_seconds:30.0',
                     'Sat solver parameters.')
@@ -182,13 +185,30 @@ def add_soft_sum_constraint(model, works, hard_min, soft_min, min_cost,
 
     return cost_variables, cost_coefficients
 
+def get_month_by_weeks(year : int, month : int):
+    cal = calendar.Calendar()
+    x = cal.monthdays2calendar(year, month)
+    x = [list(filter(lambda item: item[0] != 0, week)) for week in x]
+    return x
 
-def solve_shift_scheduling(params, output_proto):
+def flatten(t : list):
+    return [item for sublist in t for item in sublist]
+
+def solve_shift_scheduling(year, month, params, output_proto):
     """Solves the shift scheduling problem."""
-    # Data
+    # Employee data
     num_employees = 8
-    num_weeks = 4
+
+    # Calendar data
+    list_month = get_month_by_weeks(year, month)
+    num_weeks = len(list_month)
+    num_days = list_month[-1][-1][0]
+    num_sundays = sum([x[1] == 6 for x in flatten(list_month)])
+
+    # Shift data
     shifts = ['-', 'M', 'A', 'N']
+    num_shifts = len(shifts)
+    
 
     # Fixed assignment: (employee, shift, day).
     # This fixes the first 2 days of the schedule.
@@ -217,12 +237,12 @@ def solve_shift_scheduling(params, output_proto):
     requests = [
         # Employee 3 does not want to work on the first Saturday (negative weight
         # for the Off shift).
-        # (3, 0, 5, -2),
+        (3, 0, 5, -2),
         # Employee 5 wants a night shift on the second Thursday (negative weight).
-        # (5, 3, 10, -2),
+        (5, 3, 10, -2),
         # Employee 2 does not want a night shift on the first Friday (positive
         # weight).
-        # (2, 3, 4, 4)
+        (2, 3, 4, 4)
     ]
 
     # Shift constraints on continuous sequence :
@@ -269,9 +289,6 @@ def solve_shift_scheduling(params, output_proto):
 
     # Penalty for exceeding the cover constraint per shift type.
     excess_cover_penalties = (20, 20, 20)
-
-    num_days = num_weeks * 7
-    num_shifts = len(shifts)
 
     model = cp_model.CpModel()
 
@@ -421,7 +438,7 @@ def solve_shift_scheduling(params, output_proto):
 
 
 def main(_=None):
-    solve_shift_scheduling(FLAGS.params, FLAGS.output_proto)
+    solve_shift_scheduling(2022, 5, FLAGS.params, FLAGS.output_proto)
 
 
 if __name__ == '__main__':
