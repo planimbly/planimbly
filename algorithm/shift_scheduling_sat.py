@@ -185,7 +185,8 @@ def add_soft_sum_constraint(model, works, hard_min, soft_min, min_cost,
 
     return cost_variables, cost_coefficients
 
-def get_month_by_weeks(year : int, month : int):
+
+def get_month_by_weeks(year: int, month: int):
     """Returns list of lists containing days of given month
 
     Sublists contain days of given week (the last element of every sublist is either a sunday or the last day of the month)
@@ -198,8 +199,10 @@ def get_month_by_weeks(year : int, month : int):
     x = [list(filter(lambda item: item[0] != 0, week)) for week in x]
     return x
 
-def flatten(t : list):
+
+def flatten(t: list):
     return [item for sublist in t for item in sublist]
+
 
 def solve_shift_scheduling(year, month, params, output_proto):
     """Solves the shift scheduling problem."""
@@ -215,7 +218,6 @@ def solve_shift_scheduling(year, month, params, output_proto):
     # Shift data
     shifts = ['-', 'M', 'A', 'N']
     num_shifts = len(shifts)
-    
 
     # Fixed assignment: (employee, shift, day).
     # This fixes the first 2 days of the schedule.
@@ -445,7 +447,8 @@ def solve_shift_scheduling(year, month, params, output_proto):
     print('  - branches        : %i' % solver.NumBranches())
     print('  - wall time       : %f s' % solver.WallTime())
 
-def get_letter_for_weekday(day : int):
+
+def get_letter_for_weekday(day: int):
     match day:
         case 0:
             return 'M'
@@ -463,6 +466,7 @@ def get_letter_for_weekday(day : int):
             return 'S'
         case _:
             return None
+
 
 def main(_=None):
     solve_shift_scheduling(2022, 6, FLAGS.params, FLAGS.output_proto)
