@@ -186,6 +186,13 @@ def add_soft_sum_constraint(model, works, hard_min, soft_min, min_cost,
     return cost_variables, cost_coefficients
 
 def get_month_by_weeks(year : int, month : int):
+    """Returns list of lists containing days of given month
+
+    Sublists contain days of given week (the last element of every sublist is either a sunday or the last day of the month)
+
+    Days are stored in a tuple:
+    day - (day, weekday)
+    """
     cal = calendar.Calendar()
     x = cal.monthdays2calendar(year, month)
     x = [list(filter(lambda item: item[0] != 0, week)) for week in x]
@@ -295,7 +302,7 @@ def solve_shift_scheduling(year, month, params, output_proto):
     work = {}
     for e in range(num_employees):
         for s in range(num_shifts):
-            for d in range(num_days):
+            for d in range(1, num_days + 1):
                 work[e, s, d] = model.NewBoolVar('work%i_%i_%i' % (e, s, d))
 
     # Linear terms of the objective in a minimization context.
@@ -306,7 +313,7 @@ def solve_shift_scheduling(year, month, params, output_proto):
 
     # Exactly one shift per day.
     for e in range(num_employees):
-        for d in range(num_days):
+        for d in range(1, num_days + 1):
             model.AddExactlyOne(work[e, s, d] for s in range(num_shifts))
 
     # Fixed assignments.
@@ -322,7 +329,7 @@ def solve_shift_scheduling(year, month, params, output_proto):
     for ct in shift_constraints:
         shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = ct
         for e in range(num_employees):
-            works = [work[e, shift, d] for d in range(num_days)]
+            works = [work[e, shift, d] for d in range(1, num_days + 1)]
             variables, coeffs = add_soft_sequence_constraint(
                 model, works, hard_min, soft_min, min_cost, soft_max, hard_max,
                 max_cost,
@@ -331,11 +338,12 @@ def solve_shift_scheduling(year, month, params, output_proto):
             obj_bool_coeffs.extend(coeffs)
 
     # Weekly sum constraints
+    # BUG: when dealing with 6 week months, the algorithm fails, this function below is probably the culprit
     for ct in weekly_sum_constraints:
         shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = ct
         for e in range(num_employees):
-            for w in range(num_weeks):
-                works = [work[e, shift, d + w * 7] for d in range(7)]
+            for w, week in enumerate(list_month):
+                works = [work[e, shift, d[0]] for d in week]
                 variables, coeffs = add_soft_sum_constraint(
                     model, works, hard_min, soft_min, min_cost, soft_max,
                     hard_max, max_cost,
@@ -347,7 +355,7 @@ def solve_shift_scheduling(year, month, params, output_proto):
     # Penalized transitions
     for previous_shift, next_shift, cost in penalized_transitions:
         for e in range(num_employees):
-            for d in range(num_days - 1):
+            for d in range(1, num_days):
                 transition = [
                     work[e, previous_shift, d].Not(), work[e, next_shift,
                                                            d + 1].Not()
@@ -364,17 +372,17 @@ def solve_shift_scheduling(year, month, params, output_proto):
 
     # Cover constraints
     for s in range(1, num_shifts):
-        for w in range(num_weeks):
-            for d in range(7):
-                works = [work[e, s, w * 7 + d] for e in range(num_employees)]
+        for w, week in enumerate(list_month):
+            for d in week:
+                works = [work[e, s, d[0]] for e in range(num_employees)]
                 # Ignore Off shift.
-                min_demand = weekly_cover_demands[d][s - 1]
+                min_demand = weekly_cover_demands[d[1]][s - 1]
                 worked = model.NewIntVar(min_demand, num_employees, '')
                 model.Add(worked == sum(works))
                 over_penalty = excess_cover_penalties[s - 1]
                 if over_penalty > 0:
                     name = 'excess_demand(shift=%i, week=%i, day=%i)' % (s, w,
-                                                                         d)
+                                                                         d[0])
                     excess = model.NewIntVar(0, num_employees - min_demand,
                                              name)
                     model.Add(excess == worked - min_demand)
@@ -404,12 +412,13 @@ def solve_shift_scheduling(year, month, params, output_proto):
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
         print()
         header = '          '
-        for w in range(num_weeks):
-            header += 'M T W T F S S '
+        for w, week in enumerate(list_month):
+            for d in week:
+                header += get_letter_for_weekday(d[1]) + " "
         print(header)
         for e in range(num_employees):
             schedule = ''
-            for d in range(num_days):
+            for d in range(1, num_days + 1):
                 for s in range(num_shifts):
                     if solver.BooleanValue(work[e, s, d]):
                         schedule += shifts[s] + ' '
@@ -436,9 +445,27 @@ def solve_shift_scheduling(year, month, params, output_proto):
     print('  - branches        : %i' % solver.NumBranches())
     print('  - wall time       : %f s' % solver.WallTime())
 
+def get_letter_for_weekday(day : int):
+    match day:
+        case 0:
+            return 'M'
+        case 1:
+            return 'T'
+        case 2:
+            return 'W'
+        case 3:
+            return 'T'
+        case 4:
+            return 'F'
+        case 5:
+            return 'S'
+        case 6:
+            return 'S'
+        case _:
+            return None
 
 def main(_=None):
-    solve_shift_scheduling(2022, 5, FLAGS.params, FLAGS.output_proto)
+    solve_shift_scheduling(2022, 6, FLAGS.params, FLAGS.output_proto)
 
 
 if __name__ == '__main__':
