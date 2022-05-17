@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+
+
+{% block content %}
+    <div>
+        <h1>Utwórz nowy grafik</h1>
+        <form id="schedule_form" action method="post">
+            {% csrf_token %}
+            <label>Data startu</label>
+            <input type="date" name="date_start" required>
+            <label>Data końca</label>
+            <input type="date" name="date_end" required>
+            {% for workplace in workplace_list %}
+                <label>Czy uzwględnić {{ workplace.name }} w grafiku?</label>
+                <input type="checkbox" checked name="{{ workplace.name }}_checkbox">
+            {% endfor %}
+            <input type="submit">
+        </form>
+    </div>
+
+{% endblock %}

@@ -133,6 +133,7 @@ class WorkplaceManageView(UserPassesTestMixin, TemplateView):
         return test
 
 
+# API TEMPLATES
 class UnitViewSet(viewsets.ModelViewSet):
     serializer_class = UnitSerializer
     permission_classes = [permissions.IsAuthenticated]
