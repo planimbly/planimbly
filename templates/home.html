@@ -31,12 +31,16 @@
                     <ul>
                         <li><a href="{% url 'units_manage' %}"> Zarządzanie jednostkami w organizacji</a></li>
                         {% for unit, workplace_list in workplace_dict.items %}
-                            <li><a href="{% url 'workplace_manage' unit.pk %}">{{ unit.name }}</a> - <a
-                                    href="{% url 'employee_to_unit' unit.pk %}">Pracownicy</a></li>
+                            <li><a href="{% url 'workplace_manage' unit.pk %}">{{ unit.name }}</a> -
+                                <a href="{% url 'employee_to_unit' unit.pk %}">Pracownicy</a> -
+                                <a href="{% url 'schedule_manage' unit.pk %}">Grafiki</a>
+                            </li>
                             <ul>
                                 {% for workplace in workplace_list %}
                                     <li>{{ workplace.name }} -
-                                        <a href="{% url 'employee_to_workplace' workplace.pk %}">Pracownicy</a></li>
+                                        <a href="{% url 'employee_to_workplace' workplace.pk %}">Pracownicy</a>
+                                        <a href="{% url 'shiftType_manage' workplace.pk %}">Zmiany</a>
+                                    </li>
                                 {% endfor %}
                             </ul>
                         {% endfor %}
