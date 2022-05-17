@@ -13,11 +13,14 @@
 # limitations under the License.
 """Creates a shift scheduling problem and solves it."""
 
+from datetime import datetime
 from absl import app
 from absl import flags
 
 from google.protobuf import text_format
 from ortools.sat.python import cp_model
+
+from classes import schedule_data, shift_type_data, shift_data, Time
 
 # from datetime import datetime
 import calendar
@@ -440,12 +443,39 @@ def solve_shift_scheduling(year, month, params, output_proto):
                 print('  %s violated by %i, linear penalty=%i' %
                       (var.Name(), solver.Value(var), obj_int_coeffs[i]))
 
+    shift_m = shift_type_data(0, Time(6), Time(14), 0, '1111100')
+    shift_a = shift_type_data(1, Time(14), Time(22), 0, '1111100')
+    shift_n = shift_type_data(2, Time(22), Time(6), 0, '1111100')
+
+    shift_types = [shift_m, shift_a, shift_n]
+
+    def output_inflate(shift_types):
+        if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+
+            output_schedule = schedule_data(0, datetime(year, month, 1), datetime(year, month, num_days), [])
+
+            for e in range(num_employees):
+                for d in range(1, num_days + 1):
+                    for s in range(num_shifts):
+                        if solver.BooleanValue(work[e, s, d]):
+                            shift_day = datetime(year, month, d)
+                            shift_id = str(e) + str(s) + str(d+1) + str(shift_day.date())
+                            if shifts[s] == 'M':
+                                output_schedule.shifts.append(shift_data(shift_id, e, 0, shift_day, shift_types[0]))
+                            if shifts[s] == 'A':
+                                output_schedule.shifts.append(shift_data(shift_id, e, 0, shift_day, shift_types[1]))
+                            if shifts[s] == 'N':
+                                output_schedule.shifts.append(shift_data(shift_id, e, 0, shift_day, shift_types[2]))
+        return output_schedule
+
     print()
     print('Statistics')
     print('  - status          : %s' % solver.StatusName(status))
     print('  - conflicts       : %i' % solver.NumConflicts())
     print('  - branches        : %i' % solver.NumBranches())
     print('  - wall time       : %f s' % solver.WallTime())
+
+    return output_inflate(shift_types)
 
 
 def get_letter_for_weekday(day: int):
@@ -469,7 +499,11 @@ def get_letter_for_weekday(day: int):
 
 
 def main(_=None):
-    solve_shift_scheduling(2022, 6, FLAGS.params, FLAGS.output_proto)
+    data = solve_shift_scheduling(2022, 6, FLAGS.params, FLAGS.output_proto)
+    for shift_ in data.shifts:
+        print(str(shift_) + '| id: ' + shift_.id + '| emp: ' + str(shift_.id_employee) +
+              '| date: ' + str(shift_.date.date()) + '| shift type: ' + str(shift_.shift_type))
+    return data
 
 
 if __name__ == '__main__':
