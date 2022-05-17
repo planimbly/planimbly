@@ -3,6 +3,7 @@
 {% load static %}
 
 {% block head %}
+    <link rel="stylesheet" href="{% static 'css/organizations/employees_manage.css' %}">
     <script type="application/javascript" src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script type="application/javascript" src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script>
@@ -12,33 +13,105 @@
 {% endblock head %}
 
 {% block content %}
-    <a href="{% url 'home' %}">Home</a>
-    <h1>Zarządzenie pracownikami w ramach organizacji</h1>
-    <ul>
-        <li><a href="{% url 'employee-list' %}">Employees list</a></li>
-    </ul>
+    <nav style aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Strona główna</a></li>
+            <li class="breadcrumb-item">Nazwa organizacji</li>
+            <li class="breadcrumb-item" aria-current="page">Pracownicy</li>
+        </ol>
+        <h2 class="mb-4"><a href="{% url 'home' %}"><i class="material-icons" style=" text-align: center; font-size:24px;">arrow_back_ios</i></a>Zarządzenie
+            pracownikami w ramach organizacji</h2>
+    <hr class=" border-2 border-top">
+
+    </nav>
+
     <div id="vue-app">
-        <h2>Dodaj pracownika</h2>
-        <form v-on:submit.prevent="add_employee">
-            <input type="text" v-model="email">
-            <input type="text" v-model="username">
-            <input type="text" v-model="first_name">
-            <input type="text" v-model="last_name">
-            <button>dodaj</button>
-        </form>
-        <p v-for="(field, index) in response">
-            [[ index ]] : [[ field.join('') ]]
-        </p>
-        <h2>Lista pracowników</h2>
-        <div v-for="(employee, i) in employee_list" :key="employee.id">
-            <span>[[ employee.id ]]</span>
-            <input type="text" v-model="employee.email">
-            <input type="text" v-model="employee.username">
-            <input type="text" v-model="employee.first_name">
-            <input type="text" v-model="employee.last_name">
-            <button v-on:click="remove_employee(employee.id)">-</button>
-            <button v-on:click="change_employee(i)">zapisz</button>
+        <div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form v-on:submit.prevent="add_employee">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Dodawanie pracownika</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="inputEmail" class="form-label">E-mail</label>
+                                    <input type="email" class="form-control" v-model="email" id="inputEmail">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="inputLogin" class="form-label">Login</label>
+                                    <input type="text" class="form-control" v-model="username" id="inputLogin">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="inputName" class="form-label">Imię</label>
+                                    <input type="text" class="form-control" v-model="first_name" id="inputName">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="inputSurname" class="form-label">Nazwisko</label>
+                                    <input type="text" class="form-control" v-model="last_name" id="inputSurname">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                            <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
+                        </div>
+                    </form>
+
+                    <p v-for="(field, index) in response">
+                        [[ index ]] : [[ field.join('') ]]
+                    </p>
+                </div>
+            </div>
         </div>
+
+        <div class="row">
+            <div class="col-10"><h3>Lista pracowników</h3></div>
+            <div class="col-2">
+                <button type="button" class="m-1 btn btn-success d-flex justify-content-center align-content-between" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+                    Dodaj pracownika
+                </button>
+            </div>
+        </div>
+
+
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">E-mail</th>
+                <th scope="col">Login</th>
+                <th scope="col">Imię</th>
+                <th scope="col">Nazwisko</th>
+                <th scope="col">Zapisz</th>
+                <th scope="col">Usuń</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(employee, i) in employee_list" :key="employee.id">
+                <th scope="row" style="text-align: center; vertical-align: middle;"><span>[[ employee.id ]]</span></th>
+                <td><input type="text" class="form-control" v-model="employee.email"></td>
+                <td><input type="text" class="form-control" v-model="employee.username"></td>
+                <td><input type="text" class="form-control" v-model="employee.first_name"></td>
+                <td><input type="text" class="form-control" v-model="employee.last_name"></td>
+                <td>
+                    <button v-on:click="change_employee(i)" type="button"
+                            class="m-1 btn btn-primary d-flex justify-content-center align-content-between"><i
+                            class="material-icons">save</i></button>
+                </td>
+                <td>
+                    <button v-on:click="remove_employee(employee.id)" type="button"
+                            class="m-1 btn btn-danger d-flex justify-content-center align-content-between"><i
+                            class="material-icons">delete</i></button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
     </div>
 {% endblock content %}
 
