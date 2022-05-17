@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     # Internal
     'apps.accounts',
     'apps.organizations',
+    'apps.schedules',
 
     # External
     'crispy_forms',

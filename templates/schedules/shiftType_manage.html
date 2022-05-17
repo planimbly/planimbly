@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+
+{% block head %}
+    <script type="application/javascript" src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script type="application/javascript" src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script>
+        axios.defaults.xsrfCookieName = 'csrftoken';
+        axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
+    </script>
+{% endblock head %}
+
+{% block content %}
+    <a href="{% url 'home' %}">Home</a>
+    <h1>Zarządzenie zmianami w ramach Działu</h1>
+    <ul>
+        <li><a href="{% url 'shiftType-list' workplace_pk %}">ShiftType list</a></li>
+    </ul>
+    <div id="vue-app">
+        <h2>Dodaj pracownika</h2>
+        <form v-on:submit.prevent="add_shiftType">
+            <input type="time" v-model="hour_start">
+            <input type="time" v-model="hour_end">
+            <input type="text" v-model="name">
+            <input type="text" v-model="active_days">
+            <input type="checkbox" v-model="is_algorithm">
+            <button>dodaj</button>
+        </form>
+        <p v-for="(field, index) in response">
+            [[ index ]] : [[ field.join('') ]]
+        </p>
+        <h2>Lista zmian</h2>
+        <div v-for="(shiftType, i) in shiftType_list" :key="shiftType.id">
+            <span>[[ shiftType.id ]]</span>
+            <input type="time" v-model="shiftType.hour_start">
+            <input type="time" v-model="shiftType.hour_end">
+            <input type="text" v-model="shiftType.name">
+            <input type="text" v-model="shiftType.active_days">
+            <input type="checkbox" v-model="shiftType.is_algorithm">
+            <button v-on:click="remove_shiftType(shiftType.id)">-</button>
+            <button v-on:click="change_shiftType(i)">zapisz</button>
+        </div>
+    </div>
+{% endblock content %}
+
+{% block vue-content %}
+    <script type="application/javascript">
+        var app = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#vue-app',
+            data() {
+                return {
+                    hour_start: '',
+                    hour_end: '',
+                    name: '',
+                    active_days: '',
+                    is_algorithm: true,
+                    shiftType_list: null,
+                    response: null,
+                    base_url: '{% url 'shiftType-list' workplace_pk %}',
+
+                }
+            },
+            methods: {
+                fetch_data() {
+                    axios
+                        .get(this.base_url)
+                        .then(response => (this.shiftType_list = response.data))
+                },
+                add_shiftType() {
+                    swal({
+                        title: "Potwierdź dodanie zmiany",
+                        icon: "info",
+                        buttons: true
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
+
+                                axios
+                                    .post(this.base_url,
+                                        {
+                                            hour_start: this.hour_start,
+                                            hour_end: this.hour_end,
+                                            name: this.name,
+                                            active_days: this.active_days,
+                                            is_algorithm: this.is_algorithm
+                                        }
+                                    )
+                                    .then(
+                                        this.fetch_data
+                                    )
+                                    .catch(error => {
+                                            this.response = error.response.data
+                                        }
+                                    )
+                                this.hour_start = ''
+                                this.hour_end = ''
+                                this.name = ''
+                                this.active_days = ''
+                                this.is_algorithm = 1
+                            }
+                        });
+                },
+                remove_shiftType(id) {
+                    swal({
+                        title: "Czy na pewno chcesz usunąć zmianę?",
+                        icon: "warning",
+                        buttons: true,
+                        dangerMode: true,
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
+                                url = this.base_url + id + '/'
+                                axios
+                                    .delete(url,
+                                        {
+                                            id: id
+                                        }
+                                    )
+                                    .then(
+                                        this.fetch_data
+                                    )
+                                    .catch(error => {
+                                            this.response = error.response.data
+                                        }
+                                    )
+                            }
+                        });
+
+                },
+                change_shiftType(i) {
+                    url = this.base_url + this.shiftType_list[i].id + '/'
+                    swal({
+                        title: "Czy chcesz zatwierdzić zmiany",
+                        icon: "info",
+                        buttons: true,
+                        //dangerMode: true,
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
+                                axios
+                                    .put(url,
+                                        {
+                                            hour_start: this.shiftType_list[i].hour_start,
+                                            hour_end: this.shiftType_list[i].hour_end,
+                                            name: this.shiftType_list[i].name,
+                                            active_days: this.shiftType_list[i].active_days,
+                                            is_algorithm: this.shiftType_list[i].is_algorithm
+                                        }
+                                    )
+                                    .then(
+                                        this.fetch_data
+                                    )
+                                    .catch(error => {
+                                            this.response = error.response.data
+                                        }
+                                    )
+
+                            }
+                        });
+
+                }
+            },
+            mounted() {
+                this.fetch_data()
+            }
+        })
+    </script>
+{% endblock vue-content %}
