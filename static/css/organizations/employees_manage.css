@@ -7,9 +7,18 @@
     padding: 8px;
 }
 
-hr {
-  color: inherit;
-  background-color: currentColor;
-  border: 0;
-  opacity: 0.50;
-}
+/*hr {*/
+/*  color: inherit;*/
+/*  background-color: currentColor;*/
+/*  border: 0;*/
+/*  opacity: 0.50;*/
+/*}*/
+
+/*hr.breadcrumb {*/
+/*    height: 5px;*/
+/*    border: 1px #165DFF;*/
+/*    background-color: #000000;*/
+/*    border-radius: 5px;*/
+/*    width: 95%;*/
+/*    !*color: #165DFF;*!*/
+/*}*/
