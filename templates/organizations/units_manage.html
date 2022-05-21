@@ -95,8 +95,7 @@
             <tr v-for="(unit, i) in unit_list" :key="unit.id">
                 <th scope="row"><span>[[ unit.id ]]</span></th>
                 <td><input type="text" class="form-control" v-model="unit.name"></td>
-                <td><input type="checkbox" class="form-check-input" value="" v-model="unit.allow_preferences" checked>
-                </td>
+                <td><input type="checkbox" class="form-check-input" value="" v-model="unit.allow_preferences"></td>
                 <td>
                     <button v-on:click="change_unit(i)" type="button"
                             class="btn btn-primary"  style="/*vertical-align: center; text-align: center; */display: flex; align-items: center; justify-content: center;"><i
