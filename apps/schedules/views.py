@@ -3,7 +3,7 @@ from django.views.generic import TemplateView
 from rest_framework import viewsets, permissions
 from rest_framework.views import APIView
 
-from apps.organizations.models import Workplace, Unit
+from apps.organizations.models import Workplace  # , Unit
 from apps.schedules.models import ShiftType, Schedule
 from apps.schedules.serializers import ShiftTypeSerializer
 
