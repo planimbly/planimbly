@@ -31,7 +31,7 @@ class ShiftGetApiView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, unit_pk):
-        unit = Unit.objects.filter(id=unit_pk).first()
+        # unit = Unit.objects.filter(id=unit_pk).first()
         workplace = Workplace.objects.filter(id=2).first()
         schedule = Schedule(date_start="2022-05-16", date_end="2022-05-23", workplace=workplace)
         schedule.save()
