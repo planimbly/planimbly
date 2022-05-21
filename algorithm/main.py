@@ -465,7 +465,7 @@ def solve_shift_scheduling(employees: list, shift_types: list, year: int, month:
                                 output_schedule.shifts.append(shift_data(shift_id, e, 0, shift_day, shift_types[1]))
                             if shifts[s] == 'N':
                                 output_schedule.shifts.append(shift_data(shift_id, e, 0, shift_day, shift_types[2]))
-        return output_schedule 
+        return output_schedule
 
     print()
     print('Statistics')
@@ -494,16 +494,16 @@ def get_letter_for_weekday(day: int):
 
 
 def main(_=None):
-    emp = [4,2,0,6,9,1,3,7]
+    emp = [4, 2, 0, 6, 9, 1, 3, 7]
 
     shift_m = shift_type_data(0, Time(6), Time(14), 0, '1111100')
     shift_a = shift_type_data(1, Time(14), Time(22), 0, '1111100')
     shift_n = shift_type_data(2, Time(22), Time(6), 0, '1111100')
 
     shift_types = [shift_m, shift_a, shift_n]
-    data = solve_shift_scheduling(emp, # employee list
-                                  shift_types, # shift type list
-                                  2022, 6, # date
+    data = solve_shift_scheduling(emp,          # employee list
+                                  shift_types,  # shift type list
+                                  2022, 6,      # date
                                   FLAGS.params, FLAGS.output_proto)
     for shift_ in data.shifts:
         print(str(shift_) + '| id: ' + shift_.id + '| emp: ' + str(shift_.id_employee) +
