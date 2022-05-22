@@ -164,3 +164,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Crispy config
 CRISPY_TEMPLATE_PACK = 'bootstrap'
+
+if DEBUG:
+    import mimetypes
+    mimetypes.add_type("application/javascript", ".js", True)

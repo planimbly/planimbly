@@ -1,18 +1,26 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Schedule</title>
-    <script src="https://unpkg.com/vue@3"></script>
-    <link rel="stylesheet" href="../../static/css/schedules/schedule.css">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@200;400;600&display=swap" rel="stylesheet">
-</head>
-<body>
+{#THIS HTML IS UNUSED AS FOR NOW#}
+
+{#<!DOCTYPE html>#}
+{#<html lang="en">#}
+{#<head>#}
+{#    <meta charset="UTF-8">#}
+{#    <meta http-equiv="X-UA-Compatible" content="IE=edge">#}
+{#    <meta name="viewport" content="width=device-width, initial-scale=1.0">#}
+{#    <title>Schedule</title>#}
+{#    <script src="https://unpkg.com/vue@3"></script>#}
+{#    <link rel="stylesheet" href="../../static/css/schedules/schedule.css">#}
+{#    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">#}
+{#    <link rel="preconnect" href="https://fonts.googleapis.com">#}
+{#    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>#}
+{#    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@200;400;600&display=swap" rel="stylesheet">#}
+{#</head>#}
+{% extends base.html %}
+{% load static %}
+{% block head %}
+    <link rel="stylesheet" href="{% static 'css/schedules/schedule.css' %}">
+{% endblock head %}
+{#<body>#}
+{% block content %}
     <div id="app">
         <work-calendar
         :year="year"
@@ -24,10 +32,11 @@
         :schedule="fetched_schedule">
         </work-calendar>
     </div>
-
-
+{% endblock content %}
+{% block vue-content %}
     <script type="module">
-        import WorkCalendar from '../../static/js/components/WorkCalendar.js'
+        {#import WorkCalendar from '../../static/js/components/WorkCalendar.js'#}
+        import WorkCalendar from "{% static 'js/components/WorkCalendar.js' %}";
 
         const { createApp } = Vue
         createApp({
@@ -204,6 +213,7 @@
         }).mount('#app')
     </script>
 
+{% endblock vue-content %}
 
-</body>
-</html>
+{#</body>#}
+{#</html>#}
