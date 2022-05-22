@@ -113,9 +113,11 @@
 {% endblock content %}
 
 {% block vue-content %}
-    <script type="application/javascript">
-        var app = new Vue({
-            el: '#vue-app',
+    <script type="module">
+        {#var app = new Vue#}
+        const {createApp} = Vue
+        var app = createApp({
+            {#el: '#vue-app',#}
             delimiters: ["[[", "]]"],
             data() {
                 return {
@@ -218,6 +220,6 @@
             mounted() {
                 this.fetch_data()
             }
-        })
+        }).mount('#vue-app');
     </script>
 {% endblock vue-content %}

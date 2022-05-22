@@ -27,54 +27,55 @@ export default {
                element.workplace_id === this.workplace_id){
 
                 if (element.days != null){
-                  for (const day of Object.keys(element.days)){
-                    console.log(day)
-                    let currShifts = [];
+                  for (const day of Object.keys(element.days)) {
+                    if (new Date(day).getMonth() === this.month - 1 && new Date(day).getFullYear() === this.year) {
+                      let currShifts = [];
 
-                    // With Date() constructor, the date is converted to UMT!
-                    // for now, it is assumed that shifts are fetched
-                    // from api in the right order (time-wise)
-                    // sorting in this script, can be implemented after figuring out
-                    // how to compare two hrs in string format
+                      // With Date() constructor, the date is converted to UMT!
+                      // for now, it is assumed that shifts are fetched
+                      // from api in the right order (time-wise)
+                      // sorting in this script, can be implemented after figuring out
+                      // how to compare two hrs in string format
 
-                    if (element.days[day] != null){
+                      if (element.days[day] != null) {
 
-                      for (const shift of Object.keys(element.days[day])){
+                        for (const shift of Object.keys(element.days[day])) {
 
-                        if (currShifts.some(shift_el=>shift_el.id === element.days[day][shift].id)){
+                          if (currShifts.some(shift_el => shift_el.id === element.days[day][shift].id)) {
 
-                          //append employee to an existing shift
-                          for (const currShift in currShifts){
+                            //append employee to an existing shift
+                            for (const currShift in currShifts) {
 
-                            if (currShifts[currShift].id === element.days[day][shift].id){
-                              currShifts[currShift].workers.push(element.days[day][shift].worker);
+                              if (currShifts[currShift].id === element.days[day][shift].id) {
+                                currShifts[currShift].workers.push(element.days[day][shift].worker);
+                              }
                             }
+
+                          } else //add new shift for a given day
+                          {
+                            currShifts.push({
+                              id: element.days[day][shift].id,
+                              time_start: element.days[day][shift].time_start,
+                              time_end: element.days[day][shift].time_end,
+                              label: element.days[day][shift].time_start + "-" + element.days[day][shift].time_end,
+                              workers: [
+                                element.days[day][shift].worker
+                              ]
+                            })
+
                           }
 
-                        } else //add new shift for a given day
-                        {
-                          currShifts.push({
-                            id: element.days[day][shift].id,
-                            time_start: element.days[day][shift].time_start,
-                            time_end: element.days[day][shift].time_end,
-                            label: element.days[day][shift].time_start + "-" + element.days[day][shift].time_end,
-                            workers: [
-                              element.days[day][shift].worker
-                            ]
-                          })
-
                         }
-
                       }
+
+                      workMonth.push({
+                        day: new Date(day),
+                        day_label: new Date(day).getDate(),
+                        weekday: weekdays[new Date(day).getDay()],
+                        shifts: currShifts
+                      });
+
                     }
-
-                    workMonth.push({
-                      day: new Date(day),
-                      day_label: new Date(day).getDate(),
-                      weekday: weekdays[new Date(day).getDay()],
-                      shifts: currShifts
-                    });
-
                   }
               }
             }
