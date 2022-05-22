@@ -20,15 +20,19 @@
             <li class="breadcrumb-item" aria-current="page"><span style="font-weight: 600;">Jednostki</span></li>
         </ol>
 
-        <h2 class="mb-4"><a href="{% url 'home' %}"><i class="material-icons" style="text-align: center; font-size:24px;">arrow_back_ios</i></a>Zarządzanie działami</h2>
+        <h2 class="mb-4"><a href="{% url 'home' %}"><i class="material-icons"
+                                                       style="text-align: center; font-size:24px;">arrow_back_ios</i></a>Zarządzanie
+            działami</h2>
         <hr class="breadcrumb">
     </nav>
 
-    <ul>
-        <li><a href="{% url 'workplace-list' unit_pk %}">Workplace list</a></li>
-    </ul>
 
     <div id="vue-app">
+        <select v-model="selected_unit" v-on:change="fetch_data">
+            <option v-for="unit in select_unit" :value="unit.id">
+                [[ unit.name ]]
+            </option>
+        </select>
         <div class="modal fade" id="addWorkplaceModal" tabindex="-1" aria-labelledby="exampleModalLabel"
              aria-hidden="true">
             <div class="modal-dialog">
@@ -92,8 +96,10 @@
                 </td>
                 <td>
                     <button v-on:click="change_workplace(i)" type="button"
-                            class="btn btn-primary"  style="/*vertical-align: center; text-align: center; */display: flex; align-items: center; justify-content: center;"><i
-                            class="material-icons">save</i></button>
+                            class="btn btn-primary"
+                            style="/*vertical-align: center; text-align: center; */display: flex; align-items: center; justify-content: center;">
+                        <i
+                                class="material-icons">save</i></button>
                 </td>
                 <td>
                     <button v-on:click="remove_workplace(workplace.id)" type="button"
@@ -117,11 +123,21 @@
                     name: '',
                     workplace_list: null,
                     response: null,
-                    base_url: '{% url 'workplace-list' unit_pk %}',
+                    selected_unit: {{ default_unit }},
+                    select_unit: {{ select_unit | safe}}
+                }
+            },
+            // TODO LEPSZE TWORZENIE URLA
+            computed: {
+                base_url: {
+                    get() {
+                        return 'http://{{ request.get_host }}/' + 'organizations/api/' + this.selected_unit + '/workplace/'
+                    }
                 }
             },
             methods: {
                 fetch_data() {
+                    console.log(this.base_url)
                     axios
                         .get(this.base_url)
                         .then(response => (this.workplace_list = response.data))
@@ -161,7 +177,7 @@
                     })
                         .then((willAdd) => {
                             if (willAdd) {
-                                url = this.base_url + id + '/'
+                                let url = this.base_url + id + '/'
                                 axios
                                     .delete(url,
                                         {
@@ -180,7 +196,7 @@
 
                 },
                 change_workplace(i) {
-                    url = this.base_url + this.workplace_list[i].id + '/'
+                    let url = this.base_url + this.workplace_list[i].id + '/'
                     swal({
                         title: "Czy chcesz zatwierdzić zmiany",
                         icon: "info",
