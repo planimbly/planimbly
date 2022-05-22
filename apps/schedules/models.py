@@ -16,7 +16,7 @@ class ShiftType(models.Model):
     name = models.CharField(max_length=512, verbose_name="Etykieta zmiany")
     workplace = models.ForeignKey(Workplace, verbose_name="Dział", on_delete=models.CASCADE)
     active_days = models.TextField(verbose_name="Aktywne dni")
-    is_algorithm = models.BooleanField(default=False)
+    is_used = models.BooleanField(default=False)
     is_archive = models.BooleanField(default=False)
 
 
