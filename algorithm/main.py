@@ -14,14 +14,14 @@
 """Creates a shift scheduling problem and solves it."""
 
 from datetime import datetime
+from tokenize import String
 from absl import app
 from absl import flags
 
 from google.protobuf import text_format
 from ortools.sat.python import cp_model
 
-from classes import schedule_data, shift_type_data, shift_data, Time
-
+from apps.schedules.models import Schedule, Shift, ShiftType
 # from datetime import datetime
 import calendar
 
@@ -207,7 +207,7 @@ def flatten(t: list):
     return [item for sublist in t for item in sublist]
 
 
-def solve_shift_scheduling(employees: list, shift_types: list, year: int, month: int, params, output_proto):
+def solve_shift_scheduling(workplace_id: str, employees: list, shift_types: list, year: int, month: int, params, output_proto):
     """Solves the shift scheduling problem."""
 
     # Calendar data
@@ -450,22 +450,21 @@ def solve_shift_scheduling(employees: list, shift_types: list, year: int, month:
     # TODO: wyjebać nasze modele i zastąpić klasami Mirona
     # Chcemy zwracać na dobrą sprawę tylko listę obiektów shift
     def output_inflate(shift_types):
-        output_schedule = None
+        output_shifts = []
         if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-            output_schedule = schedule_data(0, datetime(year, month, 1), datetime(year, month, num_days), [])
+            output_schedule = Schedule(datetime(year, month, 1), datetime(year, month, num_days), workplace_id)
             for e in employees:
                 for d in range(1, num_days + 1):
                     for s in range(num_shifts):
                         if solver.BooleanValue(work[e, s, d]):
                             shift_day = datetime(year, month, d)
-                            shift_id = str(e) + str(s) + str(d+1) + str(shift_day.date())
                             if shifts[s] == 'M':
-                                output_schedule.shifts.append(shift_data(shift_id, e, 0, shift_day, shift_types[0]))
+                                output_shifts.append(Shift(shift_day.date(), 0, e, shift_types[0]))
                             if shifts[s] == 'A':
-                                output_schedule.shifts.append(shift_data(shift_id, e, 0, shift_day, shift_types[1]))
+                                output_shifts.append(Shift(shift_day.date(), 0, e, shift_types[1]))
                             if shifts[s] == 'N':
-                                output_schedule.shifts.append(shift_data(shift_id, e, 0, shift_day, shift_types[2]))
-        return output_schedule
+                                output_shifts.append(Shift(shift_day.date(), 0, e, shift_types[2]))
+        return output_shifts
 
     print()
     print('Statistics')
@@ -496,18 +495,23 @@ def get_letter_for_weekday(day: int):
 def main(_=None):
     emp = [4, 2, 0, 6, 9, 1, 3, 7]
 
-    shift_m = shift_type_data(0, Time(6), Time(14), 0, '1111100')
-    shift_a = shift_type_data(1, Time(14), Time(22), 0, '1111100')
-    shift_n = shift_type_data(2, Time(22), Time(6), 0, '1111100')
+    datetime(hour=6)
+
+    workplace_id = 0
+    active_days = '1111111'
+
+    shift_m = ShiftType(datetime(hour=6).hour, datetime(hour=14).hour, 'M', workplace_id, active_days, True, False)
+    shift_a = ShiftType(datetime(hour=14).hour, datetime(hour=22).hour, 'A', workplace_id, active_days, True, False)
+    shift_n = ShiftType(datetime(hour=22).hour, datetime(hour=6).hour, 'N', workplace_id, active_days, True, False)
 
     shift_types = [shift_m, shift_a, shift_n]
-    data = solve_shift_scheduling(emp,          # employee list
+    data = solve_shift_scheduling(workplace_id,
+                                  emp,          # employee list
                                   shift_types,  # shift type list
                                   2022, 6,      # date
                                   FLAGS.params, FLAGS.output_proto)
-    for shift_ in data.shifts:
-        print(str(shift_) + '| id: ' + shift_.id + '| emp: ' + str(shift_.id_employee) +
-              '| date: ' + str(shift_.date.date()) + '| shift type: ' + str(shift_.shift_type))
+    for shift_ in data:
+        print(str(shift_) + '| emp: ' + str(shift_.employee) + '| date: ' + str(shift_.date) + '| shift type: ' + str(shift_.shift_type))
     return data
 
 
