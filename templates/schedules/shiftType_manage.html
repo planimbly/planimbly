@@ -45,10 +45,13 @@
 {% endblock content %}
 
 {% block vue-content %}
-    <script type="application/javascript">
-        var app = new Vue({
+    <script type="module">
+        {#var app = new Vue#}
+        const {createApp} = Vue
+
+        var app = createApp({
             delimiters: ["[[", "]]"],
-            el: '#vue-app',
+            {#el: '#vue-app',#}
             data() {
                 return {
                     hour_start: '',
@@ -165,6 +168,6 @@
             mounted() {
                 this.fetch_data()
             }
-        })
+        }).mount('#vue-app');
     </script>
 {% endblock vue-content %}

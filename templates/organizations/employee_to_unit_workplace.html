@@ -3,10 +3,17 @@
 {% load static %}
 {% block head %}
     <link rel="stylesheet" href="{% static 'css/organizations/employee_to_unit.css' %}">
+    {% block vue-cdn %}
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    {% endblock vue-cdn %}
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script src="//cdn.jsdelivr.net/npm/sortablejs@1.8.4/Sortable.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/Vue.Draggable/2.20.0/vuedraggable.umd.min.js"></script>
+
+{#    <script src="//cdn.jsdelivr.net/npm/sortablejs@1.10.2/Sortable.min.js"></script>#}
+{# WAITING FOR ERROR404 BUG FIX...   <script src="//cdnjs.cloudflare.com/ajax/libs/Vue.Draggable/4.0.0/vuedraggable.umd.min.js"></script>#}
+
     <script>
         axios.defaults.xsrfCookieName = 'csrftoken';
         axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
@@ -76,8 +83,51 @@
         </div>
     </div>
 {% endblock content %}
-{% block vue-content %}
+{#TEMPORARILY CHANGING ORIGINAL NAV APP TO VUE2#}
+{% block vue-nav-app %}
     <script type="application/javascript">
+
+    var nav_app = new Vue({
+        delimiters: ["[[", "]]"],
+        el: '#app',
+        data() {
+            return{
+                isSidebarHidden: false,
+            }
+        },
+        computed: {
+            moveSidebar() {
+                if (this.isSidebarHidden) {
+                    return "-15rem"
+                } else {
+                    return 0
+                }
+            },
+
+            moveMainWithSidebar() {
+                if (this.isSidebarHidden) {
+                    return "1rem";
+                } else {
+                    return "16rem";
+                }
+            },
+
+        },
+        methods: {
+            changeSidebarState() {
+                this.isSidebarHidden = !this.isSidebarHidden;
+
+            }
+        },
+
+    });
+
+</script>
+{% endblock vue-nav-app %}
+
+{% block vue-content %}
+    <script type="module">
+
         var app = new Vue({
             delimiters: ["[[", "]]"],
             el: '#vue-app',
@@ -123,6 +173,6 @@
             mounted() {
                 this.fetch_data()
             }
-        })
+        });
     </script>
 {% endblock vue-content %}
