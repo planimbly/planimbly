@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
@@ -102,21 +101,22 @@ class EmployeesManageView(TemplateView):
     template_name = 'organizations/employees_manage.html'
 
 
-class EmployeeToUnitView(TemplateView):
+class EmployeeToUnitWorkplaceView(TemplateView):
     template_name = 'organizations/employee_to_unit_workplace.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['model'] = 'unit'
-        return context
+        units = Unit.objects.all()
+        select_unit = list(units.values(
+            'id', 'name'))
+        workplace_list = Workplace.objects.filter(workplace_unit__in=units)
+        select_workplace = dict()
+        for obj in workplace_list:
+            select_workplace.setdefault(obj.workplace_unit_id, []).append({"id": obj.id, "name": obj.name})
 
-
-class EmployeeToWorkplaceView(TemplateView):
-    template_name = 'organizations/employee_to_unit_workplace.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['model'] = 'workplace'
+        context['default_unit'] = select_unit[0]['id']
+        context['select_unit'] = select_unit
+        context['select_workplace'] = select_workplace
         return context
 
 
@@ -124,13 +124,16 @@ class UnitsManageView(TemplateView):
     template_name = 'organizations/units_manage.html'
 
 
-class WorkplaceManageView(UserPassesTestMixin, TemplateView):
+class WorkplaceManageView(TemplateView):
     template_name = 'organizations/workplace_manage.html'
 
-    def test_func(self):
-        unit_pk = self.kwargs['unit_pk']
-        test = Unit.objects.filter(pk=unit_pk).exists()
-        return test
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        select_unit = list(Unit.objects.all().values(
+            'id', 'name'))
+        context['default_unit'] = select_unit[0]['id']
+        context['select_unit'] = select_unit
+        return context
 
 
 # API TEMPLATES

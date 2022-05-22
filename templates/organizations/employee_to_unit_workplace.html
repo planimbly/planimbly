@@ -4,15 +4,15 @@
 {% block head %}
     <link rel="stylesheet" href="{% static 'css/organizations/employee_to_unit.css' %}">
     {% block vue-cdn %}
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     {% endblock vue-cdn %}
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script src="//cdn.jsdelivr.net/npm/sortablejs@1.8.4/Sortable.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/Vue.Draggable/2.20.0/vuedraggable.umd.min.js"></script>
 
-{#    <script src="//cdn.jsdelivr.net/npm/sortablejs@1.10.2/Sortable.min.js"></script>#}
-{# WAITING FOR ERROR404 BUG FIX...   <script src="//cdnjs.cloudflare.com/ajax/libs/Vue.Draggable/4.0.0/vuedraggable.umd.min.js"></script>#}
+    {#    <script src="//cdn.jsdelivr.net/npm/sortablejs@1.10.2/Sortable.min.js"></script>#}
+    {# WAITING FOR ERROR404 BUG FIX...   <script src="//cdnjs.cloudflare.com/ajax/libs/Vue.Draggable/4.0.0/vuedraggable.umd.min.js"></script>#}
 
     <script>
         axios.defaults.xsrfCookieName = 'csrftoken';
@@ -30,17 +30,28 @@
 
         <h2 class="mb-4"><a href="{% url 'home' %}"><i class="material-icons"
                                                        style="text-align: center; font-size:24px;">arrow_back_ios</i></a>
-            Zarządzanie pracownikami w ramach
-            {% if model == 'unit' %}
-                jednostek
-            {% elif model == 'workplace' %}
-                działów
-            {% endif %}
+            Zarządzanie pracownikami
         </h2>
         <hr class="breadcrumb">
     </nav>
 
     <div id="vue-app">
+        <input type="radio" id="unit" value="unit" v-model="picked" v-on:change="fetch_data"/>
+        <label for="unit">Jednostka</label>
+        <input type="radio" id="workplace" value="workplace" v-model="picked" v-on:change="fetch_data"/>
+        <label for="workplace">Dział</label>
+
+        <select v-model="selected_unit" v-on:change="change_workplace">
+            <option v-for="unit in select_unit" :value="unit.id">
+                [[ unit.name ]]
+            </option>
+        </select>
+
+        <select v-model="selected_workplace" :disabled="picked === 'unit'" v-on:change="fetch_data">
+            <option v-for="workplace in current_workplace" :value="workplace.id">
+                [[ workplace.name ]]
+            </option>
+        </select>
         <div class="row">
             <div class="col">
                 <h2 style="text-align: center">Pracownicy</h2>
@@ -59,11 +70,8 @@
             </div>
             <div class="col">
                 <h2 style="text-align: center">Pracownicy w
-                    {% if model == 'unit' %}
-                        jednostkach
-                    {% elif model == 'workplace' %}
-                        działach
-                    {% endif %}
+                    <div v-if="picked == 'unit'">jednostce</div>
+                    <div v-else>dziale</div>
                 </h2>
                 <draggable :list="employee_list_unit" group="employee" v-on:change="change_employee">
 
@@ -87,42 +95,42 @@
 {% block vue-nav-app %}
     <script type="application/javascript">
 
-    var nav_app = new Vue({
-        delimiters: ["[[", "]]"],
-        el: '#app',
-        data() {
-            return{
-                isSidebarHidden: false,
-            }
-        },
-        computed: {
-            moveSidebar() {
-                if (this.isSidebarHidden) {
-                    return "-15rem"
-                } else {
-                    return 0
+        var nav_app = new Vue({
+            delimiters: ["[[", "]]"],
+            el: '#app',
+            data() {
+                return {
+                    isSidebarHidden: false,
+                }
+            },
+            computed: {
+                moveSidebar() {
+                    if (this.isSidebarHidden) {
+                        return "-15rem"
+                    } else {
+                        return 0
+                    }
+                },
+
+                moveMainWithSidebar() {
+                    if (this.isSidebarHidden) {
+                        return "1rem";
+                    } else {
+                        return "16rem";
+                    }
+                },
+
+            },
+            methods: {
+                changeSidebarState() {
+                    this.isSidebarHidden = !this.isSidebarHidden;
+
                 }
             },
 
-            moveMainWithSidebar() {
-                if (this.isSidebarHidden) {
-                    return "1rem";
-                } else {
-                    return "16rem";
-                }
-            },
+        });
 
-        },
-        methods: {
-            changeSidebarState() {
-                this.isSidebarHidden = !this.isSidebarHidden;
-
-            }
-        },
-
-    });
-
-</script>
+    </script>
 {% endblock vue-nav-app %}
 
 {% block vue-content %}
@@ -136,13 +144,42 @@
                     employee_list: null,
                     employee_list_unit: null,
                     response: null,
-                    base_url: {% if model == 'unit' %}
-                        '{% url 'employee_to_unit_api' unit_workplace_pk %}' {% elif model == 'workplace' %}
-                        '{% url 'employee_to_workplace_api' unit_workplace_pk %}' {% endif %},
+                    picked: 'unit',
+                    selected_unit: {{ default_unit }},
+                    select_unit: {{ select_unit | safe}},
+                    select_workplace: {{ select_workplace | safe }},
+                    selected_workplace: ''
+                }
+            },
+            computed: {
+                base_url: {
+                    get() {
+                        let unit = '{% url 'employee_to_unit_api' 123456789 %}'.replace(/123456789/, this.selected_unit);
+                        let workplace = '{% url 'employee_to_workplace_api' 123456789 %}'.replace(/123456789/, this.selected_workplace);
+                        if (this.picked === 'unit')
+                            return unit
+                        else
+                            return workplace
+
+                    }
+                },
+                current_workplace: {
+                    get() {
+                        return this.select_workplace[this.selected_unit]
+                    }
                 }
             },
             methods: {
+                change_workplace() {
+                    try {
+                        this.selected_workplace = this.select_workplace[this.selected_unit][0]['id']
+                    } catch {
+
+                    }
+                    this.fetch_data()
+                },
                 fetch_data() {
+                    console.log(this.selected_workplace)
                     axios
                         .get(this.base_url)
                         .then(response => (
@@ -172,6 +209,7 @@
             },
             mounted() {
                 this.fetch_data()
+                this.selected_workplace = this.select_workplace[this.selected_unit][0]['id']
             }
         });
     </script>
