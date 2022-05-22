@@ -1,3 +1,12 @@
 .employee {
     border: black 2px solid;
 }
+
+hr.breadcrumb {
+    height: 5px;
+    border: 1px #165DFF;
+    background-color: #000000;
+    border-radius: 5px;
+    width: 95%;
+    /*color: #165DFF;*/
+}
