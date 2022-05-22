@@ -24,7 +24,7 @@
             <input type="time" v-model="hour_end">
             <input type="text" v-model="name">
             <input type="text" v-model="active_days">
-            <input type="checkbox" v-model="is_algorithm">
+            <input type="checkbox" v-model="is_used">
             <button>dodaj</button>
         </form>
         <p v-for="(field, index) in response">
@@ -37,7 +37,7 @@
             <input type="time" v-model="shiftType.hour_end">
             <input type="text" v-model="shiftType.name">
             <input type="text" v-model="shiftType.active_days">
-            <input type="checkbox" v-model="shiftType.is_algorithm">
+            <input type="checkbox" v-model="shiftType.is_used">
             <button v-on:click="remove_shiftType(shiftType.id)">-</button>
             <button v-on:click="change_shiftType(i)">zapisz</button>
         </div>
@@ -55,7 +55,7 @@
                     hour_end: '',
                     name: '',
                     active_days: '',
-                    is_algorithm: true,
+                    is_used: true,
                     shiftType_list: null,
                     response: null,
                     base_url: '{% url 'shiftType-list' workplace_pk %}',
@@ -84,7 +84,7 @@
                                             hour_end: this.hour_end,
                                             name: this.name,
                                             active_days: this.active_days,
-                                            is_algorithm: this.is_algorithm
+                                            is_used: this.is_used
                                         }
                                     )
                                     .then(
@@ -98,7 +98,7 @@
                                 this.hour_end = ''
                                 this.name = ''
                                 this.active_days = ''
-                                this.is_algorithm = 1
+                                this.is_used = 1
                             }
                         });
                 },
@@ -146,7 +146,7 @@
                                             hour_end: this.shiftType_list[i].hour_end,
                                             name: this.shiftType_list[i].name,
                                             active_days: this.shiftType_list[i].active_days,
-                                            is_algorithm: this.shiftType_list[i].is_algorithm
+                                            is_used: this.shiftType_list[i].is_used
                                         }
                                     )
                                     .then(
