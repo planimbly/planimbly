@@ -14,43 +14,66 @@
 {% endblock head %}
 
 {% block content %}
+    <nav style aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Strona główna</a></li>
+            <li class="breadcrumb-item">Nazwa organizacji</li>
+            <li class="breadcrumb-item" aria-current="page"><span style="font-weight: 600;">Jednostki</span></li>
+        </ol>
 
-    <a href="{% url 'home' %}">Home</a>
-
-    <h1>Zarządzenie pracownikami w ramach
-        {% if model == 'unit' %}
-            jednostek
-        {% elif model == 'workplace' %}
-            działów
-        {% endif %}
-    </h1>
-    <div id="vue-app">
-        <h2>Lista pracowników</h2>
-        <draggable :list="employee_list" group="employee">
-            <div class="employee" v-for="(employee, i) in employee_list" :key="employee.id">
-                <span>[[ employee.id ]]</span>
-                <span>[[ employee.email ]]</span>
-                <span>[[ employee.username ]]</span>
-                <span>[[ employee.first_name ]]</span>
-                <span>[[ employee.last_name ]]</span>
-            </div>
-        </draggable>
-        <h2>Lista pracowników w
+        <h2 class="mb-4"><a href="{% url 'home' %}"><i class="material-icons"
+                                                       style="text-align: center; font-size:24px;">arrow_back_ios</i></a>
+            Zarządzanie pracownikami w ramach
             {% if model == 'unit' %}
-                jednostkach
+                jednostek
             {% elif model == 'workplace' %}
-                działach
+                działów
             {% endif %}
         </h2>
-        <draggable :list="employee_list_unit" group="employee" v-on:change="change_employee">
-            <div class="employee" v-for="(employee, i) in employee_list_unit" :key="employee.id">
-                <span>[[ employee.id ]]</span>
-                <span>[[ employee.email ]]</span>
-                <span>[[ employee.username ]]</span>
-                <span>[[ employee.first_name ]]</span>
-                <span>[[ employee.last_name ]]</span>
+        <hr class="breadcrumb">
+    </nav>
+
+    <div id="vue-app">
+        <div class="row">
+            <div class="col">
+                <h2 style="text-align: center">Pracownicy</h2>
+                <draggable :list="employee_list" group="employee">
+                    <div class="card border-dark mb-3" style="max-width: 15rem;" v-for="(employee, i) in employee_list"
+                         :key="employee.id">
+                        <div class="card-header"><span>[[ employee.first_name ]] [[ employee.last_name ]]</span>
+                        </div>
+                        <div class="card-body text-dark">
+                            <p class="card-text">ID: [[ employee.id ]]</p>
+                            <p class="card-text">E-mail: [[ employee.email ]]</p>
+                            <p class="card-text">Login: [[ employee.username ]]</p>
+                        </div>
+                    </div>
+                </draggable>
             </div>
-        </draggable>
+            <div class="col">
+                <h2 style="text-align: center">Pracownicy w
+                    {% if model == 'unit' %}
+                        jednostkach
+                    {% elif model == 'workplace' %}
+                        działach
+                    {% endif %}
+                </h2>
+                <draggable :list="employee_list_unit" group="employee" v-on:change="change_employee">
+
+                    <div class="card border-dark mb-3" style="max-width: 15rem;"
+                         v-for="(employee, i) in employee_list_unit" :key="employee.id">
+                        <div class="card-header"><span>[[ employee.first_name ]] [[ employee.last_name ]]</span>
+                        </div>
+                        <div class="card-body text-dark">
+                            <p class="card-text">ID: [[ employee.id ]]</p>
+                            <p class="card-text">E-mail: [[ employee.email ]]</p>
+                            <p class="card-text">Login: [[ employee.username ]]</p>
+                        </div>
+                    </div>
+                </draggable>
+            </div>
+
+        </div>
     </div>
 {% endblock content %}
 {% block vue-content %}
