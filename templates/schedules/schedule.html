@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedule</title>
+    <script src="https://unpkg.com/vue@3"></script>
+    <link rel="stylesheet" href="../../static/css/schedules/schedule.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@200;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <work-calendar
+        :year="year"
+        :month="month"
+        :unit_id="unit_id"
+        :workplace_id="workplace_id"
+        :employee_id="employee_id"
+        :show_for_workplace="show_for_workplace"
+        :schedule="fetched_schedule">
+        </work-calendar>
+    </div>
+
+
+    <script type="module">
+        import WorkCalendar from '../../static/js/components/WorkCalendar.js'
+
+        const { createApp } = Vue
+        createApp({
+          components: {
+            WorkCalendar
+          },
+          data() {
+            return {
+              fetched_schedule: [
+                {
+                  unit_id: 1,
+                  workplace_id: 1,
+                  days: {
+                    "2022-09-01":[
+                        {
+                          id: 1,
+                          time_start: '6:00',
+                          time_end: '14:00',
+                          worker:{
+                            id: 1,
+                            name: 'Szymon',
+                            surname: 'Sławianowski'
+                          },
+                        },
+                        {
+                          id: 1,
+                          time_start: '6:00',
+                          time_end: '14:00',
+                          worker:{
+                            id: 2,
+                            name: 'Jan',
+                            surname: 'Kowalski'
+                          },
+                        },
+                        {
+                          id: 2,
+                          time_start: '14:00',
+                          time_end: '22:00',
+                          worker:{
+                            id: 3,
+                            name: 'Krzysztof',
+                            surname: 'Nowak'
+                          }
+                        }
+                    ],
+
+                    "2022-09-02":[],
+                    "2022-09-03":[
+                        {
+                        id: 3,
+                        time_start: '22:00',
+                        time_end: '6:00',
+                        worker:{
+                          id: 2,
+                          name: 'Jan',
+                          surname: 'Kowalski'
+                        },
+                       }
+                    ],
+                    "2022-09-04":[
+                        {
+                        id: 3,
+                        time_start: '22:00',
+                        time_end: '6:00',
+                        worker:{
+                          id: 2,
+                          name: 'Jan',
+                          surname: 'Kowalski'
+                        },
+                       }
+                    ],
+                    "2022-09-05":[
+                        {
+                        id: 3,
+                        time_start: '22:00',
+                        time_end: '6:00',
+                        worker:{
+                          id: 2,
+                          name: 'Jan',
+                          surname: 'Kowalski'
+                        },
+                       }
+                    ],
+                    "2022-09-06":[
+                        {
+                        id: 3,
+                        time_start: '22:00',
+                        time_end: '6:00',
+                        worker:{
+                          id: 2,
+                          name: 'Jan',
+                          surname: 'Kowalski'
+                        },
+                       }
+                    ],
+                    "2022-09-07":[
+                        {
+                        id: 3,
+                        time_start: '22:00',
+                        time_end: '6:00',
+                        worker:{
+                          id: 2,
+                          name: 'Jan',
+                          surname: 'Kowalski'
+                        },
+                       }
+                    ],
+                    "2022-09-08":[],
+                    "2022-09-09":[],
+                    "2022-09-10":[],
+                    "2022-09-11":[],
+                    "2022-09-12":[],
+                    "2022-09-13":[],
+                    "2022-09-14":[],
+                    "2022-09-15":[],
+                    "2022-09-16":[],
+                    "2022-09-17":[],
+                    "2022-09-18":[],
+                    "2022-09-19":[],
+                    "2022-09-20":[],
+                    "2022-09-21":[],
+                    "2022-09-22":[],
+                    "2022-09-23":[],
+                    "2022-09-24":[
+                        {
+                          id: 1,
+                          time_start: '6:00',
+                          time_end: '14:00',
+                          worker:{
+                            id: 1,
+                            name: 'Szymon',
+                            surname: 'Sławianowski'
+                          },
+                        },
+                        {
+                          id: 1,
+                          time_start: '6:00',
+                          time_end: '14:00',
+                          worker:{
+                            id: 2,
+                            name: 'Jan',
+                            surname: 'Kowalski'
+                          },
+                        },
+                        {
+                          id: 2,
+                          time_start: '14:00',
+                          time_end: '22:00',
+                          worker:{
+                            id: 3,
+                            name: 'Krzysztof',
+                            surname: 'Nowak'
+                          }
+                        }
+                    ],
+                    "2022-09-25":[],
+                    "2022-09-26":[],
+                    "2022-09-27":[],
+                    "2022-09-28":[],
+                    "2022-09-29":[],
+                    "2022-09-30":[]
+                  }
+                }
+
+              ],
+              month: 9,
+              year: 2022,
+              unit_id: 1,
+              workplace_id: 1,
+              employee_id: 1,
+              show_for_workplace: true
+            }
+          }
+        }).mount('#app')
+    </script>
+
+
+</body>
+</html>
