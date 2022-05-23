@@ -26,6 +26,7 @@ html{
     /* max-height: 20px; */
 }
 
+/*DO USUNIĘCIA PO SPRAWDZENIU, ŻE NIGDZIE NIE JEST UŻYWANE*/
 .medium-icon{
     width: 24px;
     height: auto;
@@ -100,4 +101,11 @@ html{
     .margin-remove{
         margin-left: 1rem !important;
     }
+}
+
+.material-icons.navbar-style {
+    font-size: 32px;
+    cursor: pointer;
+    user-select: none;
+    /*color: #0004ff;*/
 }

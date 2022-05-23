@@ -15,11 +15,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@200;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp">
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp">
     {#  vue.js v3  #}
     {#    <script src="https://unpkg.com/vue@3"></script>#}
     {% block vue-cdn %}
-{#    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>#}
+        {#    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>#}
         <script src="https://unpkg.com/vue@3"></script>
     {% endblock vue-cdn %}
     {% block head %}
@@ -74,15 +75,12 @@
 {% block navsidebar %}
     <div id="app">
         <nav class="navbar">
-            <img v-on:click="changeSidebarState" class="medium-icon" src="{% static 'img/menu.svg' %}" alt="Burger"
-                 id="burger" style="cursor: pointer;">
+            <i v-on:click="changeSidebarState" class="material-icons navbar-style" title="Burger" id="burger"
+               style="font-size: 24px;">menu</i>
             <a href="{% url 'home' %}"><img src="{% static 'img/Logo-Main-Big2.svg' %}" alt="Nav logo"
-                                            class="medium-logo-nav"
-            ></a>
+                                            class="medium-logo-nav"></a>
             <nav class="right-nav-menu">
-                <img src="{% static 'img/account_circle_FILL0_wght400_GRAD0_opsz48.svg' %}" alt="account"
-                     class="medium-icon" style="cursor: pointer; width: 32px;">
-                <i class="material-icons">save</i>
+                <i class="material-icons navbar-style" title="account">account_circle</i>
             </nav>
         </nav>
         <div class="main">
@@ -99,67 +97,66 @@
                 <div v-pre>
                     {% block content %}
 
-                {% endblock content %}
+                    {% endblock content %}
                 </div>
             </div>
         </div>
-
     </div>
 
 {% endblock navsidebar %}
 
-{% comment %}<div class="container">
-    {% block content-no-nav %}
-
-    {% endblock %}
-</div>{% endcomment %}
+{#<div class="container">#}
+{#    {% block content-no-nav %}#}
+{##}
+{#    {% endblock %}#}
+{#</div>#}
 
 {% block vue-nav-app %}
-<script type="application/javascript">
+    <script type="application/javascript">
 
-    {#var nav_app = new Vue({#}
-    const {createApp} = Vue;
-    var nav_app = createApp({
-        delimiters: ["[[", "]]"],
-        {#el: '#app',#}
-        data() {
-            return{
-                isSidebarHidden: false,
-            }
-        },
-        computed: {
-            moveSidebar() {
-                if (this.isSidebarHidden) {
-                    return "-15rem"
-                } else {
-                    return 0
+        {#var nav_app = new Vue({#}
+        const {createApp} = Vue;
+        var nav_app = createApp({
+            delimiters: ["[[", "]]"],
+            {#el: '#app',#}
+            data() {
+                return {
+                    isSidebarHidden: false,
+                }
+            },
+            computed: {
+                moveSidebar() {
+                    if (this.isSidebarHidden) {
+                        return "-15rem"
+                    } else {
+                        return 0
+                    }
+                },
+
+                moveMainWithSidebar() {
+                    if (this.isSidebarHidden) {
+                        return "1rem";
+                    } else {
+                        return "16rem";
+                    }
+                },
+            },
+            methods: {
+                changeSidebarState() {
+                    this.isSidebarHidden = !this.isSidebarHidden;
                 }
             },
 
-            moveMainWithSidebar() {
-                if (this.isSidebarHidden) {
-                    return "1rem";
-                } else {
-                    return "16rem";
-                }
-            },
-
-        },
-        methods: {
-            changeSidebarState() {
-                this.isSidebarHidden = !this.isSidebarHidden;
-
-            }
-        },
-
-    }).mount('#app');
-
-</script>
+        }).mount('#app');
+    </script>
 {% endblock vue-nav-app %}
+
 {% block vue-content %}
 {% endblock vue-content %}
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
-        crossorigin="anonymous"></script>
+        crossorigin="anonymous">
+</script>
 </body>
 </html>
