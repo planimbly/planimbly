@@ -21,7 +21,7 @@ def test_sample():
 
 To test the algorithm use command:
 ```console
-$ pytest algorithm
+$ pytest scripts
 ```
 
 ## Testing the django app
@@ -40,7 +40,7 @@ $ flake8
 ## Generating test coverage reports
 ```console
 $ coverage erase
-$ coverage run -ma --source=./algorithm pytest algorithm
+$ coverage run -ma --source=./scripts pytest scripts
 $ coverage run -a manage.py test
 $ coverage report
 $ coverage html
