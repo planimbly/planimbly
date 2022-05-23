@@ -25,7 +25,7 @@ from ortools.sat.python import cp_model
 # from datetime import datetime
 import calendar
 
-from apps.schedules.models import Shift, ShiftType, Schedule
+from apps.schedules.models import Shift, ShiftType  # , Schedule
 
 
 FLAGS = flags.FLAGS
@@ -455,7 +455,7 @@ def solve_shift_scheduling(workplace_id: str, employees: list, shift_types: list
     def output_inflate(shift_types):
         output_shifts = []
         if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-            output_schedule = Schedule(datetime(year, month, 1), datetime(year, month, num_days), workplace_id)
+            # output_schedule = Schedule(datetime(year, month, 1), datetime(year, month, num_days), workplace_id)
             for e in employees:
                 for d in range(1, num_days + 1):
                     for s in range(num_shifts):
