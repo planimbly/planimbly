@@ -16,3 +16,4 @@ absl-py==0.13.0
 six==1.15.0
 protobuf==3.20.1
 ortools==9.3.10497
+django-extensions==3.1.5
