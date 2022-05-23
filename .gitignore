@@ -34,4 +34,4 @@ htmlcov/
 
 .pytest_cache
 
-.proto
+*.proto

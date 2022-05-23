@@ -497,16 +497,16 @@ def get_letter_for_weekday(day: int):
 
 def main(_=None):
 
-    emp = [4, 2, 0, 6, 9, 1, 3, 7]
+    emp = [4, 2, 0, 6, 9, 3, 7]
 
     workplace_id = 0
     active_days = '1111111'
 
-    shift_m = ShiftType('06:00', '14:00', 'M', workplace_id, active_days, True, False)
+    shift_m = ShiftType('06:00', '14:00', 'Dzienna', workplace_id, active_days, True, False)
     shift_a = ShiftType('14:00', '22:00', 'A', workplace_id, active_days, True, False)
     shift_n = ShiftType('22:00', '06:00', 'N', workplace_id, active_days, True, False)
-
-    shift_types = [shift_m, shift_a, shift_n]
+    shift_c = ShiftType('15:00', '16:00', 'N', workplace_id, active_days, True, False)
+    shift_types = [shift_m, shift_a, shift_n, shift_c]
     data = solve_shift_scheduling(workplace_id,
                                   emp,          # employee list
                                   shift_types,  # shift type list
