@@ -1,3 +1,5 @@
+# python manage.py runscript run_algorithm
+
 #!/usr/bin/env python3
 # Copyright 2010-2021 Google LLC
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,20 +15,17 @@
 # limitations under the License.
 """Creates a shift scheduling problem and solves it."""
 
-
 from datetime import datetime
-# from tokenize import String
+import sched
 from absl import app
 from absl import flags
 
 from google.protobuf import text_format
 from ortools.sat.python import cp_model
 
-# from datetime import datetime
 import calendar
-
-from apps.schedules.models import Shift, ShiftType  # , Schedule
-
+from apps.schedules.models import Shift, ShiftType, Schedule
+from apps.organizations.models import Workplace
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('output_proto', 'cp_model.proto',
@@ -210,7 +209,7 @@ def flatten(t: list):
     return [item for sublist in t for item in sublist]
 
 
-def solve_shift_scheduling(workplace_id: str, employees: list, shift_types: list, year: int, month: int, params, output_proto):
+def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: list, year: int, month: int, params, output_proto):
     """Solves the shift scheduling problem."""
 
     # Calendar data
@@ -221,7 +220,14 @@ def solve_shift_scheduling(workplace_id: str, employees: list, shift_types: list
 
     # TODO: faktycznie sparametryzować algorytm względem shiftów
     # Shift data
-    shifts = ['-', 'M', 'A', 'N']
+
+    shifts = ['-']
+
+    for shift__ in shift_types:
+        shifts.append(shift__.name)
+
+    print(shifts)
+    
     num_shifts = len(shifts)
 
     # TODO: zrobić z employees listę 2D, która oprócz ID będzie zawierała manualnie przypisane zmiany i preferencje pracownika
@@ -297,13 +303,13 @@ def solve_shift_scheduling(workplace_id: str, employees: list, shift_types: list
     # daily demands for work shifts (morning, afternon, night) for each day
     # of the week starting on Monday.
     weekly_cover_demands = [
-        (2, 2, 1),  # Monday
-        (2, 2, 1),  # Tuesday
-        (2, 2, 1),  # Wednesday
-        (2, 2, 1),  # Thursday
-        (2, 2, 1),  # Friday
-        (2, 2, 1),  # Saturday
-        (2, 2, 1),  # Sunday
+        (1, 1, 1),  # Monday
+        (1, 1, 1),  # Tuesday
+        (1, 1, 1),  # Wednesday
+        (1, 1, 1),  # Thursday
+        (1, 1, 1),  # Friday
+        (1, 1, 1),  # Saturday
+        (1, 1, 1),  # Sunday
     ]
 
     # Penalty for exceeding the cover constraint per shift type.
@@ -429,12 +435,12 @@ def solve_shift_scheduling(workplace_id: str, employees: list, shift_types: list
                 header += get_letter_for_weekday(d[1]) + " "
         print(header)
         for e in employees:
-            schedule = ''
+            sched = ''
             for d in range(1, num_days + 1):
                 for s in range(num_shifts):
                     if solver.BooleanValue(work[e, s, d]):
-                        schedule += shifts[s] + ' '
-            print('worker %i: %s' % (e, schedule))
+                        sched += shifts[s] + ' '
+            print('worker %i: %s' % (e, sched))
         print()
         print('Penalties:')
         for i, var in enumerate(obj_bool_vars):
@@ -452,21 +458,20 @@ def solve_shift_scheduling(workplace_id: str, employees: list, shift_types: list
 
     # TODO: wywalić nasze modele i zastąpić klasami Mirona
     # Chcemy zwracać na dobrą sprawę tylko listę obiektów shift
-    def output_inflate(shift_types):
+    def output_inflate(shift_types, schedule):
         output_shifts = []
         if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-            # output_schedule = Schedule(datetime(year, month, 1), datetime(year, month, num_days), workplace_id)
             for e in employees:
                 for d in range(1, num_days + 1):
                     for s in range(num_shifts):
                         if solver.BooleanValue(work[e, s, d]):
                             shift_day = datetime(year, month, d)
                             if shifts[s] == 'M':
-                                output_shifts.append(Shift(shift_day.date(), 0, e, shift_types[0]))
+                                output_shifts.append(Shift(shift_day.date(), 0, schedule, shift_types[0]))
                             if shifts[s] == 'A':
-                                output_shifts.append(Shift(shift_day.date(), 0, e, shift_types[1]))
+                                output_shifts.append(Shift(shift_day.date(), 0, schedule, shift_types[1]))
                             if shifts[s] == 'N':
-                                output_shifts.append(Shift(shift_day.date(), 0, e, shift_types[2]))
+                                output_shifts.append(Shift(shift_day.date(), 0, schedule, shift_types[2]))
         return output_shifts
 
     print()
@@ -476,7 +481,7 @@ def solve_shift_scheduling(workplace_id: str, employees: list, shift_types: list
     print('  - branches        : %i' % solver.NumBranches())
     print('  - wall time       : %f s' % solver.WallTime())
 
-    return output_inflate(shift_types)
+    return output_inflate(shift_types, schedule)
 
 
 def get_letter_for_weekday(day: int):
@@ -499,26 +504,22 @@ def main(_=None):
 
     emp = [4, 2, 0, 6, 9, 3, 7]
 
-    workplace_id = 0
+    workplace = Workplace.objects.all().first()
+    schedule = Schedule.objects.all().first()
     active_days = '1111111'
 
-    shift_m = ShiftType('06:00', '14:00', 'Dzienna', workplace_id, active_days, True, False)
-    shift_a = ShiftType('14:00', '22:00', 'A', workplace_id, active_days, True, False)
-    shift_n = ShiftType('22:00', '06:00', 'N', workplace_id, active_days, True, False)
-    shift_c = ShiftType('15:00', '16:00', 'N', workplace_id, active_days, True, False)
-    shift_types = [shift_m, shift_a, shift_n, shift_c]
-    data = solve_shift_scheduling(workplace_id,
+    shift_m = ShiftType(hour_start='06:00', hour_end='14:00', name='M', workplace=workplace, active_days= active_days, is_used= True, is_archive= False)
+    shift_a = ShiftType(hour_start='14:00', hour_end='22:00', name='A', workplace=workplace, active_days= active_days, is_used= True, is_archive= False)
+    shift_n = ShiftType(hour_start='22:00', hour_end='06:00', name='N', workplace=workplace, active_days= active_days, is_used= True, is_archive= False)
+
+    shift_types = [shift_m, shift_a, shift_n]
+
+    data = solve_shift_scheduling(schedule,
                                   emp,          # employee list
                                   shift_types,  # shift type list
                                   2022, 6,      # date
                                   FLAGS.params, FLAGS.output_proto)
-    # for shift_ in data:
-    #     print(str(shift_) + '| emp: ' + str(shift_.employee) + '| date: ' + str(shift_.date) + '| shift type: ' + str(shift_.shift_type))
     return data
-
-
-# if __name__ == '__main__':
-#     app.run(main)
 
 
 def run():
