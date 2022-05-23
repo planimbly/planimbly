@@ -217,10 +217,9 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
     num_days = list_month[-1][-1][0]
     # num_sundays = sum([x[1] == 6 for x in flatten(list_month)])
 
-    # TODO: faktycznie sparametryzować algorytm względem shiftów
     # Shift data
 
-    shifts = ['-']
+    shifts = []
 
     for shift__ in shift_types:
         shifts.append(shift__.name)
@@ -258,12 +257,12 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
     requests = [
         # Employee 3 does not want to work on the first Saturday (negative weight
         # for the Off shift).
-        (3, 0, 5, -2),
+        # (3, 0, 5, -2),
         # Employee 4 wants a night shift on the second Thursday (negative weight).
-        (4, 3, 10, -2),
+        # (4, 3, 10, -2),
         # Employee 2 does not want a night shift on the first Friday (positive
         # weight).
-        (2, 3, 4, 4)
+        # (2, 3, 4, 4)
     ]
 
     # TODO: faktycznie sparametryzować algorytm względem shiftów
@@ -275,7 +274,7 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
         (0, 1, 1, 0, 2, 2, 0),
         # between 2 and 3 consecutive days of night shifts, 1 and 4 are
         # possible but penalized.
-        (3, 1, 2, 20, 3, 4, 5),
+        (5, 1, 2, 20, 3, 4, 5),
     ]
 
     # Weekly sum constraints on shifts days:
@@ -285,7 +284,7 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
         # Constraints on rests per week.
         (0, 1, 2, 7, 2, 3, 4),
         # At least 1 night shift per week (penalized). At most 4 (hard).
-        (3, 0, 1, 3, 4, 4, 0),
+        (5, 0, 1, 3, 4, 4, 0),
     ]
 
     # TODO: napisać funkcję, która będzie obliczała nielegalne tranzycje między zmianami i inną funkcję która będzie tworzyła constrainty na jej podstawie
@@ -293,26 +292,32 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
     #     (previous_shift, next_shift, penalty (0 means forbidden))
     penalized_transitions = [
         # Afternoon to night has a penalty of 4.
-        (2, 3, 4),
+        (3, 5, 4),
+        (4, 5, 4),
         # Night to morning is forbidden.
-        (3, 1, 0),
+        (5, 1, 0),
+        (5, 2, 0),
     ]
 
     # TODO: faktycznie sparametryzować algorytm względem shiftów
-    # daily demands for work shifts (morning, afternon, night) for each day
+    # TODO: shifty dla każdego z obiektów
+    # daily demands for work shifts (morning, afternoon, night) for each day
     # of the week starting on Monday.
     weekly_cover_demands = [
-        (1, 1, 1),  # Monday
-        (1, 1, 1),  # Tuesday
-        (1, 1, 1),  # Wednesday
-        (1, 1, 1),  # Thursday
-        (1, 1, 1),  # Friday
-        (1, 1, 1),  # Saturday
-        (1, 1, 1),  # Sunday
+        (1, 1, 1, 1, 1),  # Monday
+        (1, 1, 1, 1, 1),  # Tuesday
+        (1, 1, 1, 1, 1),  # Wednesday
+        (1, 1, 1, 1, 1),  # Thursday
+        (1, 1, 1, 1, 1),  # Friday
+        (1, 1, 1, 1, 1),  # Saturday
+        (1, 1, 1, 1, 1),  # Sunday
     ]
 
+    # TODO: zamienić 1 na parametr daily cover demand który będzie w klasie shift_type
+    weekly_cover_demands = [tuple(1 for x in shift_types) for _ in range(7)]
+
     # Penalty for exceeding the cover constraint per shift type.
-    excess_cover_penalties = (20, 20, 20)
+    excess_cover_penalties = tuple(20 for x in shift_types)
 
     model = cp_model.CpModel()
 
@@ -504,14 +509,18 @@ def main(_=None):
     emp = [4, 2, 0, 6, 9, 3, 7]
 
     workplace = Workplace.objects.all().first()
+    workplace2 = Workplace.objects.all().last()
     schedule = Schedule.objects.all().first()
     active_days = '1111111'
 
-    shift_m = ShiftType(hour_start='06:00', hour_end='14:00', name='M', workplace=workplace, active_days=active_days, is_used=True, is_archive=False)
-    shift_a = ShiftType(hour_start='14:00', hour_end='22:00', name='A', workplace=workplace, active_days=active_days, is_used=True, is_archive=False)
+    shift_free = ShiftType(hour_start='00:00', hour_end='00:00', name='-', workplace=workplace, active_days=active_days, is_used=True, is_archive=False)
+    shift_m1 = ShiftType(hour_start='06:00', hour_end='14:00', name='M', workplace=workplace, active_days=active_days, is_used=True, is_archive=False)
+    shift_a1 = ShiftType(hour_start='14:00', hour_end='22:00', name='A', workplace=workplace, active_days=active_days, is_used=True, is_archive=False)
+    shift_m2 = ShiftType(hour_start='06:00', hour_end='14:00', name='M', workplace=workplace2, active_days=active_days, is_used=True, is_archive=False)
+    shift_a2 = ShiftType(hour_start='14:00', hour_end='22:00', name='A', workplace=workplace2, active_days=active_days, is_used=True, is_archive=False)
     shift_n = ShiftType(hour_start='22:00', hour_end='06:00', name='N', workplace=workplace, active_days=active_days, is_used=True, is_archive=False)
 
-    shift_types = [shift_m, shift_a, shift_n]
+    shift_types = [shift_free, shift_m1, shift_m2, shift_a1, shift_a2, shift_n]
 
     data = solve_shift_scheduling(schedule,
                                   emp,          # employee list
