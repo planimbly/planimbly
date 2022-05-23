@@ -3,6 +3,7 @@
 {% load static %}
 
 {% block head %}
+    <link rel="stylesheet" href="{% static 'css/schedules/shiftType_manage.css' %}">
     <script type="application/javascript" src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script type="application/javascript" src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script>
@@ -12,35 +13,130 @@
 {% endblock head %}
 
 {% block content %}
-    <a href="{% url 'home' %}">Home</a>
-    <h1>Zarządzenie zmianami w ramach Działu</h1>
-    <ul>
-        <li><a href="{% url 'shiftType-list' workplace_pk %}">ShiftType list</a></li>
-    </ul>
-    <div id="vue-app">
-        <h2>Dodaj pracownika</h2>
-        <form v-on:submit.prevent="add_shiftType">
-            <input type="time" v-model="hour_start">
-            <input type="time" v-model="hour_end">
-            <input type="text" v-model="name">
-            <input type="text" v-model="active_days">
-            <input type="checkbox" v-model="is_used">
-            <button>dodaj</button>
-        </form>
-        <p v-for="(field, index) in response">
-            [[ index ]] : [[ field.join('') ]]
-        </p>
-        <h2>Lista zmian</h2>
-        <div v-for="(shiftType, i) in shiftType_list" :key="shiftType.id">
-            <span>[[ shiftType.id ]]</span>
-            <input type="time" v-model="shiftType.hour_start">
-            <input type="time" v-model="shiftType.hour_end">
-            <input type="text" v-model="shiftType.name">
-            <input type="text" v-model="shiftType.active_days">
-            <input type="checkbox" v-model="shiftType.is_used">
-            <button v-on:click="remove_shiftType(shiftType.id)">-</button>
-            <button v-on:click="change_shiftType(i)">zapisz</button>
+    <nav style aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Strona główna</a></li>
+            <li class="breadcrumb-item">Nazwa organizacji</li>
+            <li class="breadcrumb-item" aria-current="page"><span style="font-weight: 600;">Jednostki</span></li>
+        </ol>
+
+        <h2 class="mb-4"><a href="{% url 'home' %}"><i class="material-icons"
+                                                       style="text-align: center; font-size:24px;">arrow_back_ios</i></a>Zarządzanie
+            zmianami w ramach działu</h2>
+        <hr class="breadcrumb">
+    </nav>
+    <div class="row">
+        <div class="col">
+            <h3>Lista zmian</h3>
         </div>
+        <div class="col">
+            <ul>
+                <li><a href="{% url 'shiftType-list' workplace_pk %}">ShiftType list</a></li>
+            </ul>
+        </div>
+        <div class="col">
+            <button type="button" class="m-1 btn btn-success d-flex justify-content-center align-content-between"
+                    data-bs-toggle="modal" data-bs-target="#addShiftModal">
+                Dodaj zmianę
+            </button>
+        </div>
+    </div>
+
+    <div id="vue-app">
+        <div class="modal fade" id="addShiftModal" tabindex="-1" aria-labelledby="shiftModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form v-on:submit.prevent="add_shiftType">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="shiftModalLabel">Dodawanie zmiany</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="shiftStartDate" class="form-label">Start zmiany</label>
+                                </div>
+                                <div class="col-md-8">
+                                    <input type="time" class="form-control" v-model="hour_start" id="shiftStartDate">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="shiftEndDate" class="form-label">Koniec zmiany</label>
+                                </div>
+                                <div class="col-md-8">
+                                    <input type="time" class="form-control" v-model="hour_end" id="shiftEndDate">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="shiftName" class="form-label">Nazwa</label>
+                                </div>
+                                <div class="col-md-8">
+                                    <input type="text" class="form-control" v-model="name" id="shiftName">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="shiftActiveDays" class="form-label">Dni zmiany</label>
+                                </div>
+                                <div class="col-md-8">
+                                    <input type="text" class="form-control" v-model="active_days" id="shiftActiveDays">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="inputPreferences" class="form-label">Obowiązuje</label>
+                                </div>
+                                <div class="col-md-8">
+                                    <input type="checkbox" class="form-check-input" value="" v-model="is_used"
+                                           id="isShiftUsed" checked>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                            <button type="submit" class="btn btn-primary">Dodaj</button>
+                        </div>
+                    </form>
+
+                    <p v-for="(field, index) in response">
+                        [[ index ]] : [[ field.join('') ]]
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <table class="table styled-table">
+            <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Start zmiany</th>
+                <th scope="col">Koniec zmiany</th>
+                <th scope="col">Nazwa</th>
+                <th scope="col">Aktywne dni</th>
+                <th scope="col">W użyciu</th>
+                <th scope="col">Zapisz</th>
+                <th scope="col">Usuń</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr v-for="(shiftType, i) in shiftType_list" :key="shiftType.id">
+                <th scope="row"><span>[[ shiftType.id ]]</span></th>
+                <td><input type="time" class="form-control" v-model="shiftType.hour_start"></td>
+                <td><input type="time" class="form-control" v-model="shiftType.hour_end"></td>
+                <td><input type="text" class="form-control" v-model="shiftType.name"></td>
+                <td><input type="text" class="form-control" v-model="shiftType.active_days"></td>
+                <td><input type="checkbox" class="form-check-input" value="" v-model="shiftType.is_used"></td>
+                <td>
+                    <button v-on:click="change_shiftType(i)" type="button"
+                            class="btn btn-primary d-flex justify-content-center align-content-between"><i
+                            class="material-icons">save</i></button>
+                </td>
+                <td>
+                    <button v-on:click="remove_shiftType(shiftType.id)" type="button"
+                            class="btn btn-danger d-flex justify-content-center align-content-between"><i
+                            class="material-icons">delete</i></button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
     </div>
 {% endblock content %}
 
