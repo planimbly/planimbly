@@ -507,9 +507,9 @@ def main(_=None):
     schedule = Schedule.objects.all().first()
     active_days = '1111111'
 
-    shift_m = ShiftType(hour_start='06:00',hour_end='14:00',name='M',workplace=workplace,active_days=active_days,is_used=True,is_archive=False)
-    shift_a = ShiftType(hour_start='14:00',hour_end='22:00',name='A',workplace=workplace,active_days=active_days,is_used=True,is_archive=False)
-    shift_n = ShiftType(hour_start='22:00',hour_end='06:00',name='N',workplace=workplace,active_days=active_days,is_used=True,is_archive=False)
+    shift_m = ShiftType(hour_start='06:00', hour_end='14:00', name='M', workplace=workplace, active_days=active_days, is_used=True, is_archive=False)
+    shift_a = ShiftType(hour_start='14:00', hour_end='22:00', name='A', workplace=workplace, active_days=active_days, is_used=True, is_archive=False)
+    shift_n = ShiftType(hour_start='22:00', hour_end='06:00', name='N', workplace=workplace, active_days=active_days, is_used=True, is_archive=False)
 
     shift_types = [shift_m, shift_a, shift_n]
 
