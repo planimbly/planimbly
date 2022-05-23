@@ -28,6 +28,7 @@
                     </ul>
                     <a href="{% url 'units_manage' %}"> Zarządzanie jednostkami w organizacji</a> <br>
                     <a href="{% url 'workplace_manage' %}"> Zarządzanie działami w organizacji</a> <br>
+                    <a href="{% url 'shiftType_manage' %}">Zmiany</a> <br>
                     <a href="{% url 'employee_to_unit_workplace' %}">Pracownicy</a> <br>
                     <h2>Lista jednostek</h2>
                     <ul>
@@ -38,7 +39,7 @@
                             <ul>
                                 {% for workplace in workplace_list %}
                                     <li>{{ workplace.name }} -
-                                        <a href="{% url 'shiftType_manage' workplace.pk %}">Zmiany</a>
+
                                     </li>
                                 {% endfor %}
                             </ul>
