@@ -14,14 +14,14 @@
 """Creates a shift scheduling problem and solves it."""
 
 from datetime import datetime
-from tokenize import String
+# from tokenize import String
 from absl import app
 from absl import flags
 
 from google.protobuf import text_format
 from ortools.sat.python import cp_model
 
-from apps.schedules.models import Schedule, Shift, ShiftType
+from apps.schedules.models import Shift, ShiftType  # , Schedule
 # from datetime import datetime
 import calendar
 
@@ -447,7 +447,7 @@ def solve_shift_scheduling(workplace_id: str, employees: list, shift_types: list
                 print('  %s violated by %i, linear penalty=%i' %
                       (var.Name(), solver.Value(var), obj_int_coeffs[i]))
 
-    # TODO: wyjebać nasze modele i zastąpić klasami Mirona
+    # TODO: wywalić nasze modele i zastąpić klasami Mirona
     # Chcemy zwracać na dobrą sprawę tylko listę obiektów shift
     def output_inflate(shift_types):
         output_shifts = []
