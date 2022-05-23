@@ -1,6 +1,6 @@
 # python manage.py runscript run_algorithm
 
-#!/usr/bin/env python3
+# !/usr/bin/env python3
 # Copyright 2010-2021 Google LLC
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 """Creates a shift scheduling problem and solves it."""
 
 from datetime import datetime
-import sched
 from absl import app
 from absl import flags
 
@@ -227,7 +226,7 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
         shifts.append(shift__.name)
 
     print(shifts)
-    
+
     num_shifts = len(shifts)
 
     # TODO: zrobić z employees listę 2D, która oprócz ID będzie zawierała manualnie przypisane zmiany i preferencje pracownika
@@ -508,9 +507,9 @@ def main(_=None):
     schedule = Schedule.objects.all().first()
     active_days = '1111111'
 
-    shift_m = ShiftType(hour_start='06:00', hour_end='14:00', name='M', workplace=workplace, active_days= active_days, is_used= True, is_archive= False)
-    shift_a = ShiftType(hour_start='14:00', hour_end='22:00', name='A', workplace=workplace, active_days= active_days, is_used= True, is_archive= False)
-    shift_n = ShiftType(hour_start='22:00', hour_end='06:00', name='N', workplace=workplace, active_days= active_days, is_used= True, is_archive= False)
+    shift_m = ShiftType(hour_start='06:00',hour_end='14:00',name='M',workplace=workplace,active_days=active_days,is_used=True,is_archive=False)
+    shift_a = ShiftType(hour_start='14:00',hour_end='22:00',name='A',workplace=workplace,active_days=active_days,is_used=True,is_archive=False)
+    shift_n = ShiftType(hour_start='22:00',hour_end='06:00',name='N',workplace=workplace,active_days=active_days,is_used=True,is_archive=False)
 
     shift_types = [shift_m, shift_a, shift_n]
 
