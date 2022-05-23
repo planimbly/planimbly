@@ -470,12 +470,10 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
                     for s in range(num_shifts):
                         if solver.BooleanValue(work[e, s, d]):
                             shift_day = datetime(year, month, d)
-                            if shifts[s] == 'M':
-                                output_shifts.append(Shift(shift_day.date(), 0, schedule, shift_types[0]))
-                            if shifts[s] == 'A':
-                                output_shifts.append(Shift(shift_day.date(), 0, schedule, shift_types[1]))
-                            if shifts[s] == 'N':
-                                output_shifts.append(Shift(shift_day.date(), 0, schedule, shift_types[2]))
+                            shift_type = next((x for x in shift_types if x.name == shifts[s]), None)
+                            if shift_type.name == "-":
+                                continue
+                            output_shifts.append(Shift(date=shift_day.date(), schedule=schedule, employee=e, shift_type=shift_type))
         return output_shifts
 
     print()
@@ -516,8 +514,8 @@ def main(_=None):
     shift_free = ShiftType(hour_start='00:00', hour_end='00:00', name='-', workplace=workplace, active_days=active_days, is_used=True, is_archive=False)
     shift_m1 = ShiftType(hour_start='06:00', hour_end='14:00', name='M', workplace=workplace, active_days=active_days, is_used=True, is_archive=False)
     shift_a1 = ShiftType(hour_start='14:00', hour_end='22:00', name='A', workplace=workplace, active_days=active_days, is_used=True, is_archive=False)
-    shift_m2 = ShiftType(hour_start='06:00', hour_end='14:00', name='M', workplace=workplace2, active_days=active_days, is_used=True, is_archive=False)
-    shift_a2 = ShiftType(hour_start='14:00', hour_end='22:00', name='A', workplace=workplace2, active_days=active_days, is_used=True, is_archive=False)
+    shift_m2 = ShiftType(hour_start='06:00', hour_end='14:00', name='m', workplace=workplace2, active_days=active_days, is_used=True, is_archive=False)
+    shift_a2 = ShiftType(hour_start='14:00', hour_end='22:00', name='a', workplace=workplace2, active_days=active_days, is_used=True, is_archive=False)
     shift_n = ShiftType(hour_start='22:00', hour_end='06:00', name='N', workplace=workplace, active_days=active_days, is_used=True, is_archive=False)
 
     shift_types = [shift_free, shift_m1, shift_m2, shift_a1, shift_a2, shift_n]
@@ -527,6 +525,7 @@ def main(_=None):
                                   shift_types,  # shift type list
                                   2022, 6,      # date
                                   FLAGS.params, FLAGS.output_proto)
+    print(data)                    
     return data
 
 
