@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.accounts.models import Employee
-from apps.organizations.models import Workplace
+from apps.organizations.models import Workplace, Unit
 from apps.schedules.models import ShiftType, Shift
 from apps.schedules.serializers import ShiftTypeSerializer
 
@@ -16,6 +16,20 @@ from apps.schedules.serializers import ShiftTypeSerializer
 class ShiftTypeManageView(TemplateView):
     template_name = 'schedules/shiftType_manage.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        units = Unit.objects.all()
+        select_unit = list(units.values(
+            'id', 'name'))
+        workplace_list = Workplace.objects.filter(workplace_unit__in=units)
+        select_workplace = dict()
+        for obj in workplace_list:
+            select_workplace.setdefault(obj.workplace_unit_id, []).append({"id": obj.id, "name": obj.name})
+
+        context['default_unit'] = select_unit[0]['id']
+        context['select_unit'] = select_unit
+        context['select_workplace'] = select_workplace
+        return context
 
 class ScheduleManageView(TemplateView):
     template_name = 'schedules/schedule_manage.html'

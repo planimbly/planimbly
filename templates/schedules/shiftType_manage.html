@@ -30,11 +30,6 @@
             <h3>Lista zmian</h3>
         </div>
         <div class="col">
-            <ul>
-                <li><a href="{% url 'shiftType-list' workplace_pk %}">ShiftType list</a></li>
-            </ul>
-        </div>
-        <div class="col">
             <button type="button" class="m-1 btn btn-success d-flex justify-content-center align-content-between"
                     data-bs-toggle="modal" data-bs-target="#addShiftModal">
                 Dodaj zmianę
@@ -101,7 +96,16 @@
                 </div>
             </div>
         </div>
-
+        <select v-model="selected_unit" v-on:change="change_workplace">
+            <option v-for="unit in select_unit" :value="unit.id">
+                [[ unit.name ]]
+            </option>
+        </select>
+        <select v-model="selected_workplace" v-on:change="fetch_data">
+            <option v-for="workplace in current_workplace" :value="workplace.id">
+                [[ workplace.name ]]
+            </option>
+        </select>
         <table class="table styled-table">
             <thead>
             <tr>
@@ -157,11 +161,35 @@
                     is_used: true,
                     shiftType_list: null,
                     response: null,
-                    base_url: '{% url 'shiftType-list' workplace_pk %}',
-
+                    selected_unit: {{ default_unit }},
+                    select_unit: {{ select_unit | safe}},
+                    select_workplace: {{ select_workplace | safe }},
+                    selected_workplace: ''
+                }
+            },
+            computed: {
+                base_url: {
+                    get() {
+                        {% comment %}let url = '{% url 'shiftType' 1234 %}'.replace(/1234/, this.selected_workplace){% endcomment %}
+                        let url = 'http://{{ request.get_host }}/' + 'schedules/api/' + this.selected_workplace + '/shiftType/'
+                        return url
+                    }
+                },
+                current_workplace: {
+                    get() {
+                        return this.select_workplace[this.selected_unit]
+                    }
                 }
             },
             methods: {
+                change_workplace() {
+                    try {
+                        this.selected_workplace = this.select_workplace[this.selected_unit][0]['id']
+                    } catch {
+
+                    }
+                    this.fetch_data()
+                },
                 fetch_data() {
                     axios
                         .get(this.base_url)
@@ -210,7 +238,7 @@
                     })
                         .then((willAdd) => {
                             if (willAdd) {
-                                url = this.base_url + id + '/'
+                                let url = this.base_url + id + '/'
                                 axios
                                     .delete(url,
                                         {
@@ -229,7 +257,7 @@
 
                 },
                 change_shiftType(i) {
-                    url = this.base_url + this.shiftType_list[i].id + '/'
+                    let url = this.base_url + this.shiftType_list[i].id + '/'
                     swal({
                         title: "Czy chcesz zatwierdzić zmiany",
                         icon: "info",
@@ -262,6 +290,7 @@
                 }
             },
             mounted() {
+                this.selected_workplace = this.select_workplace[this.selected_unit][0]['id']
                 this.fetch_data()
             }
         }).mount('#vue-app');

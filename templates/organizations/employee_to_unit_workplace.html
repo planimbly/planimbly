@@ -179,7 +179,6 @@
                     this.fetch_data()
                 },
                 fetch_data() {
-                    console.log(this.selected_workplace)
                     axios
                         .get(this.base_url)
                         .then(response => (
@@ -208,8 +207,8 @@
                 }
             },
             mounted() {
-                this.fetch_data()
                 this.selected_workplace = this.select_workplace[this.selected_unit][0]['id']
+                this.fetch_data()
             }
         });
     </script>
