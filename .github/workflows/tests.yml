@@ -28,7 +28,7 @@ jobs:
           flake8
       - name: coverage reporting
         run: |
-          coverage run -ma --source=./algorithm pytest algorithm
+          coverage run -ma --source=./scripts pytest algorithm
           coverage run -a manage.py test
           coverage report
       - name: test django apps
