@@ -8,6 +8,12 @@
 {#{% endblock vue-cdn %}#}
 {% block head %}
     <link rel="stylesheet" href="{% static 'css/schedules/schedule.css' %}">
+    <script type="application/javascript" src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script type="application/javascript" src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script>
+        axios.defaults.xsrfCookieName = 'csrftoken';
+        axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
+    </script>
 {% endblock head %}
 
 {#STOP/added calendar#}
@@ -33,6 +39,26 @@
 
     {#    START/added calendar#}
     <div id="vue-app">
+        <label>
+            <input type="text" v-model="year_str" placeholder="Year">
+        </label>
+        <label>
+            <input type="text" v-model="month_str" placeholder="Month">
+        </label>
+
+
+{#        <select v-model="selected_unit" v-on:change="change_workplace">#}
+{#            <option v-for="unit in select_unit" :value="unit.id">#}
+{#                [[ unit.name ]]#}
+{#            </option>#}
+{#        </select>#}
+
+        <select v-model="selected_workplace" v-on:change="fetch_data">
+            <option v-for="workplace in current_workplace" :value="workplace.id">
+                [[ workplace.name ]]
+            </option>
+        </select>
+
         <work-calendar
                 :year="year"
                 :month="month"
@@ -124,11 +150,14 @@
         const {createApp} = Vue
         createApp({
             {#el: "#app",#}
+            delimiters: ["[[", "]]"],
             components: {
                 WorkCalendar
             },
             data() {
                 return {
+                    schedul: null,
+
                     fetched_schedule: [
                         {
                             unit_id: 1,
@@ -287,13 +316,52 @@
 
                     ],
                     month: 9,
+                    month_str: null,
                     year: 2022,
+                    year_str: null,
                     unit_id: 1,
                     workplace_id: 1,
                     employee_id: 1,
-                    show_for_workplace: true
+                    show_for_workplace: true,
+                    selected_unit: {{ chosen_unit }},
+                    //select_unit: {{ select_unit | safe}},
+                    select_workplace: {{ select_workplace | safe }},
+                    selected_workplace: ''
                 }
-            }
+            },
+            computed: {
+                base_url: {
+                    get() {
+                        {#let unit = '{% url 'employee_to_unit_api' 123456789 %}'.replace(/123456789/, this.selected_unit);#}
+                        {#let workplace = '{% url 'employee_to_workplace_api' 123456789 %}'.replace(/123456789/, this.selected_workplace);#}
+                        return '{% url 'schedule_get' 123456789 %}'.replace(/123456789/, this.selected_workplace);
+                        {#if (this.picked === 'unit')#}
+                        {#    return unit#}
+                        {#else#}
+                    }
+                },
+                current_workplace: {
+                    get() {
+                        return this.select_workplace[this.selected_unit]
+                    }
+                }
+            },
+            methods: {
+              fetch_data() {
+                    axios
+                        .get(this.base_url, {params:{'year': this.year, 'month': this.month}})
+                        {#//.then(response => (this.schedul = response.data))#}
+                        .then(response => {
+                            this.schedul = response.data;
+                            console.log(this.schedul);
+                        }
+
+                  )
+                },
+            },
+            mounted() {
+                //this.fetch_data();
+            },
         }).mount('#vue-app');
     </script>
 
