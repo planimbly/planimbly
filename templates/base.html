@@ -28,51 +28,9 @@
     {% endblock head %}
 </head>
 
-{#<nav class="navbar navbar-expand-lg navbar-light bg-light">#}
-{#    <div class="container-fluid">#}
-{#        <button class="navbar-toggler" type="button" data-toggle="collapse"#}
-{#                data-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent"#}
-{#                aria-expanded="false" aria-label="Toggle navigation">#}
-{#            <span class="navbar-toggler-icon"></span>#}
-{#        </button>#}
-{##}
-{#        <div class="collapse" id="navbarToggleExternalContent">#}
-{#            <div class="bg-light">#}
-{#                            sidebar to collapse#}
-{#            </div>#}
-{#        </div>#}
-{##}
-{#        <div class="d-flex">#}
-{#            <a class="navbar-brand" href="{% url 'login' %}">#}
-{#                <img src="{% static 'img/Logo-Main-Big2.svg' %}" width="170" height="30"#}
-{#                     class="d-inline-block align-top"#}
-{#                     alt="">#}
-{#            </a>#}
-{#        </div>#}
-{##}
-{#        <div class="d-flex">#}
-{#            <div class="nav-item dropdown">#}
-{#                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"#}
-{#                   data-bs-toggle="dropdown" aria-expanded="false">#}
-{#                    Settings#}
-{#                </a>#}
-{#                <ul class="dropdown-menu" aria-labelledby="navbarDropdown">#}
-{#                    <li><a class="dropdown-item" href="#">Action</a></li>#}
-{#                    <li><a class="dropdown-item" href="#">Another action</a></li>#}
-{#                    <li>#}
-{#                        <hr class="dropdown-divider">#}
-{#                    </li>#}
-{#                    <li><a class="dropdown-item" href="#">Something else here</a></li>#}
-{#                </ul>#}
-{#            </div>#}
-{#        </div>#}
-{##}
-{#    </div>#}
-{#</nav>#}
-
 <body>
-
 {% block navsidebar %}
+
     <div id="app">
         <nav class="navbar">
             <i v-on:click="changeSidebarState" class="material-icons navbar-style" title="Burger" id="burger"
@@ -95,21 +53,16 @@
             </div>
             <div class="proper-main margin-remove" v-bind:style="`margin-left: ${moveMainWithSidebar};`">
                 <div v-pre>
-                    {% block content %}
+                    <div class="container">
+                        {% block content %}
 
-                    {% endblock content %}
+                        {% endblock content %}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
 {% endblock navsidebar %}
-
-{#<div class="container">#}
-{#    {% block content-no-nav %}#}
-{##}
-{#    {% endblock %}#}
-{#</div>#}
 
 {% block vue-nav-app %}
     <script type="application/javascript">
