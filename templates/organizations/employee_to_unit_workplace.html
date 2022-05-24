@@ -28,37 +28,56 @@
             <li class="breadcrumb-item" aria-current="page"><span style="font-weight: 600;">Jednostki</span></li>
         </ol>
 
-        <h2 class="mb-4"><a href="{% url 'home' %}"><i class="material-icons"
-                                                       style="text-align: center; font-size:24px;">arrow_back_ios</i></a>
-            Zarządzanie pracownikami
+        <h2 class="breadcrumb-title"><a href="{% url 'home' %}">
+            <i class="material-icons breadcrumb-go-back-icon">arrow_back_ios</i></a>Zarządzanie pracownikami
         </h2>
         <hr class="breadcrumb">
     </nav>
 
     <div id="vue-app">
-        <input type="radio" id="unit" value="unit" v-model="picked" v-on:change="fetch_data"/>
-        <label for="unit">Jednostka</label>
-        <input type="radio" id="workplace" value="workplace" v-model="picked" v-on:change="fetch_data"/>
-        <label for="workplace">Dział</label>
+        <div class="col">
+            <div class="row my-1 d-flex align-items-center">
+                <div class="col-2">
+                    <input class="form-check-input" type="radio" id="unit" value="unit" v-model="picked"
+                           v-on:change="fetch_data"/>
+                    <label class="form-check-label" for="unit">Jednostka</label>
+                </div>
+                <div class="col-2">
+                    <select class="form-select" v-model="selected_unit" v-on:change="change_workplace">
+                        <option v-for="unit in select_unit" :value="unit.id">
+                            [[ unit.name ]]
+                        </option>
+                    </select>
+                </div>
+            </div>
+            <div class="row my-1 d-flex align-items-center">
+                <div class="col-2">
+                    <input class="form-check-input" type="radio" id="workplace" value="workplace" v-model="picked"
+                           v-on:change="fetch_data"/>
+                    <label class="form-check-label" for="workplace">Dział</label>
+                </div>
+                <div class="col-2">
+                    <select class="form-select" v-model="selected_workplace" :disabled="picked === 'unit'"
+                            v-on:change="fetch_data">
+                        <option v-for="workplace in current_workplace" :value="workplace.id">
+                            [[ workplace.name ]]
+                        </option>
+                    </select>
+                </div>
+            </div>
+        </div>
 
-        <select v-model="selected_unit" v-on:change="change_workplace">
-            <option v-for="unit in select_unit" :value="unit.id">
-                [[ unit.name ]]
-            </option>
-        </select>
+        <hr class="breadcrumb" style="margin-bottom: 0px">
 
-        <select v-model="selected_workplace" :disabled="picked === 'unit'" v-on:change="fetch_data">
-            <option v-for="workplace in current_workplace" :value="workplace.id">
-                [[ workplace.name ]]
-            </option>
-        </select>
         <div class="row">
             <div class="col">
-                <h2 style="text-align: center">Pracownicy</h2>
+                <h3 class="cards-title">Pracownicy</h3>
                 <draggable :list="employee_list" group="employee">
-                    <div class="card border-dark mb-3" style="max-width: 15rem;" v-for="(employee, i) in employee_list"
+                    <div class="row card border-dark mb-2 mx-2" v-for="(employee, i) in employee_list"
                          :key="employee.id">
-                        <div class="card-header"><span>[[ employee.first_name ]] [[ employee.last_name ]]</span>
+                        <div class="card-header">
+                            <i class="material-icons drag-icon" title="handle1">drag_handle</i>
+                            <span>[[ employee.first_name ]] [[ employee.last_name ]]</span>
                         </div>
                         <div class="card-body text-dark">
                             <p class="card-text">ID: [[ employee.id ]]</p>
@@ -68,16 +87,18 @@
                     </div>
                 </draggable>
             </div>
+
             <div class="col">
-                <h2 style="text-align: center">Pracownicy w
-                    <div v-if="picked == 'unit'">jednostce</div>
-                    <div v-else>dziale</div>
-                </h2>
+                <h3 class="cards-title">Pracownicy w
+                    <span v-if="picked == 'unit'">jednostce</span>
+                    <span v-else>dziale</span>
+                </h3>
                 <draggable :list="employee_list_unit" group="employee" v-on:change="change_employee">
-
-                    <div class="card border-dark mb-3" style="max-width: 15rem;"
-                         v-for="(employee, i) in employee_list_unit" :key="employee.id">
-                        <div class="card-header"><span>[[ employee.first_name ]] [[ employee.last_name ]]</span>
+                    <div class="row card border-dark mb-2 mx-2" v-for="(employee, i) in employee_list_unit"
+                         :key="employee.id">
+                        <div class="card-header">
+                            <i class="material-icons drag-icon" title="handle2">drag_handle</i>
+                            <span>[[ employee.first_name ]] [[ employee.last_name ]]</span>
                         </div>
                         <div class="card-body text-dark">
                             <p class="card-text">ID: [[ employee.id ]]</p>
@@ -87,7 +108,6 @@
                     </div>
                 </draggable>
             </div>
-
         </div>
     </div>
 {% endblock content %}
@@ -119,15 +139,12 @@
                         return "16rem";
                     }
                 },
-
             },
             methods: {
                 changeSidebarState() {
                     this.isSidebarHidden = !this.isSidebarHidden;
-
                 }
             },
-
         });
 
     </script>
@@ -160,7 +177,6 @@
                             return unit
                         else
                             return workplace
-
                     }
                 },
                 current_workplace: {
