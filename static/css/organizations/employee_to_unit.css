@@ -1,12 +1,33 @@
-.employee {
-    border: black 2px solid;
+/*cards columns styling*/
+h3.cards-title{
+    margin: 15px 10px;
+    padding: 10px 5px;
+    text-align: center;
+    vertical-align: middle;
 }
 
-hr.breadcrumb {
-    height: 5px;
-    border: 1px #165DFF;
-    background-color: #000000;
-    border-radius: 5px;
-    width: 95%;
-    /*color: #165DFF;*/
+.card-header{
+    padding: 10px;
+    min-height: 51px;
+    max-height: 51px
+}
+
+.card-body{
+    padding: 15px 20px;
+}
+
+.card-text{
+    margin-bottom: 10px;
+}
+
+.material-icons.drag-icon{
+    vertical-align: middle;
+    padding-right: 3px;
+    cursor: grab;
+}
+
+/*radio label correction*/
+.form-check-label{
+    margin: 0px 2px;
+    padding: 0px 2px;
 }
