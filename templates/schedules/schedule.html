@@ -17,11 +17,26 @@
 {% extends base.html %}
 {% load static %}
 {% block head %}
+    <script type="application/javascript" src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script type="application/javascript" src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script>
+        axios.defaults.xsrfCookieName = 'csrftoken';
+        axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
+    </script>
     <link rel="stylesheet" href="{% static 'css/schedules/schedule.css' %}">
 {% endblock head %}
 {#<body>#}
+
 {% block content %}
+    <h1> TEST </h1>
     <div id="app">
+        <label>
+            <input type="text" v-model="year_str" placeholder="Year">
+        </label>
+        <label>
+            <input type="text" v-model="month_str" placeholder="Month">
+        </label>
+        <h1>TEST2</h1>
         <work-calendar
         :year="year"
         :month="month"
@@ -40,11 +55,13 @@
 
         const { createApp } = Vue
         createApp({
+          delimiters: ["[[", "]]"],
           components: {
             WorkCalendar
           },
           data() {
             return {
+              schedul: null,
               fetched_schedule: [
                 {
                   unit_id: 1,
@@ -208,8 +225,25 @@
               workplace_id: 1,
               employee_id: 1,
               show_for_workplace: true
-            }
-          }
+            }},
+          mounted() {
+                this.fetch_data()
+          },
+          methods: {
+              fetch_data() {
+                    axios
+                        .get({% url 'schedule_get' workplace_pk %}, {year: this.year, month: this.month})
+                        {#//.then(response => (this.schedul = response.data))#}
+                        .then(response => {
+                            this.schedul = response.data;
+                            console.log(this.schedul);
+                        }
+
+                  )
+                },
+          },
+
+
         }).mount('#app')
     </script>
 

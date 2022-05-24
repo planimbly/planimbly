@@ -87,8 +87,6 @@ export default {
         }
 
 
-        console.log(workMonth);
-
         workMonth.sort(function(dayA, dayB){
           return dayA.day - dayB.day
         })
