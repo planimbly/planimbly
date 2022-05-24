@@ -12,3 +12,22 @@
     margin: auto;
 }
 
+/*breadcrumb styling*/
+hr.breadcrumb {
+    height: 2px;
+    color: #000000;
+    margin: 15px 0px;
+    /*border-radius: 5px;*/
+    /*border: 1px #165DFF;*/
+    /*background-color: #000000;*/
+}
+
+h2.breadcrumb-title{
+    margin: 20px 0px;
+}
+
+i.breadcrumb-go-back-icon{
+    text-align: center;
+    font-size:24px;
+    color: #000000;
+}
