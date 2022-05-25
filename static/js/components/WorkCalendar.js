@@ -115,8 +115,6 @@ export default {
     },
 
     template: `
-    <h2>[[ month || 'No props passed yet' ]]</h2>
-    
     <div class="calendar-weekday-label">
       <div class="weekday-label-tile"><div class="weekday-label">Mon</div></div>
       <div class="weekday-label-tile"><div class="weekday-label">Tue</div></div>
