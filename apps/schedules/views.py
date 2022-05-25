@@ -24,7 +24,7 @@ class ScheduleManageView(TemplateView):
         context = super().get_context_data(**kwargs)
         workplace_list = Workplace.objects.filter(workplace_unit_id=self.kwargs['unit_pk'])
         context['workplace_list'] = workplace_list
-        # SaluSL: added more context to schedule_manage
+
         select_workplace = dict()
         for obj in workplace_list:
             select_workplace.setdefault(obj.workplace_unit_id, []).append({"id": obj.id, "name": obj.name})

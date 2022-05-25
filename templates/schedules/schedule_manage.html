@@ -3,9 +3,6 @@
 {% load static %}
 
 {#START/added calendar#}
-{#{% block vue-cdn %}#}
-{#    <script src="https://unpkg.com/vue@3"></script>#}
-{#{% endblock vue-cdn %}#}
 {% block head %}
     <link rel="stylesheet" href="{% static 'css/schedules/schedule.css' %}">
     <script type="application/javascript" src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -15,7 +12,6 @@
         axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
     </script>
 {% endblock head %}
-
 {#STOP/added calendar#}
 
 {% block content %}
@@ -46,12 +42,6 @@
             <input type="text" v-model="month_str" placeholder="Month">
         </label>
 
-
-{#        <select v-model="selected_unit" v-on:change="change_workplace">#}
-{#            <option v-for="unit in select_unit" :value="unit.id">#}
-{#                [[ unit.name ]]#}
-{#            </option>#}
-{#        </select>#}
 
         <select v-model="selected_workplace" v-on:change="fetch_data">
             <option v-for="workplace in current_workplace" :value="workplace.id">
@@ -140,11 +130,9 @@
 
 {% endblock %}
 
-{#START/added calendar#}
+
 {% block vue-content %}
     <script type="module">
-        {#import WorkCalendar from '../../static/js/components/WorkCalendar.js'#}
-
         import WorkCalendar from "{% static 'js/components/WorkCalendar.js' %}";
 
         const {createApp} = Vue
@@ -181,7 +169,6 @@
               fetch_data() {
                     axios
                         .get(this.base_url, {params:{'year': this.year_str, 'month': this.month_str}})
-                        {#//.then(response => (this.schedul = response.data))#}
                         .then(response => {
                             this.fetched_schedule = response.data;
                         }
@@ -196,5 +183,3 @@
     </script>
 
 {% endblock vue-content %}
-
-{#END/added calendar#}
