@@ -73,7 +73,7 @@ class ShiftGetApiView(APIView):
         # 127.0.0.1:8000/schedules/api/2/schedule_get?year=2022&month=5
         year = self.request.GET.get('year')
         month = self.request.GET.get('month')
-        date_format = '%y-%m-%d'
+        date_format = '%Y-%m-%d'
         if year and month:
             workplace = Workplace.objects.filter(id=workplace_pk).first()
             shifts = Shift.objects.filter(schedule__workplace=workplace).order_by('date')
@@ -84,9 +84,11 @@ class ShiftGetApiView(APIView):
                 date = datetime.date(int(year), int(month), x).strftime(date_format)
                 days.update({date: []})
             for shift in shifts:
+
                 days[shift.date.strftime(date_format)].append((
                     {
                         'id': shift.id,
+                        'shift_type_id': shift.shift_type.id,
                         'time_start': shift.shift_type.hour_start,
                         'time_end': shift.shift_type.hour_start,
                         'name': shift.shift_type.name,

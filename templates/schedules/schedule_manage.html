@@ -60,10 +60,10 @@
         </select>
 
         <work-calendar
-                :year="year"
-                :month="month"
-                :unit_id="unit_id"
-                :workplace_id="workplace_id"
+                :year="Number(year_str)"
+                :month="Number(month_str)"
+                :unit_id="selected_unit"
+                :workplace_id="selected_workplace"
                 :employee_id="employee_id"
                 :show_for_workplace="show_for_workplace"
                 :schedule="fetched_schedule">
@@ -149,195 +149,26 @@
 
         const {createApp} = Vue
         createApp({
-            {#el: "#app",#}
             delimiters: ["[[", "]]"],
             components: {
                 WorkCalendar
             },
             data() {
                 return {
-                    schedul: null,
-
-                    fetched_schedule: [
-                        {
-                            unit_id: 1,
-                            workplace_id: 1,
-                            days: {
-                                "2022-09-01": [
-                                    {
-                                        id: 1,
-                                        time_start: '6:00',
-                                        time_end: '14:00',
-                                        worker: {
-                                            id: 1,
-                                            name: 'Szymon',
-                                            surname: 'Sławianowski'
-                                        },
-                                    },
-                                    {
-                                        id: 1,
-                                        time_start: '6:00',
-                                        time_end: '14:00',
-                                        worker: {
-                                            id: 2,
-                                            name: 'Jan',
-                                            surname: 'Kowalski'
-                                        },
-                                    },
-                                    {
-                                        id: 2,
-                                        time_start: '14:00',
-                                        time_end: '22:00',
-                                        worker: {
-                                            id: 3,
-                                            name: 'Krzysztof',
-                                            surname: 'Nowak'
-                                        }
-                                    }
-                                ],
-
-                                "2022-09-02": [],
-                                "2022-09-03": [
-                                    {
-                                        id: 3,
-                                        time_start: '22:00',
-                                        time_end: '6:00',
-                                        worker: {
-                                            id: 2,
-                                            name: 'Jan',
-                                            surname: 'Kowalski'
-                                        },
-                                    }
-                                ],
-                                "2022-09-04": [
-                                    {
-                                        id: 3,
-                                        time_start: '22:00',
-                                        time_end: '6:00',
-                                        worker: {
-                                            id: 2,
-                                            name: 'Jan',
-                                            surname: 'Kowalski'
-                                        },
-                                    }
-                                ],
-                                "2022-09-05": [
-                                    {
-                                        id: 3,
-                                        time_start: '22:00',
-                                        time_end: '6:00',
-                                        worker: {
-                                            id: 2,
-                                            name: 'Jan',
-                                            surname: 'Kowalski'
-                                        },
-                                    }
-                                ],
-                                "2022-09-06": [
-                                    {
-                                        id: 3,
-                                        time_start: '22:00',
-                                        time_end: '6:00',
-                                        worker: {
-                                            id: 2,
-                                            name: 'Jan',
-                                            surname: 'Kowalski'
-                                        },
-                                    }
-                                ],
-                                "2022-09-07": [
-                                    {
-                                        id: 3,
-                                        time_start: '22:00',
-                                        time_end: '6:00',
-                                        worker: {
-                                            id: 2,
-                                            name: 'Jan',
-                                            surname: 'Kowalski'
-                                        },
-                                    }
-                                ],
-                                "2022-09-08": [],
-                                "2022-09-09": [],
-                                "2022-09-10": [],
-                                "2022-09-11": [],
-                                "2022-09-12": [],
-                                "2022-09-13": [],
-                                "2022-09-14": [],
-                                "2022-09-15": [],
-                                "2022-09-16": [],
-                                "2022-09-17": [],
-                                "2022-09-18": [],
-                                "2022-09-19": [],
-                                "2022-09-20": [],
-                                "2022-09-21": [],
-                                "2022-09-22": [],
-                                "2022-09-23": [],
-                                "2022-09-24": [
-                                    {
-                                        id: 1,
-                                        time_start: '6:00',
-                                        time_end: '14:00',
-                                        worker: {
-                                            id: 1,
-                                            name: 'Szymon',
-                                            surname: 'Sławianowski'
-                                        },
-                                    },
-                                    {
-                                        id: 1,
-                                        time_start: '6:00',
-                                        time_end: '14:00',
-                                        worker: {
-                                            id: 2,
-                                            name: 'Jan',
-                                            surname: 'Kowalski'
-                                        },
-                                    },
-                                    {
-                                        id: 2,
-                                        time_start: '14:00',
-                                        time_end: '22:00',
-                                        worker: {
-                                            id: 3,
-                                            name: 'Krzysztof',
-                                            surname: 'Nowak'
-                                        }
-                                    }
-                                ],
-                                "2022-09-25": [],
-                                "2022-09-26": [],
-                                "2022-09-27": [],
-                                "2022-09-28": [],
-                                "2022-09-29": [],
-                                "2022-09-30": []
-                            }
-                        }
-
-                    ],
-                    month: 9,
-                    month_str: null,
-                    year: 2022,
-                    year_str: null,
-                    unit_id: 1,
-                    workplace_id: 1,
+                    fetched_schedule: null,
+                    month_str: '5',
+                    year_str: '2022',
                     employee_id: 1,
                     show_for_workplace: true,
                     selected_unit: {{ chosen_unit }},
-                    //select_unit: {{ select_unit | safe}},
                     select_workplace: {{ select_workplace | safe }},
-                    selected_workplace: ''
+                    selected_workplace: null
                 }
             },
             computed: {
                 base_url: {
                     get() {
-                        {#let unit = '{% url 'employee_to_unit_api' 123456789 %}'.replace(/123456789/, this.selected_unit);#}
-                        {#let workplace = '{% url 'employee_to_workplace_api' 123456789 %}'.replace(/123456789/, this.selected_workplace);#}
                         return '{% url 'schedule_get' 123456789 %}'.replace(/123456789/, this.selected_workplace);
-                        {#if (this.picked === 'unit')#}
-                        {#    return unit#}
-                        {#else#}
                     }
                 },
                 current_workplace: {
@@ -349,11 +180,10 @@
             methods: {
               fetch_data() {
                     axios
-                        .get(this.base_url, {params:{'year': this.year, 'month': this.month}})
+                        .get(this.base_url, {params:{'year': this.year_str, 'month': this.month_str}})
                         {#//.then(response => (this.schedul = response.data))#}
                         .then(response => {
-                            this.schedul = response.data;
-                            console.log(this.schedul);
+                            this.fetched_schedule = response.data;
                         }
 
                   )
