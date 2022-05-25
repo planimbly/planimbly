@@ -525,7 +525,7 @@ def main(_=None):
                                   shift_types,  # shift type list
                                   2022, 6,      # date
                                   FLAGS.params, FLAGS.output_proto)
-    print(data)                    
+    print(data)
     return data
 
 
