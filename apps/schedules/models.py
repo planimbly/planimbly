@@ -27,4 +27,5 @@ class Shift(models.Model):
     shift_type = models.ForeignKey(ShiftType, on_delete=models.CASCADE, verbose_name="Typ zmiany")
 
     def __str__(self):
-        return 'Data:' + str(self.date) + ' Pracownik: ' + self.employee + 'Zmiana: ' + self.shift_type.name
+        # return 'Data:' + str(self.date) + ' Pracownik: ' + self.employee + 'Zmiana: ' + self.shift_type.name
+        return 'Data:' + str(self.date) + ' Pracownik: ' + str(self.employee.id) + 'Zmiana: ' + self.shift_type.name
