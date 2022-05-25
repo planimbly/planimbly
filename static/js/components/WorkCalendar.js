@@ -7,12 +7,17 @@ export default {
       workplace_id: Number,
       employee_id: Number,
       show_for_workplace: Boolean,
-      schedule: JSON,
+      schedule: Object,
+      sched: Object
     },
 
     methods:{
       abbreviate_name(firstName, surname){
-        return firstName.charAt(0)+surname.charAt(0);
+        if (typeof firstName == "string" && typeof surname == "string") {
+          return firstName.charAt(0) + surname.charAt(0);
+        } else {
+          return 'Error'
+        }
       }
     },
 
@@ -21,8 +26,11 @@ export default {
         const weekdays = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
         var workMonth = [];
 
-        if (this.show_for_workplace) {
-          for(const element of this.schedule){
+        if (this.show_for_workplace && this.schedule) {
+
+          var element = this.schedule;
+
+          console.log('UNIT_ID: '+element.unit_id);
             if(element.unit_id === this.unit_id &&
                element.workplace_id === this.workplace_id){
 
@@ -41,12 +49,12 @@ export default {
 
                         for (const shift of Object.keys(element.days[day])) {
 
-                          if (currShifts.some(shift_el => shift_el.id === element.days[day][shift].id)) {
+                          if (currShifts.some(shift_el => shift_el.shift_type_id === element.days[day][shift].shift_type_id)) {
 
                             //append employee to an existing shift
                             for (const currShift in currShifts) {
 
-                              if (currShifts[currShift].id === element.days[day][shift].id) {
+                              if (currShifts[currShift].shift_type_id === element.days[day][shift].shift_type_id) {
                                 currShifts[currShift].workers.push(element.days[day][shift].worker);
                               }
                             }
@@ -55,6 +63,7 @@ export default {
                           {
                             currShifts.push({
                               id: element.days[day][shift].id,
+                              shift_type_id: element.days[day][shift].shift_type_id,
                               time_start: element.days[day][shift].time_start,
                               time_end: element.days[day][shift].time_end,
                               label: element.days[day][shift].time_start + "-" + element.days[day][shift].time_end,
@@ -79,7 +88,7 @@ export default {
                   }
               }
             }
-          }
+
         }
 
         else { //show for employee
@@ -130,7 +139,7 @@ export default {
             <div v-for="shift in day.shifts" class="shift-tile">
               [[shift.label]]
               <div v-for="worker in shift.workers" class="employee-tile">
-                [[abbreviate_name(worker.name, worker.surname)]]
+                [[abbreviate_name(worker.first_name, worker.last_name)]]
               </div>
             </div>
           </div>
