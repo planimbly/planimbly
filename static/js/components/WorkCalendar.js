@@ -7,8 +7,7 @@ export default {
       workplace_id: Number,
       employee_id: Number,
       show_for_workplace: Boolean,
-      schedule: Object,
-      sched: Object
+      schedule: Object
     },
 
     methods:{
@@ -28,9 +27,8 @@ export default {
 
         if (this.show_for_workplace && this.schedule) {
 
-          var element = this.schedule;
+          const element = this.schedule;
 
-          console.log('UNIT_ID: '+element.unit_id);
             if(element.unit_id === this.unit_id &&
                element.workplace_id === this.workplace_id){
 
