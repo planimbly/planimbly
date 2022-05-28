@@ -207,10 +207,11 @@ def get_month_by_weeks(year: int, month: int):
 def flatten(t: list):
     return [item for sublist in t for item in sublist]
 
+
 # TODO: opracować ustawianie kar za nieoptymalne (???) przejścia
-def find_illegal_transitions(shifts : list[ShiftType]):
+def find_illegal_transitions(shifts: list[ShiftType]):
     """Finds illegal transitions between shift types
-    
+
     Returns a list of tuples of given structure:
     (i, j, p)
     i - index of shift that is transitioning to 'j'
@@ -220,10 +221,10 @@ def find_illegal_transitions(shifts : list[ShiftType]):
     it = []
     for i in range(1, len(shifts)):
         i_start = datetime.strptime("1970-01-01" + shifts[i].hour_start, "%Y-%m-%d%H:%M")
-        i_delta = datetime.strptime(shifts[i].hour_end, "%H:%M") - datetime.strptime(shifts[i].hour_start, "%H:%M") 
+        i_delta = datetime.strptime(shifts[i].hour_end, "%H:%M") - datetime.strptime(shifts[i].hour_start, "%H:%M")
         h = i_delta.seconds // 3600
         # print(f"{shifts[i].name} working time: {h}")
-        i_end = i_start + timedelta(hours=h) # do all of above in case of overnight shifts
+        i_end = i_start + timedelta(hours=h)  # do all of above in case of overnight shifts
         for j in range(1, len(shifts)):
             if i == j:
                 continue
@@ -232,10 +233,11 @@ def find_illegal_transitions(shifts : list[ShiftType]):
             dt = int(dt.total_seconds() // 3600)
             print(f"dt between {shifts[i].name} and {shifts[j].name} is {dt}")
             # print(f"{i_end} to {j_start}")
-            if dt < 11: # delta below 11 hours, illegal transition
+            if dt < 11:  # delta below 11 hours, illegal transition
                 print(f"Found illegal transition: {shifts[i].name} to {shifts[j].name}")
                 it.append((i, j, 0))
     return it
+
 
 def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: list, year: int, month: int, params, output_proto):
     """Solves the shift scheduling problem."""
