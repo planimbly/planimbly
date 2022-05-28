@@ -392,11 +392,13 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
             obj_bool_coeffs.extend(coeffs)
 
     # Weekly sum constraints
-    # BUG: when dealing with 6 week months, the algorithm fails, this function below is probably the culprit
+    # BUG: when dealing with 6 week months, the algorithm fails because of this constraint
     for ct in weekly_sum_constraints:
         shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = ct
         for e in employees:
             for w, week in enumerate(list_month):
+                if len(week) < 3:  # temporary bandaid fix... probably need to account for weeks in some another way..
+                    continue
                 works = [work[e, shift, d[0]] for d in week]
                 variables, coeffs = add_soft_sum_constraint(
                     model, works, hard_min, soft_min, min_cost, soft_max,
@@ -555,7 +557,7 @@ def main(_=None):
     data = solve_shift_scheduling(schedule,
                                   emp,          # employee list
                                   shift_types,  # shift type list
-                                  2022, 6,      # date
+                                  2022, 5,      # date
                                   FLAGS.params, FLAGS.output_proto)
     print(data)
     return data
