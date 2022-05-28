@@ -9,7 +9,7 @@ html{
 
 .calendar-big{
     margin: 0 auto;
-    background-color: bisque;
+    background-color: rgb(255, 255, 255);
     padding: 1rem;
     padding-top: 0;
     display: grid;
@@ -46,7 +46,7 @@ html{
 
 .calendar-weekday-label{
     margin: 0 auto;
-    background-color: bisque;
+    background-color: rgb(255, 255, 255);
     padding: 1rem;
     padding-bottom: 0;
     display: grid;

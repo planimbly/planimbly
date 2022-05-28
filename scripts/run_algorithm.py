@@ -15,7 +15,7 @@
 # limitations under the License.
 """Creates a shift scheduling problem and solves it."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from absl import app
 from absl import flags
 
@@ -208,6 +208,37 @@ def flatten(t: list):
     return [item for sublist in t for item in sublist]
 
 
+# TODO: opracować ustawianie kar za nieoptymalne (???) przejścia
+def find_illegal_transitions(shifts: list[ShiftType]):
+    """Finds illegal transitions between shift types
+
+    Returns a list of tuples of given structure:
+    (i, j, p)
+    i - index of shift that is transitioning to 'j'
+    j - index of shift that 'i' transitions to
+    p - penalty of transition between shift 'i' to shift 'j'
+    """
+    it = []
+    for i in range(1, len(shifts)):
+        i_start = datetime.strptime("1970-01-01" + shifts[i].hour_start, "%Y-%m-%d%H:%M")
+        i_delta = datetime.strptime(shifts[i].hour_end, "%H:%M") - datetime.strptime(shifts[i].hour_start, "%H:%M")
+        h = i_delta.seconds // 3600
+        # print(f"{shifts[i].name} working time: {h}")
+        i_end = i_start + timedelta(hours=h)  # do all of above in case of overnight shifts
+        for j in range(1, len(shifts)):
+            if i == j:
+                continue
+            j_start = datetime.strptime("1970-01-02" + shifts[j].hour_start, "%Y-%m-%d%H:%M")
+            dt = j_start - i_end
+            dt = int(dt.total_seconds() // 3600)
+            print(f"dt between {shifts[i].name} and {shifts[j].name} is {dt}")
+            # print(f"{i_end} to {j_start}")
+            if dt < 11:  # delta below 11 hours, illegal transition
+                print(f"Found illegal transition: {shifts[i].name} to {shifts[j].name}")
+                it.append((i, j, 0))
+    return it
+
+
 def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: list, year: int, month: int, params, output_proto):
     """Solves the shift scheduling problem."""
 
@@ -287,17 +318,18 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
         (5, 0, 1, 3, 4, 4, 0),
     ]
 
-    # TODO: napisać funkcję, która będzie obliczała nielegalne tranzycje między zmianami i inną funkcję która będzie tworzyła constrainty na jej podstawie
     # Penalized transitions:
     #     (previous_shift, next_shift, penalty (0 means forbidden))
     penalized_transitions = [
         # Afternoon to night has a penalty of 4.
-        (3, 5, 4),
-        (4, 5, 4),
+        # (3, 5, 4),
+        # (4, 5, 4),
         # Night to morning is forbidden.
-        (5, 1, 0),
-        (5, 2, 0),
+        # (5, 1, 0),
+        # (5, 2, 0),
     ]
+
+    penalized_transitions = find_illegal_transitions(shift_types)
 
     # TODO: faktycznie sparametryzować algorytm względem shiftów
     # TODO: shifty dla każdego z obiektów
@@ -360,11 +392,13 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
             obj_bool_coeffs.extend(coeffs)
 
     # Weekly sum constraints
-    # BUG: when dealing with 6 week months, the algorithm fails, this function below is probably the culprit
+    # BUG: when dealing with 6 week months, the algorithm fails because of this constraint
     for ct in weekly_sum_constraints:
         shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = ct
         for e in employees:
             for w, week in enumerate(list_month):
+                if len(week) < 3:  # temporary bandaid fix... probably need to account for weeks in some another way..
+                    continue
                 works = [work[e, shift, d[0]] for d in week]
                 variables, coeffs = add_soft_sum_constraint(
                     model, works, hard_min, soft_min, min_cost, soft_max,
@@ -523,9 +557,9 @@ def main(_=None):
     data = solve_shift_scheduling(schedule,
                                   emp,          # employee list
                                   shift_types,  # shift type list
-                                  2022, 6,      # date
+                                  2022, 5,      # date
                                   FLAGS.params, FLAGS.output_proto)
-    print(data)                    
+    print(data)
     return data
 
 
