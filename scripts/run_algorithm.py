@@ -24,6 +24,7 @@ from ortools.sat.python import cp_model
 
 import calendar
 from apps.schedules.models import Shift, ShiftType, Schedule
+from apps.accounts.models import Employee
 from apps.organizations.models import Workplace
 
 FLAGS = flags.FLAGS
@@ -239,7 +240,7 @@ def find_illegal_transitions(shifts: list[ShiftType]):
     return it
 
 
-def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: list, year: int, month: int, params, output_proto):
+def solve_shift_scheduling(schedule: Schedule, employees: list[Employee], shift_types: list[ShiftType], year: int, month: int, params, output_proto):
     """Solves the shift scheduling problem."""
 
     # Calendar data
@@ -357,7 +358,7 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
     for e in employees:
         for s in range(num_shifts):
             for d in range(1, num_days + 1):
-                work[e, s, d] = model.NewBoolVar('work%i_%i_%i' % (e, s, d))
+                work[e.pk, s, d] = model.NewBoolVar('work%i_%i_%i' % (e.pk, s, d))
 
     # Linear terms of the objective in a minimization context.
     obj_int_vars = []
@@ -368,7 +369,7 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
     # Exactly one shift per day.
     for e in employees:
         for d in range(1, num_days + 1):
-            model.AddExactlyOne(work[e, s, d] for s in range(num_shifts))
+            model.AddExactlyOne(work[e.pk, s, d] for s in range(num_shifts))
 
     # Fixed assignments.
     for e, s, d in fixed_assignments:
@@ -383,11 +384,11 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
     for ct in shift_constraints:
         shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = ct
         for e in employees:
-            works = [work[e, shift, d] for d in range(1, num_days + 1)]
+            works = [work[e.pk, shift, d] for d in range(1, num_days + 1)]
             variables, coeffs = add_soft_sequence_constraint(
                 model, works, hard_min, soft_min, min_cost, soft_max, hard_max,
                 max_cost,
-                'shift_constraint(employee %i, shift %i)' % (e, shift))
+                'shift_constraint(employee %i, shift %i)' % (e.pk, shift))
             obj_bool_vars.extend(variables)
             obj_bool_coeffs.extend(coeffs)
 
@@ -399,12 +400,12 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
             for w, week in enumerate(list_month):
                 if len(week) < 3:  # temporary bandaid fix... probably need to account for weeks in some another way..
                     continue
-                works = [work[e, shift, d[0]] for d in week]
+                works = [work[e.pk, shift, d[0]] for d in week]
                 variables, coeffs = add_soft_sum_constraint(
                     model, works, hard_min, soft_min, min_cost, soft_max,
                     hard_max, max_cost,
                     'weekly_sum_constraint(employee %i, shift %i, week %i)' %
-                    (e, shift, w))
+                    (e.pk, shift, w))
                 obj_int_vars.extend(variables)
                 obj_int_coeffs.extend(coeffs)
 
@@ -413,7 +414,7 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
         for e in employees:
             for d in range(1, num_days):
                 transition = [
-                    work[e, previous_shift, d].Not(), work[e, next_shift,
+                    work[e.pk, previous_shift, d].Not(), work[e.pk, next_shift,
                                                            d + 1].Not()
                 ]
                 if cost == 0:
@@ -430,7 +431,7 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
     for s in range(1, num_shifts):
         for w, week in enumerate(list_month):
             for d in week:
-                works = [work[e, s, d[0]] for e in employees]
+                works = [work[e.pk, s, d[0]] for e in employees]
                 # Ignore Off shift.
                 min_demand = weekly_cover_demands[d[1]][s - 1]
                 worked = model.NewIntVar(min_demand, len(employees), '')
@@ -476,9 +477,9 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
             sched = ''
             for d in range(1, num_days + 1):
                 for s in range(num_shifts):
-                    if solver.BooleanValue(work[e, s, d]):
+                    if solver.BooleanValue(work[e.pk, s, d]):
                         sched += shifts[s] + ' '
-            print('worker %i: %s' % (e, sched))
+            print('worker %i: %s' % (e.pk, sched))
         print()
         print('Penalties:')
         for i, var in enumerate(obj_bool_vars):
@@ -502,7 +503,7 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
             for e in employees:
                 for d in range(1, num_days + 1):
                     for s in range(num_shifts):
-                        if solver.BooleanValue(work[e, s, d]):
+                        if solver.BooleanValue(work[e.pk, s, d]):
                             shift_day = datetime(year, month, d)
                             shift_type = next((x for x in shift_types if x.name == shifts[s]), None)
                             if shift_type.name == "-":
@@ -538,12 +539,19 @@ def get_letter_for_weekday(day: int):
 
 def main(_=None):
 
-    emp = [4, 2, 0, 6, 9, 3, 7]
+    emp = Employee.objects.all()
+
+    #emp = [4, 2, 0, 6, 9, 3, 7]
+
+    for e in emp:
+        print(e.pk)
 
     workplace = Workplace.objects.all().first()
     workplace2 = Workplace.objects.all().last()
     schedule = Schedule.objects.all().first()
     active_days = '1111111'
+
+
 
     shift_free = ShiftType(hour_start='00:00', hour_end='00:00', name='-', workplace=workplace, active_days=active_days, is_used=True, is_archive=False)
     shift_m1 = ShiftType(hour_start='06:00', hour_end='14:00', name='M', workplace=workplace, active_days=active_days, is_used=True, is_archive=False)
@@ -565,3 +573,4 @@ def main(_=None):
 
 def run():
     app.run(main)
+
