@@ -415,7 +415,7 @@ def solve_shift_scheduling(schedule: Schedule, employees: list[Employee], shift_
             for d in range(1, num_days):
                 transition = [
                     work[e.pk, previous_shift, d].Not(), work[e.pk, next_shift,
-                                                           d + 1].Not()
+                                                              d + 1].Not()
                 ]
                 if cost == 0:
                     model.AddBoolOr(transition)
@@ -541,7 +541,7 @@ def main(_=None):
 
     emp = Employee.objects.all()
 
-    #emp = [4, 2, 0, 6, 9, 3, 7]
+    # emp = [4, 2, 0, 6, 9, 3, 7]
 
     for e in emp:
         print(e.pk)
@@ -550,8 +550,6 @@ def main(_=None):
     workplace2 = Workplace.objects.all().last()
     schedule = Schedule.objects.all().first()
     active_days = '1111111'
-
-
 
     shift_free = ShiftType(hour_start='00:00', hour_end='00:00', name='-', workplace=workplace, active_days=active_days, is_used=True, is_archive=False)
     shift_m1 = ShiftType(hour_start='06:00', hour_end='14:00', name='M', workplace=workplace, active_days=active_days, is_used=True, is_archive=False)
@@ -573,4 +571,3 @@ def main(_=None):
 
 def run():
     app.run(main)
-
