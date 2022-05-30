@@ -209,6 +209,30 @@ def flatten(t: list):
     return [item for sublist in t for item in sublist]
 
 
+# NOTE: * kiedyś może trzeba będzie poeksperymentować z karami za nocki, lub damy ustawić to użytkownikowi
+#       * na razie to działa poprawnie tylko w przypadku gdy jest tylko jedna nocna zmiana
+# TODO: przerobić funkcję do weekly constraintów żeby mogła przyjmować sumę shiftów
+def find_overnight_shifts(shifts: list[ShiftType]):
+    """Determines which shifts are happening overnight
+
+    Returns a tuple of given structure for each overnight shift constraint:
+    (shift, hard_min, soft_min, min_penalty,
+            soft_max, hard_max, max_penalty)
+    """
+    sc = []
+    wsc = []
+    for i in range(1, len(shifts)):
+        start = int(shifts[i].hour_start[:2])
+        end = int(shifts[i].hour_end[:2])
+        if end < start:
+            print(f"Found overnight shift: {shifts[i].name}")
+            # between 2 and 3 consecutive days of night shifts, 1 and 4 are possible but penalized.
+            sc.append((i, 1, 2, 20, 3, 4, 5))
+            # At least 1 night shift per week (penalized). At most 4 (hard).
+            wsc.append((i, 0, 1, 3, 4, 4, 0))
+    return sc, wsc
+
+
 # TODO: opracować ustawianie kar za nieoptymalne (???) przejścia
 def find_illegal_transitions(shifts: list[ShiftType]):
     """Finds illegal transitions between shift types
@@ -232,9 +256,9 @@ def find_illegal_transitions(shifts: list[ShiftType]):
             j_start = datetime.strptime("1970-01-02" + shifts[j].hour_start, "%Y-%m-%d%H:%M")
             dt = j_start - i_end
             dt = int(dt.total_seconds() // 3600)
-            print(f"dt between {shifts[i].name} and {shifts[j].name} is {dt}")
+            # print(f"dt between {shifts[i].name} and {shifts[j].name} is {dt}")
             # print(f"{i_end} to {j_start}")
-            if dt < 11:  # delta below 11 hours, illegal transition
+            if dt < 11:  # break between i and j is below 11 hours
                 print(f"Found illegal transition: {shifts[i].name} to {shifts[j].name}")
                 it.append((i, j, 0))
     return it
@@ -255,8 +279,6 @@ def solve_shift_scheduling(schedule: Schedule, employees: list[Employee], shift_
 
     for shift__ in shift_types:
         shifts.append(shift__.name)
-
-    print(shifts)
 
     num_shifts = len(shifts)
 
@@ -306,7 +328,7 @@ def solve_shift_scheduling(schedule: Schedule, employees: list[Employee], shift_
         (0, 1, 1, 0, 2, 2, 0),
         # between 2 and 3 consecutive days of night shifts, 1 and 4 are
         # possible but penalized.
-        (5, 1, 2, 20, 3, 4, 5),
+        # (5, 1, 2, 20, 3, 4, 5),
     ]
 
     # Weekly sum constraints on shifts days:
@@ -316,8 +338,13 @@ def solve_shift_scheduling(schedule: Schedule, employees: list[Employee], shift_
         # Constraints on rests per week.
         (0, 1, 2, 7, 2, 3, 4),
         # At least 1 night shift per week (penalized). At most 4 (hard).
-        (5, 0, 1, 3, 4, 4, 0),
+        # (5, 0, 1, 3, 4, 4, 0),
     ]
+
+    # overnight shift constraints
+    _os = find_overnight_shifts(shift_types)
+    shift_constraints.extend(_os[0])
+    weekly_sum_constraints.extend(_os[1])
 
     # Penalized transitions:
     #     (previous_shift, next_shift, penalty (0 means forbidden))
@@ -421,7 +448,7 @@ def solve_shift_scheduling(schedule: Schedule, employees: list[Employee], shift_
                     model.AddBoolOr(transition)
                 else:
                     trans_var = model.NewBoolVar(
-                        'transition (employee=%i, day=%i)' % (e, d))
+                        'transition (employee=%i, day=%i)' % (e.pk, d))
                     transition.append(trans_var)
                     model.AddBoolOr(transition)
                     obj_bool_vars.append(trans_var)
@@ -540,12 +567,6 @@ def get_letter_for_weekday(day: int):
 def main(_=None):
 
     emp = Employee.objects.all()
-
-    # emp = [4, 2, 0, 6, 9, 3, 7]
-
-    for e in emp:
-        print(e.pk)
-
     workplace = Workplace.objects.all().first()
     workplace2 = Workplace.objects.all().last()
     schedule = Schedule.objects.all().first()
