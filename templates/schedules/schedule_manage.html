@@ -58,60 +58,61 @@
                 :show_for_workplace="show_for_workplace"
                 :schedule="fetched_schedule">
         </work-calendar>
-    </div>
-    {#    END/added calendar#}
 
-    <div class="modal fade" id="generateScheduleModal" tabindex="-1" aria-labelledby="generateScheduleLabel"
-         aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="schedule_form" action method="post">
-                    {% csrf_token %}
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="generateScheduleLabel">Utwórz nowy grafik</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
+        {#    END/added calendar#}
 
-                    <div class="modal-body">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="date_start" class="form-label">Data startu</label>
-                            </div>
-                            <div class="col-md-6">
-                                <input type="date" class="form-control" name="date_start" required>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label for="date_end" class="form-label">Data końca</label>
-                            </div>
-                            <div class="col-md-6">
-                                <input type="date" class="form-control" name="date_end" required>
-                            </div>
-
-                            <label class="form-label">Działy uwzględnione w grafiku:</label>
-                            {% for workplace in workplace_list %}
-                                <div class="col-md-6">
-                                    <label class="form-label">{{ workplace.name }}</label>
-                                </div>
-                                <div class="col-md-6 text-center">
-                                    <input type="checkbox" class="form-check-input" checked
-                                           name="{{ workplace.name }}_checkbox">
-                                </div>
-                            {% endfor %}
-                            {#                            <input type="submit">#}
+        <div class="modal fade" id="generateScheduleModal" tabindex="-1"
+             aria-labelledby="generateScheduleLabel"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form id="schedule_form" v-on:submit.prevent="create_schedule">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="generateScheduleLabel">Utwórz nowy grafik</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                    </div>
 
-                    <div class="modal-footer">
-                        <label class="form-label">Przetestować "Wygeneruj"</label>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
-                        <button type="submit" class="btn btn-primary">Wygeneruj</button>
-                    </div>
-                </form>
+                        <div class="modal-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="date_start" class="form-label">Data startu</label>
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="date" class="form-control" v-model="date_start" required>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="date_end" class="form-label">Data końca</label>
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="date" class="form-control" v-model="date_end" required>
+                                </div>
+
+                                <label class="form-label">Działy uwzględnione w grafiku:</label>
+
+                                <div v-for="(workplace, i) in workplace_list" :key="workplace.id">
+                                    <div class="col-md-6">
+                                        <label class="form-label">w [[ workplace.name ]] </label>
+                                    </div>
+                                    <div class="col-md-6 text-center">
+                                        <input v-bind:id="workplace.id" v-bind:value="workplace.id" type="checkbox"
+                                               checked v-model="checked_workplace">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <label class="form-label">Przetestować "Wygeneruj"</label>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                            <button type="submit" class="btn btn-primary">Wygeneruj</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-
     {#    <div>#}
     {#                <h1>Utwórz nowy grafik</h1>#}
     {#                <form id="schedule_form" action method="post">#}
@@ -150,8 +151,33 @@
                     show_for_workplace: true,
                     selected_unit: {{ chosen_unit }},
                     select_workplace: {{ select_workplace | safe }},
-                    selected_workplace: null
+                    selected_workplace: null,
+                    create_schedule_url: '{% url 'schedule_create' %}',
+                    date_start: '',
+                    date_end: '',
+                    checked_workplace: [],
+                    workplace_list: {{ workplace_list | safe }}
                 }
+            },
+            methods: {
+                create_schedule() {
+                    axios
+                        .post(this.create_schedule_url,
+                            {
+                                workplace_list: this.checked_workplace,
+                                date_start: this.date_start,
+                                date_end: this.date_end
+                            }
+                        )
+                },
+                fetch_data() {
+                    axios
+                        .get(this.base_url, {params: {'year': this.year_str, 'month': this.month_str}})
+                        .then(response => {
+                                this.fetched_schedule = response.data;
+                            }
+                        )
+                },
             },
             computed: {
                 base_url: {
@@ -165,21 +191,11 @@
                     }
                 }
             },
-            methods: {
-              fetch_data() {
-                    axios
-                        .get(this.base_url, {params:{'year': this.year_str, 'month': this.month_str}})
-                        .then(response => {
-                            this.fetched_schedule = response.data;
-                        }
-
-                  )
-                },
-            },
             mounted() {
                 //this.fetch_data();
             },
         }).mount('#vue-app');
+
     </script>
 
 {% endblock vue-content %}

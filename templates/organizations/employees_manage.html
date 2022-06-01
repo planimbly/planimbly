@@ -179,7 +179,7 @@
                     })
                         .then((willAdd) => {
                             if (willAdd) {
-                                url = this.base_url + id + '/'
+                                let url = this.base_url + id + '/'
                                 axios
                                     .delete(url,
                                         {
@@ -198,7 +198,7 @@
 
                 },
                 change_employee(i) {
-                    url = this.base_url + this.employee_list[i].id + '/'
+                    let url = this.base_url + this.employee_list[i].id + '/'
                     swal({
                         title: "Czy chcesz zatwierdzić zmiany",
                         icon: "info",

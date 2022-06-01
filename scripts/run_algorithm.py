@@ -15,17 +15,16 @@
 # limitations under the License.
 """Creates a shift scheduling problem and solves it."""
 
+import calendar
 from datetime import datetime, timedelta
-from absl import app
-from absl import flags
 
+from absl import flags
 from google.protobuf import text_format
 from ortools.sat.python import cp_model
 
-import calendar
-from apps.schedules.models import Shift, ShiftType, Schedule
 from apps.accounts.models import Employee
 from apps.organizations.models import Workplace
+from apps.schedules.models import Shift, ShiftType, Schedule
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('output_proto', 'cp_model.proto',
@@ -264,7 +263,8 @@ def find_illegal_transitions(shifts: list[ShiftType]):
     return it
 
 
-def solve_shift_scheduling(schedule: Schedule, employees: list[Employee], shift_types: list[ShiftType], year: int, month: int, params, output_proto):
+def solve_shift_scheduling(schedule: Schedule, employees: list[Employee], shift_types: list[ShiftType], year: int,
+                           month: int, params, output_proto):
     """Solves the shift scheduling problem."""
 
     # Calendar data
@@ -535,7 +535,10 @@ def solve_shift_scheduling(schedule: Schedule, employees: list[Employee], shift_
                             shift_type = next((x for x in shift_types if x.name == shifts[s]), None)
                             if shift_type.name == "-":
                                 continue
-                            output_shifts.append(Shift(date=shift_day.date(), schedule=schedule, employee=e, shift_type=shift_type))
+                            employe = Employee.objects.filter(id=e).first()
+
+                            output_shifts.append(Shift(date=shift_day.date(), schedule=schedule, employee=employe,
+                                                       shift_type=shift_type))
         return output_shifts
 
     print()
@@ -564,31 +567,53 @@ def get_letter_for_weekday(day: int):
             return None
 
 
-def main(_=None):
-
-    emp = Employee.objects.all()
+def main_algorithm(schedule, emp, shift_types):
     workplace = Workplace.objects.all().first()
     workplace2 = Workplace.objects.all().last()
-    schedule = Schedule.objects.all().first()
     active_days = '1111111'
-
-    shift_free = ShiftType(hour_start='00:00', hour_end='00:00', name='-', workplace=workplace, active_days=active_days, is_used=True, is_archive=False)
-    shift_m1 = ShiftType(hour_start='06:00', hour_end='14:00', name='M', workplace=workplace, active_days=active_days, is_used=True, is_archive=False)
-    shift_a1 = ShiftType(hour_start='14:00', hour_end='22:00', name='A', workplace=workplace, active_days=active_days, is_used=True, is_archive=False)
-    shift_m2 = ShiftType(hour_start='06:00', hour_end='14:00', name='m', workplace=workplace2, active_days=active_days, is_used=True, is_archive=False)
-    shift_a2 = ShiftType(hour_start='14:00', hour_end='22:00', name='a', workplace=workplace2, active_days=active_days, is_used=True, is_archive=False)
-    shift_n = ShiftType(hour_start='22:00', hour_end='06:00', name='N', workplace=workplace, active_days=active_days, is_used=True, is_archive=False)
-
-    shift_types = [shift_free, shift_m1, shift_m2, shift_a1, shift_a2, shift_n]
+    shift_free = ShiftType(hour_start='00:00', hour_end='00:00', name='-', workplace=workplace, active_days=active_days,
+                           is_used=True, is_archive=False)
+    shift_types.insert(0, shift_free)
 
     data = solve_shift_scheduling(schedule,
-                                  emp,          # employee list
+                                  emp,  # employee list
                                   shift_types,  # shift type list
-                                  2022, 5,      # date
-                                  FLAGS.params, FLAGS.output_proto)
+                                  2022, 6,  # date
+                                  params=None, output_proto=None)
     print(data)
     return data
 
 
-def run():
-    app.run(main)
+def main_test_algorithm():
+    emp = [Employee.objects.all()]
+    workplace = Workplace.objects.all().first()
+    workplace2 = Workplace.objects.all().last()
+    # schedule = Schedule.objects.all().first()
+    active_days = '1111111'
+    schedule = Schedule(date_start="2022-05-15", date_end="2022-05-16",
+                        workplace=workplace)
+    shift_free = ShiftType(hour_start='00:00', hour_end='00:00', name='-', workplace=workplace, active_days=active_days,
+                           is_used=True, is_archive=False)
+    shift_m1 = ShiftType(hour_start='06:00', hour_end='14:00', name='M', workplace=workplace, active_days=active_days,
+                         is_used=True, is_archive=False)
+    shift_a1 = ShiftType(hour_start='14:00', hour_end='22:00', name='A', workplace=workplace, active_days=active_days,
+                         is_used=True, is_archive=False)
+    shift_m2 = ShiftType(hour_start='06:00', hour_end='14:00', name='m', workplace=workplace2, active_days=active_days,
+                         is_used=True, is_archive=False)
+    shift_a2 = ShiftType(hour_start='14:00', hour_end='22:00', name='a', workplace=workplace2, active_days=active_days,
+                         is_used=True, is_archive=False)
+    shift_n = ShiftType(hour_start='22:00', hour_end='06:00', name='N', workplace=workplace, active_days=active_days,
+                        is_used=True, is_archive=False)
+    shift_types = [shift_free, shift_m1, shift_m2, shift_a1, shift_a2, shift_n]
+
+    data = solve_shift_scheduling(schedule,
+                                  emp,  # employee list
+                                  shift_types,  # shift type list
+                                  2022, 6,  # date
+                                  params=None, output_proto=None)
+    print(data)
+    return data
+
+
+'''def run(employee_list):
+    app.run(main)'''
