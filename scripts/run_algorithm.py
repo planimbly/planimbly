@@ -24,6 +24,7 @@ from ortools.sat.python import cp_model
 
 import calendar
 from apps.schedules.models import Shift, ShiftType, Schedule
+from apps.accounts.models import Employee
 from apps.organizations.models import Workplace
 
 FLAGS = flags.FLAGS
@@ -208,6 +209,30 @@ def flatten(t: list):
     return [item for sublist in t for item in sublist]
 
 
+# NOTE: * kiedyś może trzeba będzie poeksperymentować z karami za nocki, lub damy ustawić to użytkownikowi
+#       * na razie to działa poprawnie tylko w przypadku gdy jest tylko jedna nocna zmiana
+# TODO: przerobić funkcję do weekly constraintów żeby mogła przyjmować sumę shiftów
+def find_overnight_shifts(shifts: list[ShiftType]):
+    """Determines which shifts are happening overnight
+
+    Returns a tuple of given structure for each overnight shift constraint:
+    (shift, hard_min, soft_min, min_penalty,
+            soft_max, hard_max, max_penalty)
+    """
+    sc = []
+    wsc = []
+    for i in range(1, len(shifts)):
+        start = int(shifts[i].hour_start[:2])
+        end = int(shifts[i].hour_end[:2])
+        if end < start:
+            print(f"Found overnight shift: {shifts[i].name}")
+            # between 2 and 3 consecutive days of night shifts, 1 and 4 are possible but penalized.
+            sc.append((i, 1, 2, 20, 3, 4, 5))
+            # At least 1 night shift per week (penalized). At most 4 (hard).
+            wsc.append((i, 0, 1, 3, 4, 4, 0))
+    return sc, wsc
+
+
 # TODO: opracować ustawianie kar za nieoptymalne (???) przejścia
 def find_illegal_transitions(shifts: list[ShiftType]):
     """Finds illegal transitions between shift types
@@ -231,15 +256,15 @@ def find_illegal_transitions(shifts: list[ShiftType]):
             j_start = datetime.strptime("1970-01-02" + shifts[j].hour_start, "%Y-%m-%d%H:%M")
             dt = j_start - i_end
             dt = int(dt.total_seconds() // 3600)
-            print(f"dt between {shifts[i].name} and {shifts[j].name} is {dt}")
+            # print(f"dt between {shifts[i].name} and {shifts[j].name} is {dt}")
             # print(f"{i_end} to {j_start}")
-            if dt < 11:  # delta below 11 hours, illegal transition
+            if dt < 11:  # break between i and j is below 11 hours
                 print(f"Found illegal transition: {shifts[i].name} to {shifts[j].name}")
                 it.append((i, j, 0))
     return it
 
 
-def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: list, year: int, month: int, params, output_proto):
+def solve_shift_scheduling(schedule: Schedule, employees: list[Employee], shift_types: list[ShiftType], year: int, month: int, params, output_proto):
     """Solves the shift scheduling problem."""
 
     # Calendar data
@@ -254,8 +279,6 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
 
     for shift__ in shift_types:
         shifts.append(shift__.name)
-
-    print(shifts)
 
     num_shifts = len(shifts)
 
@@ -305,7 +328,7 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
         (0, 1, 1, 0, 2, 2, 0),
         # between 2 and 3 consecutive days of night shifts, 1 and 4 are
         # possible but penalized.
-        (5, 1, 2, 20, 3, 4, 5),
+        # (5, 1, 2, 20, 3, 4, 5),
     ]
 
     # Weekly sum constraints on shifts days:
@@ -315,8 +338,13 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
         # Constraints on rests per week.
         (0, 1, 2, 7, 2, 3, 4),
         # At least 1 night shift per week (penalized). At most 4 (hard).
-        (5, 0, 1, 3, 4, 4, 0),
+        # (5, 0, 1, 3, 4, 4, 0),
     ]
+
+    # overnight shift constraints
+    _os = find_overnight_shifts(shift_types)
+    shift_constraints.extend(_os[0])
+    weekly_sum_constraints.extend(_os[1])
 
     # Penalized transitions:
     #     (previous_shift, next_shift, penalty (0 means forbidden))
@@ -357,7 +385,7 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
     for e in employees:
         for s in range(num_shifts):
             for d in range(1, num_days + 1):
-                work[e, s, d] = model.NewBoolVar('work%i_%i_%i' % (e, s, d))
+                work[e.pk, s, d] = model.NewBoolVar('work%i_%i_%i' % (e.pk, s, d))
 
     # Linear terms of the objective in a minimization context.
     obj_int_vars = []
@@ -368,7 +396,7 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
     # Exactly one shift per day.
     for e in employees:
         for d in range(1, num_days + 1):
-            model.AddExactlyOne(work[e, s, d] for s in range(num_shifts))
+            model.AddExactlyOne(work[e.pk, s, d] for s in range(num_shifts))
 
     # Fixed assignments.
     for e, s, d in fixed_assignments:
@@ -383,11 +411,11 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
     for ct in shift_constraints:
         shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = ct
         for e in employees:
-            works = [work[e, shift, d] for d in range(1, num_days + 1)]
+            works = [work[e.pk, shift, d] for d in range(1, num_days + 1)]
             variables, coeffs = add_soft_sequence_constraint(
                 model, works, hard_min, soft_min, min_cost, soft_max, hard_max,
                 max_cost,
-                'shift_constraint(employee %i, shift %i)' % (e, shift))
+                'shift_constraint(employee %i, shift %i)' % (e.pk, shift))
             obj_bool_vars.extend(variables)
             obj_bool_coeffs.extend(coeffs)
 
@@ -399,12 +427,12 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
             for w, week in enumerate(list_month):
                 if len(week) < 3:  # temporary bandaid fix... probably need to account for weeks in some another way..
                     continue
-                works = [work[e, shift, d[0]] for d in week]
+                works = [work[e.pk, shift, d[0]] for d in week]
                 variables, coeffs = add_soft_sum_constraint(
                     model, works, hard_min, soft_min, min_cost, soft_max,
                     hard_max, max_cost,
                     'weekly_sum_constraint(employee %i, shift %i, week %i)' %
-                    (e, shift, w))
+                    (e.pk, shift, w))
                 obj_int_vars.extend(variables)
                 obj_int_coeffs.extend(coeffs)
 
@@ -413,14 +441,14 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
         for e in employees:
             for d in range(1, num_days):
                 transition = [
-                    work[e, previous_shift, d].Not(), work[e, next_shift,
-                                                           d + 1].Not()
+                    work[e.pk, previous_shift, d].Not(), work[e.pk, next_shift,
+                                                              d + 1].Not()
                 ]
                 if cost == 0:
                     model.AddBoolOr(transition)
                 else:
                     trans_var = model.NewBoolVar(
-                        'transition (employee=%i, day=%i)' % (e, d))
+                        'transition (employee=%i, day=%i)' % (e.pk, d))
                     transition.append(trans_var)
                     model.AddBoolOr(transition)
                     obj_bool_vars.append(trans_var)
@@ -430,7 +458,7 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
     for s in range(1, num_shifts):
         for w, week in enumerate(list_month):
             for d in week:
-                works = [work[e, s, d[0]] for e in employees]
+                works = [work[e.pk, s, d[0]] for e in employees]
                 # Ignore Off shift.
                 min_demand = weekly_cover_demands[d[1]][s - 1]
                 worked = model.NewIntVar(min_demand, len(employees), '')
@@ -476,9 +504,9 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
             sched = ''
             for d in range(1, num_days + 1):
                 for s in range(num_shifts):
-                    if solver.BooleanValue(work[e, s, d]):
+                    if solver.BooleanValue(work[e.pk, s, d]):
                         sched += shifts[s] + ' '
-            print('worker %i: %s' % (e, sched))
+            print('worker %i: %s' % (e.pk, sched))
         print()
         print('Penalties:')
         for i, var in enumerate(obj_bool_vars):
@@ -502,7 +530,7 @@ def solve_shift_scheduling(schedule: Schedule, employees: list, shift_types: lis
             for e in employees:
                 for d in range(1, num_days + 1):
                     for s in range(num_shifts):
-                        if solver.BooleanValue(work[e, s, d]):
+                        if solver.BooleanValue(work[e.pk, s, d]):
                             shift_day = datetime(year, month, d)
                             shift_type = next((x for x in shift_types if x.name == shifts[s]), None)
                             if shift_type.name == "-":
@@ -538,8 +566,7 @@ def get_letter_for_weekday(day: int):
 
 def main(_=None):
 
-    emp = [4, 2, 0, 6, 9, 3, 7]
-
+    emp = Employee.objects.all()
     workplace = Workplace.objects.all().first()
     workplace2 = Workplace.objects.all().last()
     schedule = Schedule.objects.all().first()
