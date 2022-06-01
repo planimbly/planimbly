@@ -1,33 +1,35 @@
 /*cards columns styling*/
-h3.cards-title{
+h3.cards-title {
     margin: 15px 10px;
     padding: 10px 5px;
     text-align: center;
     vertical-align: middle;
 }
 
-.card-header{
+.card-header {
     padding: 10px;
     min-height: 51px;
     max-height: 51px
 }
 
-.card-body{
+.card-body {
     padding: 15px 20px;
 }
 
-.card-text{
+.card-text {
     margin-bottom: 10px;
 }
 
-.material-icons.drag-icon{
+
+.material-icons.drag-icon {
     vertical-align: middle;
     padding-right: 3px;
     cursor: grab;
 }
 
 /*radio label correction*/
-.form-check-label{
+.form-check-label {
     margin: 0px 2px;
     padding: 0px 2px;
 }
+

@@ -51,11 +51,14 @@ class Employee(AbstractUser):
     def __str__(self):
         return self.username
 
+    class Meta:
+        ordering = ['username']
 
-class Absence(models.Model):
+
+'''class Absence(models.Model):
     start = models.DateField(verbose_name="Początek nieobecności")
     end = models.DateField(verbose_name="Koniec nieobecności")
     employee = models.ForeignKey(Employee, verbose_name="Pracownik", on_delete=models.CASCADE)
     # TODO Typ do uzupełnienia
     type = models.CharField(max_length=256, verbose_name="Typ nieobecności")
-    hours_number = models.IntegerField(verbose_name="Liczba godzin nieobecności")
+    hours_number = models.IntegerField(verbose_name="Liczba godzin nieobecności")'''

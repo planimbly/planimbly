@@ -7,9 +7,10 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+import scripts.run_algorithm
 from apps.accounts.models import Employee
 from apps.organizations.models import Workplace, Unit
-from apps.schedules.models import ShiftType, Shift
+from apps.schedules.models import ShiftType, Shift, Schedule
 from apps.schedules.serializers import ShiftTypeSerializer
 
 
@@ -31,14 +32,16 @@ class ShiftTypeManageView(TemplateView):
         context['select_workplace'] = select_workplace
         return context
 
+
 class ScheduleManageView(TemplateView):
     template_name = 'schedules/schedule_manage.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        workplace_list = Workplace.objects.filter(workplace_unit_id=self.kwargs['unit_pk'])
+        workplace_list = list(Workplace.objects.filter(workplace_unit_id=self.kwargs['unit_pk']).values(
+            "id", "name"))
         context['workplace_list'] = workplace_list
-
+        workplace_list = Workplace.objects.filter(workplace_unit_id=self.kwargs['unit_pk'])
         select_workplace = dict()
         for obj in workplace_list:
             select_workplace.setdefault(obj.workplace_unit_id, []).append({"id": obj.id, "name": obj.name})
@@ -56,10 +59,24 @@ class ScheduleCreateApiView(APIView):
         date_start = self.request.data.get('date_start')
         date_end = self.request.data.get('date_end')
         workplace_list = self.request.data.get('workplace_list')
-        if date_start and date_end and workplace_list:
-            time_format = '%H:%M'
+        workplace_query = Workplace.objects.filter(id__in=workplace_list)
+        shiftType_list = list(ShiftType.objects.filter(workplace_id__in=workplace_list))
+        schedule = Schedule(date_start=date_start, date_end=date_end,
+                            workplace=Workplace.objects.filter(id__in=workplace_list).first())
+        employee_list = Employee.objects.filter(user_workplace__in=workplace_query).distinct().order_by('id')
+        employee_values = list(employee_list.values_list('id', flat=True))
+        employee_list = list(employee_list)
+        data = scripts.run_algorithm.main_algorithm(schedule, employee_values, shiftType_list)
+        print(data)
+        return Response()
+        '''date_start = self.request.data.get('date_start')
+            date_end = self.request.data.get('date_end')
+            workplace_list = self.request.data.get('workplace_list')
             shiftType_list = ShiftType.objects.filter(workplace_id__in=workplace_list)
-            employee_list = Employee.objects.filter(user_workplace__in=workplace_list)
+            employee_list = Employee.objects.filter(user_workplace__in=workplace_list)'''
+        '''if date_start and date_end and workplace_list:
+            time_format = '%H:%M'
+       
             workplace_dict = dict()
             for obj in shiftType_list:
                 shift_dict = {'name': obj.name, 'hour_start': obj.hour_start.strftime(time_format),
@@ -77,7 +94,7 @@ class ScheduleCreateApiView(APIView):
             workplace_dict['date_end'] = date_end
             return Response(status=status.HTTP_200_OK)
         else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(status=status.HTTP_400_BAD_REQUEST)'''
 
 
 class ShiftGetApiView(APIView):
