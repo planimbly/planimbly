@@ -569,7 +569,7 @@ def get_letter_for_weekday(day: int):
 
 def main_algorithm(schedule, emp, shift_types):
     workplace = Workplace.objects.all().first()
-    workplace2 = Workplace.objects.all().last()
+    # workplace2 = Workplace.objects.all().last()
     active_days = '1111111'
     shift_free = ShiftType(hour_start='00:00', hour_end='00:00', name='-', workplace=workplace, active_days=active_days,
                            is_used=True, is_archive=False)

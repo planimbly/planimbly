@@ -77,7 +77,6 @@ class ScheduleCreateApiView(APIView):
             employee_list = Employee.objects.filter(user_workplace__in=workplace_list)'''
         '''if date_start and date_end and workplace_list:
             time_format = '%H:%M'
-       
             workplace_dict = dict()
             for obj in shiftType_list:
                 shift_dict = {'name': obj.name, 'hour_start': obj.hour_start.strftime(time_format),
