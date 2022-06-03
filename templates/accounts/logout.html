@@ -2,7 +2,11 @@
 {% load widget_tweaks %}
 {% load static %}
 
-{% block content %}
+{% block navsidebar %}
+{% endblock navsidebar %}
+{% block vue-nav-app %}
+{% endblock vue-nav-app %}
+{% block no-nav-content %}
 
     <img src="{% static 'img/Logo-Main-Big2.svg' %}" alt="Main Logo" class="large--logo--center">
     <div class="row">
@@ -11,11 +15,11 @@
                 <h3 class="mb-3 font-weight-normal"> You successfully logged out! </h3>
 
                 <div class="btn-group-vertical">
-                    <a class="btn btn-lg btn-primary" href="{% url 'home' %}" role="button"> Home page </a>
+                    <a class="btn btn-lg btn-primary" href="{% url 'units_manage' %}" role="button"> Home page </a>
                     <a class="btn btn-lg btn-success" href="{% url 'login' %}" role="button"> Log in </a>
                 </div>
             </div>
         </div>
     </div>
 
-{% endblock content %}
+{% endblock no-nav-content %}

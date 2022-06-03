@@ -2,7 +2,13 @@
 {% load widget_tweaks %}
 {% load static %}
 
-{% block content %}
+{% block navsidebar %}
+
+{% endblock navsidebar %}
+{% block vue-nav-app %}
+
+{% endblock vue-nav-app %}
+{% block no-nav-content %}
 
     <img src="{% static 'img/Logo-Main-Big2.svg' %}" alt="Main Logo" class="large--logo--center">
     <div class="row">
@@ -11,7 +17,7 @@
                 {% if user.is_authenticated %}
                     <h3 class="mb-3 font-weight-normal text-center">Logged in</h3>
                     <div class="mt-4">
-                        <a class="btn btn-lg btn-primary" href="{% url 'home' %}" role="button"> Home page </a>
+                        <a class="btn btn-lg btn-primary" href="{% url 'units_manage' %}" role="button"> Home page </a>
                     </div>
                 {% else %}
                     <form method="post" class="form--input--style">
@@ -28,4 +34,4 @@
         </div>
     </div>
 
-{% endblock content %}
+{% endblock no-nav-content %}
