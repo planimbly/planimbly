@@ -9,7 +9,7 @@ router.register(r'shiftType', ShiftTypeViewSet, basename='shiftType')
 
 urlpatterns = [
     path('shiftType_manage/', ShiftTypeManageView.as_view(), name="shiftType_manage"),
-    path('<int:unit_pk>/schedule_manage/', ScheduleManageView.as_view(), name="schedule_manage"),
+    path('schedule_manage/', ScheduleManageView.as_view(), name="schedule_manage"),
 
     # API urls
     path('api/schedule_create/', ScheduleCreateApiView.as_view(), name='schedule_create'),
