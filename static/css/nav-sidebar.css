@@ -89,12 +89,20 @@ html{
 .del-def-style-a, .del-def-style-a:hover, .del-def-style-a:focus, .del-def-style-a:active{
     text-decoration: none;
     color: inherit;
+    width: 100%;
+    height: auto;
+    display: block;
 }
 
 .sidebar-item:hover {
     color: #1D2129;
     font-weight: 600;
     cursor: pointer;
+}
+
+.sidebar-item:active {
+    color: #1D2129;
+    font-weight: 600;
 }
 
 @media screen and (max-width: 1100px){
@@ -109,3 +117,5 @@ html{
     user-select: none;
     /*color: #0004ff;*/
 }
+
+

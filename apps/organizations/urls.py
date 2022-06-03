@@ -19,6 +19,7 @@ from rest_framework import routers
 from .views import EmployeesImportView, OrganizationCreateView, EmployeesManageView, UnitsManageView, UnitViewSet, \
     WorkplaceManageView, WorkplaceViewSet, EmployeeToUnitApiView, \
     EmployeeToWorkplaceApiView, EmployeeToUnitWorkplaceView
+from django.contrib.auth.decorators import login_required
 
 unit_router = routers.DefaultRouter()
 unit_router.register(r'unit', UnitViewSet, basename='unit')
@@ -31,6 +32,7 @@ urlpatterns = [
     path('employees_import/', EmployeesImportView.as_view(), name='employees_import'),
     path('employees_manage/', EmployeesManageView.as_view(), name='employees_manage'),
     path('units_manage/', UnitsManageView.as_view(), name='units_manage'),
+    path('', login_required(UnitsManageView.as_view(), login_url='/accounts/login/'), name='units_manage'),
     path('workplace_manage/', WorkplaceManageView.as_view(), name='workplace_manage'),
     path('employees_to_unit_workplace/', EmployeeToUnitWorkplaceView.as_view(), name='employee_to_unit_workplace'),
 

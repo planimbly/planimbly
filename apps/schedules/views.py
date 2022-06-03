@@ -38,16 +38,17 @@ class ScheduleManageView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        workplace_list = list(Workplace.objects.filter(workplace_unit_id=self.kwargs['unit_pk']).values(
-            "id", "name"))
-        context['workplace_list'] = workplace_list
-        workplace_list = Workplace.objects.filter(workplace_unit_id=self.kwargs['unit_pk'])
+        units = Unit.objects.all()
+        select_unit = list(units.values(
+            'id', 'name'))
+        workplace_list = Workplace.objects.filter(workplace_unit__in=units)
         select_workplace = dict()
         for obj in workplace_list:
             select_workplace.setdefault(obj.workplace_unit_id, []).append({"id": obj.id, "name": obj.name})
-        context['chosen_unit'] = self.kwargs['unit_pk']
-        context['select_workplace'] = select_workplace
 
+        context['default_unit'] = select_unit[0]['id']
+        context['select_unit'] = select_unit
+        context['select_workplace'] = select_workplace
         return context
 
 
@@ -76,7 +77,6 @@ class ScheduleCreateApiView(APIView):
             employee_list = Employee.objects.filter(user_workplace__in=workplace_list)'''
         '''if date_start and date_end and workplace_list:
             time_format = '%H:%M'
-       
             workplace_dict = dict()
             for obj in shiftType_list:
                 shift_dict = {'name': obj.name, 'hour_start': obj.hour_start.strftime(time_format),
