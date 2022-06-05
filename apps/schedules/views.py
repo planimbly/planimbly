@@ -73,12 +73,10 @@ class ScheduleCreateApiView(APIView):
 
         shiftType_list = list(ShiftType.objects.filter(workplace_id__in=workplace_list))
         employee_list = Employee.objects.filter(user_workplace__in=workplace_query).distinct().order_by('id')
-        employee_values = list(employee_list.values_list('id', flat=True))
 
         data = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month)
         for shift in data:
             shift.save()
-        print(data)
         return Response()
 
 
@@ -92,7 +90,8 @@ class ShiftGetApiView(APIView):
         date_format = '%Y-%m-%d'
         if year and month:
             workplace = Workplace.objects.filter(id=workplace_pk).first()
-            shifts = Shift.objects.filter(schedule__workplace=workplace).order_by('date')
+            shifts = Shift.objects.filter(schedule__workplace=workplace).filter(schedule__month=month).filter(
+                schedule__year=year).order_by('date')
             print(shifts)
             days_num = calendar.monthrange(int(year), int(month))[1]
             days = {}
@@ -100,7 +99,6 @@ class ShiftGetApiView(APIView):
                 date = datetime.date(int(year), int(month), x).strftime(date_format)
                 days.update({date: []})
             for shift in shifts:
-
                 days[shift.date.strftime(date_format)].append((
                     {
                         'id': shift.id,
@@ -116,7 +114,7 @@ class ShiftGetApiView(APIView):
                     }
                 ))
             response = {
-                'unit_id': shifts.first().schedule.workplace.workplace_unit.id,
+                'unit_id': workplace.workplace_unit.id,
                 'workplace_id': workplace_pk,
                 'days': days
             }
