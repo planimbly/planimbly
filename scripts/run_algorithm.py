@@ -280,7 +280,7 @@ def solve_shift_scheduling(schedule_dict, employees: list[Employee], shift_types
     shifts = []
 
     for shift__ in shift_types:
-        shifts.append(shift__.name)
+        shifts.append(shift__.id)
 
     num_shifts = len(shifts)
 
@@ -507,7 +507,7 @@ def solve_shift_scheduling(schedule_dict, employees: list[Employee], shift_types
             for d in range(1, num_days + 1):
                 for s in range(num_shifts):
                     if solver.BooleanValue(work[e.pk, s, d]):
-                        sched += shifts[s] + ' '
+                        sched += str(shifts[s]) + ' '
             print('worker %i: %s' % (e.pk, sched))
         print()
         print('Penalties:')
@@ -534,7 +534,7 @@ def solve_shift_scheduling(schedule_dict, employees: list[Employee], shift_types
                     for s in range(num_shifts):
                         if solver.BooleanValue(work[e.pk, s, d]):
                             shift_day = datetime(year, month, d)
-                            shift_type = next((x for x in shift_types if x.name == shifts[s]), None)
+                            shift_type = next((x for x in shift_types if x.id == shifts[s]), None)
                             if shift_type.name == "-":
                                 continue
 

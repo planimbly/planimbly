@@ -23,7 +23,7 @@
         </ol>
 
         <h2 class="mb-4"><a href="{% url 'units_manage' %}"><i class="material-icons"
-                                                       style="text-align: center; font-size:24px;">arrow_back_ios</i></a>Grafik
+                                                               style="text-align: center; font-size:24px;">arrow_back_ios</i></a>Grafik
         </h2>
         <hr class="breadcrumb">
     </nav>
@@ -36,10 +36,10 @@
     {#    START/added calendar#}
     <div id="vue-app">
         <label>
-            <input type="text" v-model="year_str" placeholder="Year">
+            <input type="number" v-model="year_str" placeholder="Year" v-on:change="fetch_data">
         </label>
         <label>
-            <input type="text" v-model="month_str" placeholder="Month">
+            <input type="number" v-model="month_str" placeholder="Month" v-on:change="fetch_data">
         </label>
 
 
@@ -74,12 +74,12 @@
                 <div class="modal-content">
                     <form id="schedule_form" v-on:submit.prevent="create_schedule">
                         {% csrf_token %}
-                        <div class="modal-header">
+                        <div class="modal-header" v-if="loading == false">
                             <h5 class="modal-title" id="generateScheduleLabel">Utwórz nowy grafik</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
 
-                        <div class="modal-body">
+                        <div class="modal-body" v-if="loading == false">
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label for="year" class="form-label">Rok</label>
@@ -106,13 +106,18 @@
                                                checked v-model="checked_workplace">
                                     </div>
                                 </div>
+
                             </div>
                         </div>
 
-                        <div class="modal-footer">
-                            <label class="form-label">Przetestować "Wygeneruj"</label>
+                        <div class="modal-footer" v-if="loading == false">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
                             <button type="submit" class="btn btn-primary">Wygeneruj</button>
+                        </div>
+
+                        <div v-if="loading">
+                            <h3 class="text-center">Waiting</h3>
+                            <img src="{% static 'img/Loading_icon.gif' %}" alt="Be patient"/>
                         </div>
                     </form>
                 </div>
@@ -163,17 +168,22 @@
                     year: 2022,
                     month: 5,
                     checked_workplace: [],
-
+                    loading: false,
                 }
             },
             methods: {
                 create_schedule() {
+                    this.loading = true
                     axios
                         .post(this.create_schedule_url,
                             {
                                 workplace_list: this.checked_workplace,
                                 year: this.year,
                                 month: this.month
+                            }
+                        )
+                        .then(response => {
+                                this.loading = false
                             }
                         )
                 },
@@ -207,7 +217,12 @@
                 }
             },
             mounted() {
-                //this.fetch_data();
+                try {
+                    this.selected_workplace = this.select_workplace[this.selected_unit][0]['id']
+                } catch {
+
+                }
+                this.fetch_data()
             },
         }).mount('#vue-app');
 
