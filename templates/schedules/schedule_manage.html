@@ -82,17 +82,17 @@
                         <div class="modal-body">
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label for="date_start" class="form-label">Data startu</label>
+                                    <label for="year" class="form-label">Rok</label>
                                 </div>
                                 <div class="col-md-6">
-                                    <input type="date" class="form-control" v-model="date_start" required>
+                                    <input type="number" class="form-control" v-model="year" required>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label for="date_end" class="form-label">Data końca</label>
+                                    <label for="month" class="form-label">Miesiąc</label>
                                 </div>
                                 <div class="col-md-6">
-                                    <input type="date" class="form-control" v-model="date_end" required>
+                                    <input type="number" class="form-control" v-model="month" required>
                                 </div>
 
                                 <label class="form-label">Działy uwzględnione w grafiku:</label>
@@ -160,8 +160,8 @@
                     select_workplace: {{ select_workplace | safe }},
                     selected_workplace: null,
                     create_schedule_url: '{% url 'schedule_create' %}',
-                    date_start: '',
-                    date_end: '',
+                    year: 2022,
+                    month: 5,
                     checked_workplace: [],
 
                 }
@@ -172,8 +172,8 @@
                         .post(this.create_schedule_url,
                             {
                                 workplace_list: this.checked_workplace,
-                                date_start: this.date_start,
-                                date_end: this.date_end
+                                year: this.year,
+                                month: this.month
                             }
                         )
                 },

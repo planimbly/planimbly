@@ -5,8 +5,8 @@ from apps.organizations.models import Workplace
 
 
 class Schedule(models.Model):
-    date_start = models.DateField(verbose_name='Data rozpoczęcia')
-    date_end = models.DateField(verbose_name='Data zakończenia')
+    year = models.IntegerField(verbose_name='Rok')
+    month = models.IntegerField(verbose_name='Miesiąc')
     workplace = models.ForeignKey(Workplace, on_delete=models.CASCADE, verbose_name="Dział")
 
 
@@ -25,7 +25,3 @@ class Shift(models.Model):
     schedule = models.ForeignKey(Schedule, on_delete=models.CASCADE, verbose_name="Grafik")
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, verbose_name="Pracownik")
     shift_type = models.ForeignKey(ShiftType, on_delete=models.CASCADE, verbose_name="Typ zmiany")
-
-    def __str__(self):
-        # return 'Data:' + str(self.date) + ' Pracownik: ' + self.employee + 'Zmiana: ' + self.shift_type.name
-        return 'Data:' + str(self.date) + ' Pracownik: ' + str(self.employee.id) + 'Zmiana: ' + self.shift_type.name

@@ -57,44 +57,29 @@ class ScheduleCreateApiView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        date_start = self.request.data.get('date_start')
-        date_end = self.request.data.get('date_end')
+        year = self.request.data.get('year')
+        month = self.request.data.get('month')
         workplace_list = self.request.data.get('workplace_list')
         workplace_query = Workplace.objects.filter(id__in=workplace_list)
+        schedule_dict = dict()
+        for workplace in workplace_query:
+            old_schedule = Schedule.objects.filter(year=year).filter(month=month).filter(workplace=workplace).first()
+            if old_schedule is not None:
+                old_schedule.delete()
+            schedule = Schedule(year=year, month=month,
+                                workplace=workplace)
+            schedule.save()
+            schedule_dict.setdefault(workplace.id, schedule)
+
         shiftType_list = list(ShiftType.objects.filter(workplace_id__in=workplace_list))
-        schedule = Schedule(date_start=date_start, date_end=date_end,
-                            workplace=Workplace.objects.filter(id__in=workplace_list).first())
         employee_list = Employee.objects.filter(user_workplace__in=workplace_query).distinct().order_by('id')
         employee_values = list(employee_list.values_list('id', flat=True))
-        employee_list = list(employee_list)
-        data = scripts.run_algorithm.main_algorithm(schedule, employee_values, shiftType_list)
+
+        data = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month)
+        for shift in data:
+            shift.save()
         print(data)
         return Response()
-        '''date_start = self.request.data.get('date_start')
-            date_end = self.request.data.get('date_end')
-            workplace_list = self.request.data.get('workplace_list')
-            shiftType_list = ShiftType.objects.filter(workplace_id__in=workplace_list)
-            employee_list = Employee.objects.filter(user_workplace__in=workplace_list)'''
-        '''if date_start and date_end and workplace_list:
-            time_format = '%H:%M'
-            workplace_dict = dict()
-            for obj in shiftType_list:
-                shift_dict = {'name': obj.name, 'hour_start': obj.hour_start.strftime(time_format),
-                              'hour_end': obj.hour_end.strftime(time_format)}
-                workplace_dict.setdefault(obj.workplace_id, {'shifts': []})
-                workplace_dict[obj.workplace_id]['shifts'].append(shift_dict)
-            for obj in employee_list:
-                employee_dict = {'id': obj.id, 'first_name': obj.first_name, 'last_name': obj.last_name}
-                for workplace in obj.user_workplace.all():
-                    if workplace.id in workplace_dict:
-                        workplace_dict[workplace.id].setdefault('employees', [])
-                        if employee_dict not in workplace_dict[workplace.id]['employees']:
-                            workplace_dict[workplace.id]['employees'].append(employee_dict)
-            workplace_dict['date_start'] = date_start
-            workplace_dict['date_end'] = date_end
-            return Response(status=status.HTTP_200_OK)
-        else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)'''
 
 
 class ShiftGetApiView(APIView):
