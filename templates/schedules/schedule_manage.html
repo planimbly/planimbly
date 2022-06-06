@@ -23,7 +23,7 @@
         </ol>
 
         <h2 class="mb-4"><a href="{% url 'units_manage' %}"><i class="material-icons"
-                                                       style="text-align: center; font-size:24px;">arrow_back_ios</i></a>Grafik
+                                                               style="text-align: center; font-size:24px;">arrow_back_ios</i></a>Grafik
         </h2>
         <hr class="breadcrumb">
     </nav>
@@ -36,10 +36,10 @@
     {#    START/added calendar#}
     <div id="vue-app">
         <label>
-            <input type="text" v-model="year_str" placeholder="Year">
+            <input type="number" v-model="year_str" placeholder="Year" v-on:change="fetch_data">
         </label>
         <label>
-            <input type="text" v-model="month_str" placeholder="Month">
+            <input type="number" v-model="month_str" placeholder="Month" v-on:change="fetch_data">
         </label>
 
 
@@ -74,25 +74,25 @@
                 <div class="modal-content">
                     <form id="schedule_form" v-on:submit.prevent="create_schedule">
                         {% csrf_token %}
-                        <div class="modal-header">
+                        <div class="modal-header" v-if="loading == false">
                             <h5 class="modal-title" id="generateScheduleLabel">Utwórz nowy grafik</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
 
-                        <div class="modal-body">
+                        <div class="modal-body" v-if="loading == false">
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label for="date_start" class="form-label">Data startu</label>
+                                    <label for="year" class="form-label">Rok</label>
                                 </div>
                                 <div class="col-md-6">
-                                    <input type="date" class="form-control" v-model="date_start" required>
+                                    <input type="number" class="form-control" v-model="year" required>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label for="date_end" class="form-label">Data końca</label>
+                                    <label for="month" class="form-label">Miesiąc</label>
                                 </div>
                                 <div class="col-md-6">
-                                    <input type="date" class="form-control" v-model="date_end" required>
+                                    <input type="number" class="form-control" v-model="month" required>
                                 </div>
 
                                 <label class="form-label">Działy uwzględnione w grafiku:</label>
@@ -106,13 +106,18 @@
                                                checked v-model="checked_workplace">
                                     </div>
                                 </div>
+
                             </div>
                         </div>
 
-                        <div class="modal-footer">
-                            <label class="form-label">Przetestować "Wygeneruj"</label>
+                        <div class="modal-footer" v-if="loading == false">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
                             <button type="submit" class="btn btn-primary">Wygeneruj</button>
+                        </div>
+
+                        <div v-if="loading">
+                            <h3 class="text-center">Waiting</h3>
+                            <img src="{% static 'img/Loading_icon.gif' %}" alt="Be patient"/>
                         </div>
                     </form>
                 </div>
@@ -160,20 +165,25 @@
                     select_workplace: {{ select_workplace | safe }},
                     selected_workplace: null,
                     create_schedule_url: '{% url 'schedule_create' %}',
-                    date_start: '',
-                    date_end: '',
+                    year: 2022,
+                    month: 5,
                     checked_workplace: [],
-
+                    loading: false,
                 }
             },
             methods: {
                 create_schedule() {
+                    this.loading = true
                     axios
                         .post(this.create_schedule_url,
                             {
                                 workplace_list: this.checked_workplace,
-                                date_start: this.date_start,
-                                date_end: this.date_end
+                                year: this.year,
+                                month: this.month
+                            }
+                        )
+                        .then(response => {
+                                this.loading = false
                             }
                         )
                 },
@@ -207,8 +217,14 @@
                 }
             },
             mounted() {
-                //this.fetch_data();
-                this.change_workplace();
+
+                try {
+                    this.selected_workplace = this.select_workplace[this.selected_unit][0]['id']
+                } catch {
+
+                }
+                this.fetch_data()
+
             },
         }).mount('#vue-app');
 
