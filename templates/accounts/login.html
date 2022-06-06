@@ -26,7 +26,8 @@
                         {% render_field form.username class+="form-control mb-1" placeholder="Username" %}
                         {% render_field form.password class+="form-control mb-1" placeholder="Password" %}
                         <div class="mt-4">
-                            <input type="submit" class="btn btn-lg btn-primary btn-block">
+                            <input type="submit" class="btn btn-lg btn-primary">
+                            <a class="btn btn-lg btn-primary" href="{% url 'password_reset' %}">Resetuj hasło</a>
                         </div>
                     </form>
                 {% endif %}
