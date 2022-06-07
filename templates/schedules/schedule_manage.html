@@ -31,14 +31,14 @@
     <div id="vue-app">
         <div class="row m-2">
             <div class="col">
-                <select class="form-select" v-model="month" v-on:change="fetch_data">
+                <select class="form-select" v-model="month_cal" v-on:change="fetch_data">
                     <option v-for="label in month_labels" :value="label.id">
                         [[ label.name ]]
                     </option>
                 </select>
             </div>
             <div class="col">
-                <select class="form-select" v-model="year" v-on:change="fetch_data">
+                <select class="form-select" v-model="year_cal" v-on:change="fetch_data">
                     <option v-for="av_year in available_years" :value="av_year">
                         [[ av_year ]]
                     </option>
@@ -72,8 +72,8 @@
         {#        </div>#}
 
         <work-calendar
-                :year="year"
-                :month="month"
+                :year="year_cal"
+                :month="month_cal"
                 :unit_id="selected_unit"
                 :workplace_id="selected_workplace"
                 :employee_id="employee_id"
@@ -158,8 +158,6 @@
             data() {
                 return {
                     fetched_schedule: null,
-                    month_str: '5',
-                    year_str: '2022',
                     employee_id: 1,
                     show_for_workplace: true,
                     selected_unit: {{ default_unit }},
@@ -169,21 +167,23 @@
                     create_schedule_url: '{% url 'schedule_create' %}',
                     year: new Date().getFullYear(),
                     month: new Date().getMonth(),
+                    year_cal: new Date().getFullYear(),
+                    month_cal: new Date().getMonth(),
                     checked_workplace: [],
                     loading: false,
                     month_labels: [
-                        {id: 1, name: 'January'},
-                        {id: 2, name: 'February'},
-                        {id: 3, name: 'March'},
-                        {id: 4, name: 'April'},
-                        {id: 5, name: 'May'},
-                        {id: 6, name: 'June'},
-                        {id: 7, name: 'July'},
-                        {id: 8, name: 'August'},
-                        {id: 9, name: 'September'},
-                        {id: 10, name: 'October'},
-                        {id: 11, name: 'November'},
-                        {id: 12, name: 'December'},
+                        {id: 1, name: 'Styczeń'},
+                        {id: 2, name: 'Luty'},
+                        {id: 3, name: 'Marzec'},
+                        {id: 4, name: 'Kwiecień'},
+                        {id: 5, name: 'Maj'},
+                        {id: 6, name: 'Czerwiec'},
+                        {id: 7, name: 'Lipiec'},
+                        {id: 8, name: 'Sierpień'},
+                        {id: 9, name: 'Wrzesień'},
+                        {id: 10, name: 'Październik'},
+                        {id: 11, name: 'Listopad'},
+                        {id: 12, name: 'Grudzień'},
                     ],
                     available_years: [
                         new Date().getFullYear(),
@@ -215,7 +215,7 @@
                 },
                 fetch_data() {
                     axios
-                        .get(this.base_url, {params: {'year': this.year, 'month': this.month}})
+                        .get(this.base_url, {params: {'year': this.year_cal, 'month': this.month_cal}})
                         .then(response => {
                                 this.fetched_schedule = response.data;
                             }
