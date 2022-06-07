@@ -12,6 +12,11 @@
     margin: auto;
 }
 
+
+label.form-label.modal-style{
+    margin: 0px;
+}
+
 /*breadcrumb styling*/
 ol.breadcrumb{
     margin: 0px;

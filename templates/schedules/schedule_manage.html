@@ -27,40 +27,49 @@
         <hr class="breadcrumb">
     </nav>
 
-    <button type="button" class="m-1 btn btn-success d-flex justify-content-center align-content-between"
-            data-bs-toggle="modal" data-bs-target="#generateScheduleModal">
-        Stwórz grafik
-    </button>
-
     {#    START/added calendar#}
     <div id="vue-app">
-
-        <div id="calendar-filters" class="filter-calendar-container">
-
-            <select class="pn--select" v-model="month" v-on:change="fetch_data">
-                <option v-for="label in month_labels" :value="label.id">
-                    [[ label.name ]]
-                </option>
-            </select>
-
-            <select class="pn--select" v-model="year" v-on:change="fetch_data">
-                <option v-for="av_year in available_years" :value="av_year">
-                    [[ av_year ]]
-                </option>
-            </select>
-
-            <select class="pn--select" v-model="selected_unit" v-on:change="change_workplace">
-                <option v-for="unit in select_unit" :value="unit.id">
-                    [[ unit.name ]]
-                </option>
-            </select>
-
-            <select class="pn--select" v-model="selected_workplace" v-on:change="fetch_data">
-                <option v-for="workplace in current_workplace" :value="workplace.id">
-                    [[ workplace.name ]]
-                </option>
-            </select>
+        <div class="row m-2">
+            <div class="col">
+                <select class="form-select" v-model="month" v-on:change="fetch_data">
+                    <option v-for="label in month_labels" :value="label.id">
+                        [[ label.name ]]
+                    </option>
+                </select>
+            </div>
+            <div class="col">
+                <select class="form-select" v-model="year" v-on:change="fetch_data">
+                    <option v-for="av_year in available_years" :value="av_year">
+                        [[ av_year ]]
+                    </option>
+                </select>
+            </div>
+            <div class="col">
+                <select class="form-select" v-model="selected_unit" v-on:change="change_workplace">
+                    <option v-for="unit in select_unit" :value="unit.id">
+                        [[ unit.name ]]
+                    </option>
+                </select>
+            </div>
+            <div class="col">
+                <select class="form-select" v-model="selected_workplace" v-on:change="fetch_data">
+                    <option v-for="workplace in current_workplace" :value="workplace.id">
+                        [[ workplace.name ]]
+                    </option>
+                </select>
+            </div>
+            <div class="col d-flex justify-content-center">
+                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal"
+                        data-bs-target="#generateScheduleModal">
+                    Wygeneruj grafik
+                </button>
+            </div>
         </div>
+        <hr class="breadcrumb" style="height: 1px;">
+
+        {#        <div id="calendar-filters" class="filter-calendar-container">#}
+        {#            #}
+        {#        </div>#}
 
         <work-calendar
                 :year="year"
@@ -74,43 +83,41 @@
 
         {#    END/added calendar#}
 
-        <div class="modal fade" id="generateScheduleModal" tabindex="-1"
-             aria-labelledby="generateScheduleLabel"
-             aria-hidden="true">
+        <div class="modal fade" id="generateScheduleModal" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <form id="schedule_form" v-on:submit.prevent="create_schedule">
                         {% csrf_token %}
                         <div class="modal-header" v-if="loading == false">
-                            <h5 class="modal-title" id="generateScheduleLabel">Utwórz nowy grafik</h5>
+                            <h5 class="modal-title" id="generateScheduleLabel">Wygeneruj nowy grafik</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
 
                         <div class="modal-body" v-if="loading == false">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="year" class="form-label">Rok</label>
+                            <div class="row g-3 d-flex align-items-center">
+                                <div class="col-6">
+                                    <label for="year" class="form-label modal-style">Rok</label>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-6">
                                     <input type="number" class="form-control" v-model="year" required>
                                 </div>
 
-                                <div class="col-md-6">
-                                    <label for="month" class="form-label">Miesiąc</label>
+                                <div class="col-6">
+                                    <label for="month" class="form-label modal-style">Miesiąc</label>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-6">
                                     <input type="number" class="form-control" v-model="month" required>
                                 </div>
 
                                 <label class="form-label">Działy uwzględnione w grafiku:</label>
-
-                                <div v-for="(workplace, i) in current_workplace" :key="workplace.id">
-                                    <div class="col-md-6">
-                                        <label class="form-label">w [[ workplace.name ]] </label>
+                                <div class="row mx-0 my-1 d-flex align-items-center" v-for="(workplace, i) in current_workplace" :key="workplace.id">
+                                    <div class="col-6">
+                                        <label class="form-label modal-style">[[ workplace.name ]] </label>
                                     </div>
-                                    <div class="col-md-6 text-center">
-                                        <input v-bind:id="workplace.id" v-bind:value="workplace.id" type="checkbox"
-                                               checked v-model="checked_workplace">
+                                    <div class="col-6 d-flex align-items-center">
+                                        <input v-bind:id="workplace.id" v-bind:value="workplace.id"
+                                               class="form-check-input" style="margin: 0px;" type="checkbox" checked
+                                               v-model="checked_workplace">
                                     </div>
                                 </div>
 
@@ -118,8 +125,8 @@
                         </div>
 
                         <div class="modal-footer" v-if="loading == false">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
-                            <button type="submit" class="btn btn-primary">Wygeneruj</button>
+                            <button type="submit" class="btn btn-outline-primary">Wygeneruj</button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Zamknij</button>
                         </div>
 
                         <div v-if="loading">

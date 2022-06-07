@@ -15,7 +15,8 @@
 {% block content %}
     <nav style aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'units_manage' %}" class="breadcrumb-link">{{ user.user_org }}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'units_manage' %}"
+                                           class="breadcrumb-link">{{ user.user_org }}</a></li>
             <li class="breadcrumb-item current-subpage">Pracownicy</li>
         </ol>
         <h2 class="breadcrumb-title">Zarządzanie pracownikami</h2>
@@ -27,13 +28,8 @@
             <div class="col d-flex justify-content-start">
                 <h3 class="content-title">Lista pracowników</h3>
             </div>
-{#            <div class="col">#}
-{#                <ul style="vertical-align: center; margin: auto;">#}
-{#                    <li><a href="{% url 'unit-list' %}">Unit list</a></li>#}
-{#                </ul>#}
-{#            </div>#}
             <div class="col d-flex justify-content-end">
-                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
                     Dodaj pracownika
                 </button>
             </div>
@@ -45,34 +41,46 @@
                 <div class="modal-content">
                     <form v-on:submit.prevent="add_employee">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="exampleModalLabel">Dodawanie pracownika</h5>
+                            <h5 class="modal-title" id="exampleModalLabel">Dodaj pracownika</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
 
                         <div class="modal-body">
                             <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="inputEmail" class="form-label">E-mail</label>
-                                    <input type="email" class="form-control" v-model="email" id="inputEmail">
+                                <div class="col-6">
+                                    <div class="form-floating">
+                                        <input type="email" class="form-control" v-model="email" id="inputEmail"
+                                               placeholder="E-mail">
+                                        <label for="inputEmail">E-mail</label>
+                                    </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <label for="inputLogin" class="form-label">Login</label>
-                                    <input type="text" class="form-control" v-model="username" id="inputLogin">
+                                <div class="col-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" v-model="username" id="inputLogin"
+                                               placeholder="Login">
+                                        <label for="inputLogin">Login</label>
+                                    </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <label for="inputName" class="form-label">Imię</label>
-                                    <input type="text" class="form-control" v-model="first_name" id="inputName">
+                                <div class="col-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" v-model="first_name" id="inputName"
+                                               placeholder="Imię">
+                                        <label for="inputName">Imię</label>
+                                    </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <label for="inputSurname" class="form-label">Nazwisko</label>
-                                    <input type="text" class="form-control" v-model="last_name" id="inputSurname">
+                                <div class="col-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" v-model="last_name" id="inputSurname"
+                                               placeholder="Nazwisko">
+                                        <label for="inputSurname">Nazwisko</label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
-                            <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
+                            <button type="submit" class="btn btn-outline-primary">Dodaj</button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Zamknij</button>
                         </div>
                     </form>
 

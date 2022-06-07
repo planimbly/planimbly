@@ -25,7 +25,8 @@
     <div id="vue-app">
         <nav style aria-label="breadcrumb">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'units_manage' %}" class="breadcrumb-link">{{ user.user_org }}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'units_manage' %}"
+                                               class="breadcrumb-link">{{ user.user_org }}</a></li>
                 <li class="breadcrumb-item">
                 <span v-if="picked == 'unit'">
                     <a href="{% url 'units_manage' %}" class="breadcrumb-link">Jednostki</a>
@@ -45,32 +46,34 @@
 
         <div class="col">
             <div class="row my-2 d-flex align-items-center">
-                <div class="col-2">
-                    <input class="form-check-input" type="radio" id="unit" value="unit" v-model="picked"
-                           v-on:change="fetch_data"/>
-                    <label class="form-check-label" for="unit">Jednostka</label>
+                <div class="col-auto d-flex justify-content-center align-items-center">
+                    <div class="mx-1 col-auto">
+                        <input class="form-check-input" type="radio" id="unit" value="unit" v-model="picked"
+                               v-on:change="fetch_data"/>
+                        <label class="form-check-label" for="unit">Jednostka</label>
+                    </div>
+                    <div class="mx-1 col-auto">
+                        <select class="form-select" v-model="selected_unit" v-on:change="change_workplace">
+                            <option v-for="unit in select_unit" :value="unit.id">
+                                [[ unit.name ]]
+                            </option>
+                        </select>
+                    </div>
                 </div>
-                <div class="col-2">
-                    <select class="form-select" v-model="selected_unit" v-on:change="change_workplace">
-                        <option v-for="unit in select_unit" :value="unit.id">
-                            [[ unit.name ]]
-                        </option>
-                    </select>
-                </div>
-            </div>
-            <div class="row my-2 d-flex align-items-center">
-                <div class="col-2">
-                    <input class="form-check-input" type="radio" id="workplace" value="workplace" v-model="picked"
-                           v-on:change="fetch_data"/>
-                    <label class="form-check-label" for="workplace">Dział</label>
-                </div>
-                <div class="col-2">
-                    <select class="form-select" v-model="selected_workplace" :disabled="picked === 'unit'"
-                            v-on:change="fetch_data">
-                        <option v-for="workplace in current_workplace" :value="workplace.id">
-                            [[ workplace.name ]]
-                        </option>
-                    </select>
+                <div class="col-auto d-flex justify-content-center align-items-center">
+                    <div class="mx-1 col-auto">
+                        <input class="form-check-input" type="radio" id="workplace" value="workplace" v-model="picked"
+                               v-on:change="fetch_data"/>
+                        <label class="form-check-label" for="workplace">Dział</label>
+                    </div>
+                    <div class="mx-1 col-auto">
+                        <select class="form-select" v-model="selected_workplace" :disabled="picked === 'unit'"
+                                v-on:change="fetch_data">
+                            <option v-for="workplace in current_workplace" :value="workplace.id">
+                                [[ workplace.name ]]
+                            </option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>
