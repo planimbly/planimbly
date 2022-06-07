@@ -27,175 +27,185 @@
         </h2>
         <hr class="breadcrumb">
     </nav>
+    {% if is_any_workplace %}
+        <button type="button" class="m-1 btn btn-success d-flex justify-content-center align-content-between"
+                data-bs-toggle="modal" data-bs-target="#generateScheduleModal">
+            Stwórz grafik
+        </button>
 
-    <button type="button" class="m-1 btn btn-success d-flex justify-content-center align-content-between"
-            data-bs-toggle="modal" data-bs-target="#generateScheduleModal">
-        Stwórz grafik
-    </button>
-
-    {#    START/added calendar#}
-    <div id="vue-app">
-        <label>
-            <input type="number" v-model="year_str" placeholder="Year" v-on:change="fetch_data">
-        </label>
-        <label>
-            <input type="number" v-model="month_str" placeholder="Month" v-on:change="fetch_data">
-        </label>
+        {#    START/added calendar#}
+        <div id="vue-app">
+            <label>
+                <input type="number" v-model="year_str" placeholder="Year" v-on:change="fetch_data">
+            </label>
+            <label>
+                <input type="number" v-model="month_str" placeholder="Month" v-on:change="fetch_data">
+            </label>
 
 
-        <select v-model="selected_unit" v-on:change="change_workplace">
-            <option v-for="unit in select_unit" :value="unit.id">
-                [[ unit.name ]]
-            </option>
-        </select>
+            <select v-model="selected_unit" v-on:change="change_workplace">
+                <option v-for="unit in select_unit" :value="unit.id">
+                    [[ unit.name ]]
+                </option>
+            </select>
 
-        <select v-model="selected_workplace" v-on:change="fetch_data">
-            <option v-for="workplace in current_workplace" :value="workplace.id">
-                [[ workplace.name ]]
-            </option>
-        </select>
+            <select v-model="selected_workplace" v-on:change="fetch_data">
+                <option v-for="workplace in current_workplace" :value="workplace.id">
+                    [[ workplace.name ]]
+                </option>
+            </select>
 
-        <work-calendar
-                :year="Number(year_str)"
-                :month="Number(month_str)"
-                :unit_id="selected_unit"
-                :workplace_id="selected_workplace"
-                :employee_id="employee_id"
-                :show_for_workplace="show_for_workplace"
-                :schedule="fetched_schedule">
-        </work-calendar>
+            <work-calendar
+                    :year="Number(year_str)"
+                    :month="Number(month_str)"
+                    :unit_id="selected_unit"
+                    :workplace_id="selected_workplace"
+                    :employee_id="employee_id"
+                    :show_for_workplace="show_for_workplace"
+                    :schedule="fetched_schedule">
+            </work-calendar>
 
-        {#    END/added calendar#}
+            {#    END/added calendar#}
 
-        <div class="modal fade" id="generateScheduleModal" tabindex="-1"
-             aria-labelledby="generateScheduleLabel"
-             aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <form id="schedule_form" v-on:submit.prevent="create_schedule">
-                        {% csrf_token %}
-                        <div class="modal-header" v-if="loading == false">
-                            <h5 class="modal-title" id="generateScheduleLabel">Utwórz nowy grafik</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-
-                        <div class="modal-body" v-if="loading == false">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="year" class="form-label">Rok</label>
-                                </div>
-                                <div class="col-md-6">
-                                    <input type="number" class="form-control" v-model="year" required>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label for="month" class="form-label">Miesiąc</label>
-                                </div>
-                                <div class="col-md-6">
-                                    <input type="number" class="form-control" v-model="month" required>
-                                </div>
-
-                                <label class="form-label">Działy uwzględnione w grafiku:</label>
-
-                                <div v-for="(workplace, i) in current_workplace" :key="workplace.id">
-                                    <div class="col-md-6">
-                                        <label class="form-label">w [[ workplace.name ]] </label>
-                                    </div>
-                                    <div class="col-md-6 text-center">
-                                        <input v-bind:id="workplace.id" v-bind:value="workplace.id" type="checkbox"
-                                               checked v-model="checked_workplace">
-                                    </div>
-                                </div>
-
+            <div class="modal fade" id="generateScheduleModal" tabindex="-1"
+                 aria-labelledby="generateScheduleLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form id="schedule_form" v-on:submit.prevent="create_schedule">
+                            {% csrf_token %}
+                            <div class="modal-header" v-if="loading == false">
+                                <h5 class="modal-title" id="generateScheduleLabel">Utwórz nowy grafik</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
                             </div>
-                        </div>
 
-                        <div class="modal-footer" v-if="loading == false">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
-                            <button type="submit" class="btn btn-primary">Wygeneruj</button>
-                        </div>
+                            <div class="modal-body" v-if="loading == false">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="year" class="form-label">Rok</label>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="number" class="form-control" v-model="year" required>
+                                    </div>
 
-                        <div v-if="loading">
-                            <h3 class="text-center">Waiting</h3>
-                            <img src="{% static 'img/Loading_icon.gif' %}" alt="Be patient"/>
-                        </div>
-                    </form>
+                                    <div class="col-md-6">
+                                        <label for="month" class="form-label">Miesiąc</label>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="number" class="form-control" v-model="month" required>
+                                    </div>
+
+                                    <label class="form-label">Działy uwzględnione w grafiku:</label>
+
+                                    <div v-for="(workplace, i) in current_workplace" :key="workplace.id">
+                                        <div class="col-md-6">
+                                            <label class="form-label">w [[ workplace.name ]] </label>
+                                        </div>
+                                        <div class="col-md-6 text-center">
+                                            <input v-bind:id="workplace.id" v-bind:value="workplace.id" type="checkbox"
+                                                   checked v-model="checked_workplace">
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <div class="modal-footer" v-if="loading == false">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                                <button type="submit" class="btn btn-primary">Wygeneruj</button>
+                            </div>
+
+                            <div v-if="loading">
+                                <h3 class="text-center">Waiting</h3>
+                                <img src="{% static 'img/Loading_icon.gif' %}" alt="Be patient"/>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    {#    <div>#}
-    {#                <h1>Utwórz nowy grafik</h1>#}
-    {#                <form id="schedule_form" action method="post">#}
-    {#                    {% csrf_token %}#}
-    {#                    <label>Data startu</label>#}
-    {#                    <input type="date" name="date_start" required>#}
-    {#                    <label>Data końca</label>#}
-    {#                    <input type="date" name="date_end" required>#}
-    {#        {% for workplace in workplace_list %}#}
-    {#            <label>Czy uzwględnić {{ workplace.name }} w grafiku?</label>#}
-    {#            <input type="checkbox" checked name="{{ workplace.name }}_checkbox">#}
-    {#        {% endfor %}#}
-    {#        <input type="submit">#}
-    {#        </form>#}
-    {#    </div>#}
-
+    {% else %}
+        <span>Brak działów</span>
+    {% endif %}
 {% endblock %}
 
 
 {% block vue-content %}
-    <script type="module">
-        import WorkCalendar from "{% static 'js/components/WorkCalendar.js' %}";
+    {% if is_any_workplace %}
+        <script type="module">
+            import WorkCalendar from "{% static 'js/components/WorkCalendar.js' %}";
 
-        const {createApp} = Vue
-        createApp({
-            delimiters: ["[[", "]]"],
-            components: {
-                WorkCalendar
-            },
-            data() {
-                return {
-                    fetched_schedule: null,
-                    month_str: '5',
-                    year_str: '2022',
-                    employee_id: 1,
-                    show_for_workplace: true,
-                    selected_unit: {{ default_unit }},
-                    select_unit: {{ select_unit | safe}},
-                    select_workplace: {{ select_workplace | safe }},
-                    selected_workplace: null,
-                    create_schedule_url: '{% url 'schedule_create' %}',
-                    year: 2022,
-                    month: 5,
-                    checked_workplace: [],
-                    loading: false,
-                }
-            },
-            methods: {
-                create_schedule() {
-                    this.loading = true
-                    axios
-                        .post(this.create_schedule_url,
-                            {
-                                workplace_list: this.checked_workplace,
-                                year: this.year,
-                                month: this.month
-                            }
-                        )
-                        .then(response => {
-                                this.loading = false
-                            }
-                        )
+            const {createApp} = Vue
+            createApp({
+                delimiters: ["[[", "]]"],
+                components: {
+                    WorkCalendar
                 },
-                fetch_data() {
-                    axios
-                        .get(this.base_url, {params: {'year': this.year_str, 'month': this.month_str}})
-                        .then(response => {
-                                this.fetched_schedule = response.data;
-                            }
-                        )
+                data() {
+                    return {
+                        fetched_schedule: null,
+                        month_str: '5',
+                        year_str: '2022',
+                        employee_id: 1,
+                        show_for_workplace: true,
+                        selected_unit: {{ default_unit }},
+                        select_unit: {{ select_unit | safe}},
+                        select_workplace: {{ select_workplace | safe }},
+                        selected_workplace: null,
+                        create_schedule_url: '{% url 'schedule_create' %}',
+                        year: 2022,
+                        month: 5,
+                        checked_workplace: [],
+                        loading: false,
+                    }
                 },
-                change_workplace() {
+                methods: {
+                    create_schedule() {
+                        this.loading = true
+                        axios
+                            .post(this.create_schedule_url,
+                                {
+                                    workplace_list: this.checked_workplace,
+                                    year: this.year,
+                                    month: this.month
+                                }
+                            )
+                            .then(response => {
+                                    this.loading = false
+                                }
+                            )
+                    },
+                    fetch_data() {
+                        axios
+                            .get(this.base_url, {params: {'year': this.year_str, 'month': this.month_str}})
+                            .then(response => {
+                                    this.fetched_schedule = response.data;
+                                }
+                            )
+                    },
+                    change_workplace() {
+                        try {
+                            this.selected_workplace = this.select_workplace[this.selected_unit][0]['id']
+                        } catch {
+
+                        }
+                        this.fetch_data()
+                    },
+                },
+                computed: {
+                    base_url: {
+                        get() {
+                            return '{% url 'schedule_get' 123456789 %}'.replace(/123456789/, this.selected_workplace);
+                        }
+                    },
+                    current_workplace: {
+                        get() {
+                            return this.select_workplace[this.selected_unit]
+                        }
+                    }
+                },
+                mounted() {
                     try {
                         this.selected_workplace = this.select_workplace[this.selected_unit][0]['id']
                     } catch {
@@ -203,29 +213,8 @@
                     }
                     this.fetch_data()
                 },
-            },
-            computed: {
-                base_url: {
-                    get() {
-                        return '{% url 'schedule_get' 123456789 %}'.replace(/123456789/, this.selected_workplace);
-                    }
-                },
-                current_workplace: {
-                    get() {
-                        return this.select_workplace[this.selected_unit]
-                    }
-                }
-            },
-            mounted() {
-                try {
-                    this.selected_workplace = this.select_workplace[this.selected_unit][0]['id']
-                } catch {
+            }).mount('#vue-app');
 
-                }
-                this.fetch_data()
-            },
-        }).mount('#vue-app');
-
-    </script>
-
+        </script>
+    {% endif %}
 {% endblock vue-content %}

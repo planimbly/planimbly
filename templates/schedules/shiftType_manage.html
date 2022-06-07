@@ -21,278 +21,287 @@
         </ol>
 
         <h2 class="mb-4"><a href="{% url 'units_manage' %}"><i class="material-icons"
-                                                       style="text-align: center; font-size:24px;">arrow_back_ios</i></a>Zarządzanie
+                                                               style="text-align: center; font-size:24px;">arrow_back_ios</i></a>Zarządzanie
             zmianami w ramach działu</h2>
         <hr class="breadcrumb">
     </nav>
-    <div class="row">
-        <div class="col">
-            <h3>Lista zmian</h3>
-        </div>
-        <div class="col">
-            <button type="button" class="m-1 btn btn-success d-flex justify-content-center align-content-between"
-                    data-bs-toggle="modal" data-bs-target="#addShiftModal">
-                Dodaj zmianę
-            </button>
-        </div>
-    </div>
-
-    <div id="vue-app">
-        <div class="modal fade" id="addShiftModal" tabindex="-1" aria-labelledby="shiftModalLabel"
-             aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <form v-on:submit.prevent="add_shiftType">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="shiftModalLabel">Dodawanie zmiany</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-
-                        <div class="modal-body">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label for="shiftStartDate" class="form-label">Start zmiany</label>
-                                </div>
-                                <div class="col-md-8">
-                                    <input type="time" class="form-control" v-model="hour_start" id="shiftStartDate">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="shiftEndDate" class="form-label">Koniec zmiany</label>
-                                </div>
-                                <div class="col-md-8">
-                                    <input type="time" class="form-control" v-model="hour_end" id="shiftEndDate">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="shiftName" class="form-label">Nazwa</label>
-                                </div>
-                                <div class="col-md-8">
-                                    <input type="text" class="form-control" v-model="name" id="shiftName">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="shiftActiveDays" class="form-label">Dni zmiany</label>
-                                </div>
-                                <div class="col-md-8">
-                                    <input type="text" class="form-control" v-model="active_days" id="shiftActiveDays">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="inputPreferences" class="form-label">Obowiązuje</label>
-                                </div>
-                                <div class="col-md-8">
-                                    <input type="checkbox" class="form-check-input" value="" v-model="is_used"
-                                           id="isShiftUsed" checked>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
-                            <button type="submit" class="btn btn-primary">Dodaj</button>
-                        </div>
-                    </form>
-
-                    <p v-for="(field, index) in response">
-                        [[ index ]] : [[ field.join('') ]]
-                    </p>
-                </div>
+    {% if is_any_workplace %}
+        <div class="row">
+            <div class="col">
+                <h3>Lista zmian</h3>
+            </div>
+            <div class="col">
+                <button type="button" class="m-1 btn btn-success d-flex justify-content-center align-content-between"
+                        data-bs-toggle="modal" data-bs-target="#addShiftModal">
+                    Dodaj zmianę
+                </button>
             </div>
         </div>
-        <select v-model="selected_unit" v-on:change="change_workplace">
-            <option v-for="unit in select_unit" :value="unit.id">
-                [[ unit.name ]]
-            </option>
-        </select>
-        <select v-model="selected_workplace" v-on:change="fetch_data">
-            <option v-for="workplace in current_workplace" :value="workplace.id">
-                [[ workplace.name ]]
-            </option>
-        </select>
-        <table class="table styled-table">
-            <thead>
-            <tr>
-                <th scope="col">ID</th>
-                <th scope="col">Start zmiany</th>
-                <th scope="col">Koniec zmiany</th>
-                <th scope="col">Nazwa</th>
-                <th scope="col">Aktywne dni</th>
-                <th scope="col">W użyciu</th>
-                <th scope="col">Zapisz</th>
-                <th scope="col">Usuń</th>
-            </tr>
-            </thead>
 
-            <tbody>
-            <tr v-for="(shiftType, i) in shiftType_list" :key="shiftType.id">
-                <th scope="row"><span>[[ shiftType.id ]]</span></th>
-                <td><input type="time" class="form-control" v-model="shiftType.hour_start"></td>
-                <td><input type="time" class="form-control" v-model="shiftType.hour_end"></td>
-                <td><input type="text" class="form-control" v-model="shiftType.name"></td>
-                <td><input type="text" class="form-control" v-model="shiftType.active_days"></td>
-                <td><input type="checkbox" class="form-check-input" value="" v-model="shiftType.is_used"></td>
-                <td>
-                    <button v-on:click="change_shiftType(i)" type="button"
-                            class="btn btn-primary d-flex justify-content-center align-content-between"><i
-                            class="material-icons">save</i></button>
-                </td>
-                <td>
-                    <button v-on:click="remove_shiftType(shiftType.id)" type="button"
-                            class="btn btn-danger d-flex justify-content-center align-content-between"><i
-                            class="material-icons">delete</i></button>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
+        <div id="vue-app">
+            <div class="modal fade" id="addShiftModal" tabindex="-1" aria-labelledby="shiftModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form v-on:submit.prevent="add_shiftType">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="shiftModalLabel">Dodawanie zmiany</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label for="shiftStartDate" class="form-label">Start zmiany</label>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <input type="time" class="form-control" v-model="hour_start"
+                                               id="shiftStartDate">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="shiftEndDate" class="form-label">Koniec zmiany</label>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <input type="time" class="form-control" v-model="hour_end" id="shiftEndDate">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="shiftName" class="form-label">Nazwa</label>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <input type="text" class="form-control" v-model="name" id="shiftName">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="shiftActiveDays" class="form-label">Dni zmiany</label>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <input type="text" class="form-control" v-model="active_days"
+                                               id="shiftActiveDays">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="inputPreferences" class="form-label">Obowiązuje</label>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <input type="checkbox" class="form-check-input" value="" v-model="is_used"
+                                               id="isShiftUsed" checked>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                                <button type="submit" class="btn btn-primary">Dodaj</button>
+                            </div>
+                        </form>
+
+                        <p v-for="(field, index) in response">
+                            [[ index ]] : [[ field.join('') ]]
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <select v-model="selected_unit" v-on:change="change_workplace">
+                <option v-for="unit in select_unit" :value="unit.id">
+                    [[ unit.name ]]
+                </option>
+            </select>
+            <select v-model="selected_workplace" v-on:change="fetch_data">
+                <option v-for="workplace in current_workplace" :value="workplace.id">
+                    [[ workplace.name ]]
+                </option>
+            </select>
+            <table class="table styled-table">
+                <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Start zmiany</th>
+                    <th scope="col">Koniec zmiany</th>
+                    <th scope="col">Nazwa</th>
+                    <th scope="col">Aktywne dni</th>
+                    <th scope="col">W użyciu</th>
+                    <th scope="col">Zapisz</th>
+                    <th scope="col">Usuń</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr v-for="(shiftType, i) in shiftType_list" :key="shiftType.id">
+                    <th scope="row"><span>[[ shiftType.id ]]</span></th>
+                    <td><input type="time" class="form-control" v-model="shiftType.hour_start"></td>
+                    <td><input type="time" class="form-control" v-model="shiftType.hour_end"></td>
+                    <td><input type="text" class="form-control" v-model="shiftType.name"></td>
+                    <td><input type="text" class="form-control" v-model="shiftType.active_days"></td>
+                    <td><input type="checkbox" class="form-check-input" value="" v-model="shiftType.is_used"></td>
+                    <td>
+                        <button v-on:click="change_shiftType(i)" type="button"
+                                class="btn btn-primary d-flex justify-content-center align-content-between"><i
+                                class="material-icons">save</i></button>
+                    </td>
+                    <td>
+                        <button v-on:click="remove_shiftType(shiftType.id)" type="button"
+                                class="btn btn-danger d-flex justify-content-center align-content-between"><i
+                                class="material-icons">delete</i></button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <span>Brak działów</span>
+    {% endif %}
 {% endblock content %}
 
 {% block vue-content %}
-    <script type="module">
-        {#var app = new Vue#}
-        const {createApp} = Vue
+    {% if is_any_workplace %}
+        <script type="module">
+            {#var app = new Vue#}
+            const {createApp} = Vue
 
-        var app = createApp({
-            delimiters: ["[[", "]]"],
-            {#el: '#vue-app',#}
-            data() {
-                return {
-                    hour_start: '',
-                    hour_end: '',
-                    name: '',
-                    active_days: '',
-                    is_used: true,
-                    shiftType_list: null,
-                    response: null,
-                    selected_unit: {{ default_unit }},
-                    select_unit: {{ select_unit | safe}},
-                    select_workplace: {{ select_workplace | safe }},
-                    selected_workplace: ''
-                }
-            },
-            computed: {
-                base_url: {
-                    get() {
-                        {% comment %}let url = '{% url 'shiftType' 1234 %}'.replace(/1234/, this.selected_workplace){% endcomment %}
-                        let url = 'http://{{ request.get_host }}/' + 'schedules/api/' + this.selected_workplace + '/shiftType/'
-                        return url
+            var app = createApp({
+                delimiters: ["[[", "]]"],
+                {#el: '#vue-app',#}
+                data() {
+                    return {
+                        hour_start: '',
+                        hour_end: '',
+                        name: '',
+                        active_days: '',
+                        is_used: true,
+                        shiftType_list: null,
+                        response: null,
+                        selected_unit: {{ default_unit }},
+                        select_unit: {{ select_unit | safe}},
+                        select_workplace: {{ select_workplace | safe }},
+                        selected_workplace: ''
                     }
                 },
-                current_workplace: {
-                    get() {
-                        return this.select_workplace[this.selected_unit]
+                computed: {
+                    base_url: {
+                        get() {
+                            {% comment %}let url = '{% url 'shiftType' 1234 %}'.replace(/1234/, this.selected_workplace){% endcomment %}
+                            let url = 'http://{{ request.get_host }}/' + 'schedules/api/' + this.selected_workplace + '/shiftType/'
+                            return url
+                        }
+                    },
+                    current_workplace: {
+                        get() {
+                            return this.select_workplace[this.selected_unit]
+                        }
                     }
-                }
-            },
-            methods: {
-                change_workplace() {
-                    try {
-                        this.selected_workplace = this.select_workplace[this.selected_unit][0]['id']
-                    } catch {
+                },
+                methods: {
+                    change_workplace() {
+                        try {
+                            this.selected_workplace = this.select_workplace[this.selected_unit][0]['id']
+                        } catch {
+
+                        }
+                        this.fetch_data()
+                    },
+                    fetch_data() {
+                        axios
+                            .get(this.base_url)
+                            .then(response => (this.shiftType_list = response.data))
+                    },
+                    add_shiftType() {
+                        swal({
+                            title: "Potwierdź dodanie zmiany",
+                            icon: "info",
+                            buttons: true
+                        })
+                            .then((willAdd) => {
+                                if (willAdd) {
+
+                                    axios
+                                        .post(this.base_url,
+                                            {
+                                                hour_start: this.hour_start,
+                                                hour_end: this.hour_end,
+                                                name: this.name,
+                                                active_days: this.active_days,
+                                                is_used: this.is_used
+                                            }
+                                        )
+                                        .then(
+                                            this.fetch_data
+                                        )
+                                        .catch(error => {
+                                                this.response = error.response.data
+                                            }
+                                        )
+                                    this.hour_start = ''
+                                    this.hour_end = ''
+                                    this.name = ''
+                                    this.active_days = ''
+                                    this.is_used = 1
+                                }
+                            });
+                    },
+                    remove_shiftType(id) {
+                        swal({
+                            title: "Czy na pewno chcesz usunąć zmianę?",
+                            icon: "warning",
+                            buttons: true,
+                            dangerMode: true,
+                        })
+                            .then((willAdd) => {
+                                if (willAdd) {
+                                    let url = this.base_url + id + '/'
+                                    axios
+                                        .delete(url,
+                                            {
+                                                id: id
+                                            }
+                                        )
+                                        .then(
+                                            this.fetch_data
+                                        )
+                                        .catch(error => {
+                                                this.response = error.response.data
+                                            }
+                                        )
+                                }
+                            });
+
+                    },
+                    change_shiftType(i) {
+                        let url = this.base_url + this.shiftType_list[i].id + '/'
+                        swal({
+                            title: "Czy chcesz zatwierdzić zmiany",
+                            icon: "info",
+                            buttons: true,
+                            //dangerMode: true,
+                        })
+                            .then((willAdd) => {
+                                if (willAdd) {
+                                    axios
+                                        .put(url,
+                                            {
+                                                hour_start: this.shiftType_list[i].hour_start,
+                                                hour_end: this.shiftType_list[i].hour_end,
+                                                name: this.shiftType_list[i].name,
+                                                active_days: this.shiftType_list[i].active_days,
+                                                is_used: this.shiftType_list[i].is_used
+                                            }
+                                        )
+                                        .then(
+                                            this.fetch_data
+                                        )
+                                        .catch(error => {
+                                                this.response = error.response.data
+                                            }
+                                        )
+
+                                }
+                            });
 
                     }
+                },
+                mounted() {
+                    this.selected_workplace = this.select_workplace[this.selected_unit][0]['id']
                     this.fetch_data()
-                },
-                fetch_data() {
-                    axios
-                        .get(this.base_url)
-                        .then(response => (this.shiftType_list = response.data))
-                },
-                add_shiftType() {
-                    swal({
-                        title: "Potwierdź dodanie zmiany",
-                        icon: "info",
-                        buttons: true
-                    })
-                        .then((willAdd) => {
-                            if (willAdd) {
-
-                                axios
-                                    .post(this.base_url,
-                                        {
-                                            hour_start: this.hour_start,
-                                            hour_end: this.hour_end,
-                                            name: this.name,
-                                            active_days: this.active_days,
-                                            is_used: this.is_used
-                                        }
-                                    )
-                                    .then(
-                                        this.fetch_data
-                                    )
-                                    .catch(error => {
-                                            this.response = error.response.data
-                                        }
-                                    )
-                                this.hour_start = ''
-                                this.hour_end = ''
-                                this.name = ''
-                                this.active_days = ''
-                                this.is_used = 1
-                            }
-                        });
-                },
-                remove_shiftType(id) {
-                    swal({
-                        title: "Czy na pewno chcesz usunąć zmianę?",
-                        icon: "warning",
-                        buttons: true,
-                        dangerMode: true,
-                    })
-                        .then((willAdd) => {
-                            if (willAdd) {
-                                let url = this.base_url + id + '/'
-                                axios
-                                    .delete(url,
-                                        {
-                                            id: id
-                                        }
-                                    )
-                                    .then(
-                                        this.fetch_data
-                                    )
-                                    .catch(error => {
-                                            this.response = error.response.data
-                                        }
-                                    )
-                            }
-                        });
-
-                },
-                change_shiftType(i) {
-                    let url = this.base_url + this.shiftType_list[i].id + '/'
-                    swal({
-                        title: "Czy chcesz zatwierdzić zmiany",
-                        icon: "info",
-                        buttons: true,
-                        //dangerMode: true,
-                    })
-                        .then((willAdd) => {
-                            if (willAdd) {
-                                axios
-                                    .put(url,
-                                        {
-                                            hour_start: this.shiftType_list[i].hour_start,
-                                            hour_end: this.shiftType_list[i].hour_end,
-                                            name: this.shiftType_list[i].name,
-                                            active_days: this.shiftType_list[i].active_days,
-                                            is_used: this.shiftType_list[i].is_used
-                                        }
-                                    )
-                                    .then(
-                                        this.fetch_data
-                                    )
-                                    .catch(error => {
-                                            this.response = error.response.data
-                                        }
-                                    )
-
-                            }
-                        });
-
                 }
-            },
-            mounted() {
-                this.selected_workplace = this.select_workplace[this.selected_unit][0]['id']
-                this.fetch_data()
-            }
-        }).mount('#vue-app');
-    </script>
+            }).mount('#vue-app');
+        </script>
+    {% endif %}
 {% endblock vue-content %}

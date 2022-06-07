@@ -267,8 +267,6 @@ def find_illegal_transitions(shifts: list[ShiftType]):
 def solve_shift_scheduling(schedule_dict, employees: list[Employee], shift_types: list[ShiftType], year: int,
                            month: int, params, output_proto):
     """Solves the shift scheduling problem."""
-    # All employes
-    all_employees = Employee.objects.all()
     # Calendar data
     list_month = get_month_by_weeks(year, month)
     # num_weeks = len(list_month)
