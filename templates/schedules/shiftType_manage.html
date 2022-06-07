@@ -27,18 +27,6 @@
         <hr class="breadcrumb">
     </nav>
     {% if is_any_workplace %}
-        <div class="row">
-            <div class="col">
-                <h3>Lista zmian</h3>
-            </div>
-            <div class="col">
-                <button type="button" class="m-1 btn btn-success d-flex justify-content-center align-content-between"
-                        data-bs-toggle="modal" data-bs-target="#addShiftModal">
-                    Dodaj zmianę
-                </button>
-            </div>
-        </div>
-
     <div id="vue-app">
         <div class="row d-flex justify-content-between align-items-center">
             <div class="col d-flex justify-content-start">
@@ -326,42 +314,4 @@
             }).mount('#vue-app');
         </script>
     {% endif %}
-                },
-                change_shiftType(i) {
-                    let url = this.base_url + this.shiftType_list[i].id + '/'
-                    swal({
-                        title: "Czy chcesz zatwierdzić zmiany",
-                        icon: "info",
-                        buttons: true,
-                        //dangerMode: true,
-                    })
-                        .then((willAdd) => {
-                            if (willAdd) {
-                                axios
-                                    .put(url,
-                                        {
-                                            hour_start: this.shiftType_list[i].hour_start,
-                                            hour_end: this.shiftType_list[i].hour_end,
-                                            name: this.shiftType_list[i].name,
-                                            active_days: this.shiftType_list[i].active_days,
-                                            is_used: this.shiftType_list[i].is_used
-                                        }
-                                    )
-                                    .then(
-                                        this.fetch_data
-                                    )
-                                    .catch(error => {
-                                            this.response = error.response.data
-                                        }
-                                    )
-                            }
-                        });
-                }
-            },
-            mounted() {
-                this.selected_workplace = this.select_workplace[this.selected_unit][0]['id']
-                this.fetch_data()
-            }
-        }).mount('#vue-app');
-    </script>
 {% endblock vue-content %}
