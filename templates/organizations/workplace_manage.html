@@ -15,14 +15,12 @@
 {% block content %}
     <nav style aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'units_manage' %}">Strona główna</a></li>
-            <li class="breadcrumb-item">Nazwa organizacji</li>
-            <li class="breadcrumb-item" aria-current="page"><span style="font-weight: 600;">Jednostki</span></li>
+            <li class="breadcrumb-item"><a href="{% url 'units_manage' %}" class="breadcrumb-link">{{ user.user_org }}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'units_manage' %}" class="breadcrumb-link">Jednostki</a></li>
+            <li class="breadcrumb-item current-subpage">Działy</li>
         </ol>
-
-        <h2 class="mb-4"><a href="{% url 'units_manage' %}"><i class="material-icons"
-                                                       style="text-align: center; font-size:24px;">arrow_back_ios</i></a>Zarządzanie
-            działami</h2>
+        <h2 class="breadcrumb-title"><a href="{% url 'units_manage' %}">
+            <i class="material-icons breadcrumb-go-back-icon">arrow_back_ios</i></a>Zarządzanie działami</h2>
         <hr class="breadcrumb">
     </nav>
 
