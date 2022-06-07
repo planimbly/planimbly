@@ -32,34 +32,31 @@
             <div class="col d-flex justify-content-start">
                 <h3 class="content-title">Lista zmian</h3>
             </div>
-            <div class="col">
-                <div class="row align-items-center">
-{#                    <div class="col-auto">#}
-{#                        <label class="col-form-label" for="unitSelect">Jednostka:</label>#}
-{#                    </div>#}
-                    <div class="col-auto">
-                        <select id="unitSelect" class="form-select" v-model="selected_unit"
-                                v-on:change="change_workplace">
-                            <option v-for="unit in select_unit" :value="unit.id">
-                                [[ unit.name ]]
-                            </option>
-                        </select>
-                    </div>
-{#                    <div class="col-auto">#}
-{#                        <label class="col-form-label" for="workplaceSelect">Dział:</label>#}
-{#                    </div>#}
-                    <div class="col-auto">
-                        <select id="workplaceSelect" class="form-select" v-model="selected_workplace"
-                                v-on:change="fetch_data">
-                            <option v-for="workplace in current_workplace" :value="workplace.id">
-                                [[ workplace.name ]]
-                            </option>
-                        </select>
-                    </div>
-                </div>
+            <div class="col-auto">
+                <label class="col-form-label" for="unitSelect">Jednostka:</label>
+            </div>
+            <div class="col-auto">
+                <select id="unitSelect" class="form-select" v-model="selected_unit"
+                        v-on:change="change_workplace">
+                    <option v-for="unit in select_unit" :value="unit.id">
+                        [[ unit.name ]]
+                    </option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <label class="col-form-label" for="workplaceSelect">Dział:</label>
+            </div>
+            <div class="col-auto">
+                <select id="workplaceSelect" class="form-select" v-model="selected_workplace"
+                        v-on:change="fetch_data">
+                    <option v-for="workplace in current_workplace" :value="workplace.id">
+                        [[ workplace.name ]]
+                    </option>
+                </select>
             </div>
             <div class="col d-flex justify-content-end">
-                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addShiftModal">
+                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal"
+                        data-bs-target="#addShiftModal">
                     Dodaj zmianę
                 </button>
             </div>
@@ -76,44 +73,45 @@
                         </div>
 
                         <div class="modal-body">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label for="shiftStartDate" class="form-label">Start zmiany</label>
+                            <div class="row g-3 d-flex align-items-center">
+                                <div class="col-4">
+                                    <label for="shiftStartDate" class="form-label modal-style">Start zmiany</label>
                                 </div>
-                                <div class="col-md-8">
+                                <div class="col-8">
                                     <input type="time" class="form-control" v-model="hour_start" id="shiftStartDate">
                                 </div>
-                                <div class="col-md-4">
-                                    <label for="shiftEndDate" class="form-label">Koniec zmiany</label>
+                                <div class="col-4">
+                                    <label for="shiftEndDate" class="form-label modal-style">Koniec zmiany</label>
                                 </div>
-                                <div class="col-md-8">
+                                <div class="col-8">
                                     <input type="time" class="form-control" v-model="hour_end" id="shiftEndDate">
                                 </div>
-                                <div class="col-md-4">
-                                    <label for="shiftName" class="form-label">Nazwa</label>
+                                <div class="col-4">
+                                    <label for="shiftName" class="form-label modal-style">Nazwa</label>
                                 </div>
-                                <div class="col-md-8">
+                                <div class="col-8">
                                     <input type="text" class="form-control" v-model="name" id="shiftName">
                                 </div>
-                                <div class="col-md-4">
-                                    <label for="shiftActiveDays" class="form-label">Dni zmiany</label>
+                                <div class="col-4">
+                                    <label for="shiftActiveDays" class="form-label modal-style">Aktywne dni</label>
                                 </div>
-                                <div class="col-md-8">
+                                <div class="col-8">
                                     <input type="text" class="form-control" v-model="active_days" id="shiftActiveDays">
                                 </div>
-                                <div class="col-md-4">
-                                    <label for="inputPreferences" class="form-label">Obowiązuje</label>
+                                <div class="col-4">
+                                    <label for="isShiftUsed" class="form-label modal-style">W użyciu</label>
                                 </div>
-                                <div class="col-md-8">
-                                    <input type="checkbox" class="form-check-input" value="" v-model="is_used"
-                                           id="isShiftUsed" checked>
+                                <div class="col-8 d-flex align-items-center">
+                                    <input type="checkbox" class="form-check-input" style="margin: 0px;" value=""
+                                           v-model="is_used" id="isShiftUsed" checked>
                                 </div>
                             </div>
                         </div>
 
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
-                            <button type="submit" class="btn btn-primary">Dodaj</button>
+                            <button type="submit" class="btn btn-outline-primary">Dodaj</button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Zamknij
+                            </button>
                         </div>
                     </form>
 

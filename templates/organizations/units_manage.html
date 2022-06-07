@@ -15,7 +15,8 @@
 {% block content %}
     <nav style aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'units_manage' %}" class="breadcrumb-link">{{ user.user_org }}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'units_manage' %}"
+                                           class="breadcrumb-link">{{ user.user_org }}</a></li>
             <li class="breadcrumb-item current-subpage">Jednostki</li>
         </ol>
         <h2 class="breadcrumb-title">Zarządzanie jednostkami</h2>
@@ -27,49 +28,46 @@
             <div class="col d-flex justify-content-start">
                 <h3 class="content-title">Lista jednostek</h3>
             </div>
-            <div class="col">
-                <ul style="vertical-align: center; margin: auto;">
-                    <li><a href="{% url 'unit-list' %}">Unit list</a></li>
-                </ul>
-            </div>
             <div class="col d-flex justify-content-end">
-                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addUnitModal">
+                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal"
+                        data-bs-target="#addUnitModal">
                     Dodaj jednostkę
                 </button>
             </div>
         </div>
 
-    <div id="vue-app">
-        <div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+        <div class="modal fade" id="addUnitModal" tabindex="-1" aria-labelledby="addUnitModalLabel"
              aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <form v-on:submit.prevent="add_unit">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="exampleModalLabel">Dodawanie jednostek</h5>
+                            <h5 class="modal-title" id="addUnitModalLabel">Dodaj jednostkę</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
 
                         <div class="modal-body">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label for="inputName" class="form-label">Nazwa</label>
+                            <div class="row g-3 d-flex align-items-center">
+                                <div class="col-4">
+                                    <label for="inputName" class="form-label modal-style">Nazwa</label>
                                 </div>
-                                <div class="col-md-8">
+                                <div class="col-8">
                                     <input type="text" class="form-control" v-model="name" id="inputName">
                                 </div>
-                                <div class="col-md-4">
-                                    <label for="inputPreferences" class="form-label">Preferencje</label>
+                                <div class="col-4">
+                                    <label for="inputPreferences" class="form-label modal-style">Preferencje</label>
                                 </div>
-                                <div class="col-md-8">
-                                    <input type="checkbox" class="form-check-input" value="" v-model="allow_preferences" id="inputPreferences" checked>
+                                <div class="col-8 d-flex align-items-center">
+                                    <input type="checkbox" class="form-check-input" style="margin: 0px;" value=""
+                                           v-model="allow_preferences" id="inputPreferences" checked>
                                 </div>
                             </div>
                         </div>
 
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
-                            <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
+                            <button type="submit" class="btn btn-outline-primary">Dodaj</button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Zamknij
+                            </button>
                         </div>
                     </form>
 

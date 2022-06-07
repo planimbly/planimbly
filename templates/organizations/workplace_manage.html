@@ -15,7 +15,8 @@
 {% block content %}
     <nav style aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'units_manage' %}" class="breadcrumb-link">{{ user.user_org }}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'units_manage' %}"
+                                           class="breadcrumb-link">{{ user.user_org }}</a></li>
             <li class="breadcrumb-item"><a href="{% url 'units_manage' %}" class="breadcrumb-link">Jednostki</a></li>
             <li class="breadcrumb-item current-subpage">Działy</li>
         </ol>
@@ -43,8 +44,9 @@
                     </div>
                 </div>
             </div>
+
             <div class="col d-flex justify-content-end">
-                <button type="button" class="btn btn-success" data-bs-toggle="modal"
+                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal"
                         data-bs-target="#addWorkplaceModal">
                     Dodaj dział
                 </button>
@@ -57,24 +59,23 @@
                 <div class="modal-content">
                     <form v-on:submit.prevent="add_workplace">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="exampleModalLabel">Dodawanie działów</h5>
+                            <h5 class="modal-title" id="exampleModalLabel">Dodaj dział</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
 
                         <div class="modal-body">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label for="inputName" class="form-label">Nazwa</label>
-                                </div>
-                                <div class="col-md-8">
-                                    <input type="text" class="form-control" v-model="name" id="inputName">
+                            <div class="col">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" v-model="name" id="inputName"
+                                           placeholder="Nazwa">
+                                    <label for="inputName">Nazwa</label>
                                 </div>
                             </div>
                         </div>
 
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
-                            <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
+                            <button type="submit" class="btn btn-outline-primary">Dodaj</button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Zamknij</button>
                         </div>
                     </form>
 
