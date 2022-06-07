@@ -21,211 +21,219 @@
         </ol>
 
         <h2 class="mb-4"><a href="{% url 'units_manage' %}"><i class="material-icons"
-                                                       style="text-align: center; font-size:24px;">arrow_back_ios</i></a>Zarządzanie
+                                                               style="text-align: center; font-size:24px;">arrow_back_ios</i></a>Zarządzanie
             działami</h2>
         <hr class="breadcrumb">
     </nav>
 
+    {% if is_any_unit %}
+        <div id="vue-app">
+            <select v-model="selected_unit" v-on:change="fetch_data">
+                <option v-for="unit in select_unit" :value="unit.id">
+                    [[ unit.name ]]
+                </option>
+            </select>
+            <div class="modal fade" id="addWorkplaceModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form v-on:submit.prevent="add_workplace">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLabel">Dodawanie działów</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                            </div>
 
-    <div id="vue-app">
-        <select v-model="selected_unit" v-on:change="fetch_data">
-            <option v-for="unit in select_unit" :value="unit.id">
-                [[ unit.name ]]
-            </option>
-        </select>
-        <div class="modal fade" id="addWorkplaceModal" tabindex="-1" aria-labelledby="exampleModalLabel"
-             aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <form v-on:submit.prevent="add_workplace">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="exampleModalLabel">Dodawanie działów</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-
-                        <div class="modal-body">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label for="inputName" class="form-label">Nazwa</label>
-                                </div>
-                                <div class="col-md-8">
-                                    <input type="text" class="form-control" v-model="name" id="inputName">
+                            <div class="modal-body">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label for="inputName" class="form-label">Nazwa</label>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <input type="text" class="form-control" v-model="name" id="inputName">
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
-                            <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
-                        </div>
-                    </form>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                                <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
+                            </div>
+                        </form>
 
-                    <p v-for="(field, index) in response">
-                        [[ index ]] : [[ field.join('') ]]
-                    </p>
+                        <p v-for="(field, index) in response">
+                            [[ index ]] : [[ field.join('') ]]
+                        </p>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="row">
-            <div class="col-10">
-                <h3>Lista działów</h3>
+            <div class="row">
+                <div class="col-10">
+                    <h3>Lista działów</h3>
+                </div>
+                <div class="col-2">
+                    <button type="button"
+                            class="m-1 btn btn-success d-flex justify-content-center align-content-between"
+                            data-bs-toggle="modal" data-bs-target="#addWorkplaceModal">
+                        Dodaj dział
+                    </button>
+                </div>
             </div>
-            <div class="col-2">
-                <button type="button" class="m-1 btn btn-success d-flex justify-content-center align-content-between"
-                        data-bs-toggle="modal" data-bs-target="#addWorkplaceModal">
-                    Dodaj dział
-                </button>
-            </div>
+
+            <table class="table styled-table">
+                <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Dział</th>
+                    <th scope="col">Zapisz</th>
+                    <th scope="col">Usuń</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr v-for="(workplace, i) in workplace_list" :key="workplace.id">
+                    <th scope="row"><span>[[ workplace.id ]]</span></th>
+                    <td><input type="text" class="form-control" v-model="workplace.name"></td>
+                    </td>
+                    <td>
+                        <button v-on:click="change_workplace(i)" type="button"
+                                class="btn btn-primary"
+                                style="/*vertical-align: center; text-align: center; */display: flex; align-items: center; justify-content: center;">
+                            <i
+                                    class="material-icons">save</i></button>
+                    </td>
+                    <td>
+                        <button v-on:click="remove_workplace(workplace.id)" type="button"
+                                class="btn btn-danger d-flex justify-content-center align-content-between"><i
+                                class="material-icons">delete</i></button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
         </div>
+    {% else %}
+        <span>Brak jednostek</span>
+    {% endif %}
 
-        <table class="table styled-table">
-            <thead>
-            <tr>
-                <th scope="col">ID</th>
-                <th scope="col">Dział</th>
-                <th scope="col">Zapisz</th>
-                <th scope="col">Usuń</th>
-            </tr>
-            </thead>
-
-            <tbody>
-            <tr v-for="(workplace, i) in workplace_list" :key="workplace.id">
-                <th scope="row"><span>[[ workplace.id ]]</span></th>
-                <td><input type="text" class="form-control" v-model="workplace.name"></td>
-                </td>
-                <td>
-                    <button v-on:click="change_workplace(i)" type="button"
-                            class="btn btn-primary"
-                            style="/*vertical-align: center; text-align: center; */display: flex; align-items: center; justify-content: center;">
-                        <i
-                                class="material-icons">save</i></button>
-                </td>
-                <td>
-                    <button v-on:click="remove_workplace(workplace.id)" type="button"
-                            class="btn btn-danger d-flex justify-content-center align-content-between"><i
-                            class="material-icons">delete</i></button>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
 {% endblock content %}
 {% block vue-content %}
-    <script type="module">
-        {#var app = new Vue#}
-        const {createApp} = Vue
-        var app = createApp({
-            delimiters: ["[[", "]]"],
-            {#el: '#vue-app',#}
-            data() {
-                return {
-                    name: '',
-                    workplace_list: null,
-                    response: null,
-                    selected_unit: {{ default_unit }},
-                    select_unit: {{ select_unit | safe}}
-                }
-            },
-            // TODO LEPSZE TWORZENIE URLA
-            computed: {
-                base_url: {
-                    get() {
-                        return 'http://{{ request.get_host }}/' + 'organizations/api/' + this.selected_unit + '/workplace/'
+    {% if is_any_unit %}
+        <script type="module">
+            {#var app = new Vue#}
+            const {createApp} = Vue
+            var app = createApp({
+                delimiters: ["[[", "]]"],
+                {#el: '#vue-app',#}
+                data() {
+                    return {
+                        name: '',
+                        workplace_list: null,
+                        response: null,
+                        selected_unit: {{ default_unit }},
+                        select_unit: {{ select_unit | safe}}
                     }
+                },
+                // TODO LEPSZE TWORZENIE URLA
+                computed: {
+                    base_url: {
+                        get() {
+                            return 'http://{{ request.get_host }}/' + 'organizations/api/' + this.selected_unit + '/workplace/'
+                        }
+                    }
+                },
+                methods: {
+                    fetch_data() {
+                        console.log(this.base_url)
+                        axios
+                            .get(this.base_url)
+                            .then(response => (this.workplace_list = response.data))
+                    },
+                    add_workplace() {
+                        swal({
+                            title: "Potwierdź dodanie działu",
+                            icon: "info",
+                            buttons: true
+                        })
+                            .then((willAdd) => {
+                                if (willAdd) {
+
+                                    axios
+                                        .post(this.base_url,
+                                            {
+                                                name: this.name
+                                            }
+                                        )
+                                        .then(
+                                            this.fetch_data
+                                        )
+                                        .catch(error => {
+                                                this.response = error.response.data
+                                            }
+                                        )
+                                    this.name = ''
+                                }
+                            });
+                    },
+                    remove_workplace(id) {
+                        swal({
+                            title: "Czy na pewno chcesz usunąć dział?",
+                            icon: "warning",
+                            buttons: true,
+                            dangerMode: true,
+                        })
+                            .then((willAdd) => {
+                                if (willAdd) {
+                                    let url = this.base_url + id + '/'
+                                    axios
+                                        .delete(url,
+                                            {
+                                                id: id
+                                            }
+                                        )
+                                        .then(
+                                            this.fetch_data
+                                        )
+                                        .catch(error => {
+                                                this.response = error.response.data
+                                            }
+                                        )
+                                }
+                            });
+
+                    },
+                    change_workplace(i) {
+                        let url = this.base_url + this.workplace_list[i].id + '/'
+                        swal({
+                            title: "Czy chcesz zatwierdzić zmiany",
+                            icon: "info",
+                            buttons: true
+                        })
+                            .then((willAdd) => {
+                                if (willAdd) {
+                                    axios
+                                        .put(url,
+                                            {
+                                                name: this.workplace_list[i].name
+                                            }
+                                        )
+                                        .then(
+                                            this.fetch_data
+                                        )
+                                        .catch(error => {
+                                                this.response = error.response.data
+                                            }
+                                        )
+
+                                }
+                            });
+
+                    }
+                },
+                mounted() {
+                    this.fetch_data()
                 }
-            },
-            methods: {
-                fetch_data() {
-                    console.log(this.base_url)
-                    axios
-                        .get(this.base_url)
-                        .then(response => (this.workplace_list = response.data))
-                },
-                add_workplace() {
-                    swal({
-                        title: "Potwierdź dodanie działu",
-                        icon: "info",
-                        buttons: true
-                    })
-                        .then((willAdd) => {
-                            if (willAdd) {
-
-                                axios
-                                    .post(this.base_url,
-                                        {
-                                            name: this.name
-                                        }
-                                    )
-                                    .then(
-                                        this.fetch_data
-                                    )
-                                    .catch(error => {
-                                            this.response = error.response.data
-                                        }
-                                    )
-                                this.name = ''
-                            }
-                        });
-                },
-                remove_workplace(id) {
-                    swal({
-                        title: "Czy na pewno chcesz usunąć dział?",
-                        icon: "warning",
-                        buttons: true,
-                        dangerMode: true,
-                    })
-                        .then((willAdd) => {
-                            if (willAdd) {
-                                let url = this.base_url + id + '/'
-                                axios
-                                    .delete(url,
-                                        {
-                                            id: id
-                                        }
-                                    )
-                                    .then(
-                                        this.fetch_data
-                                    )
-                                    .catch(error => {
-                                            this.response = error.response.data
-                                        }
-                                    )
-                            }
-                        });
-
-                },
-                change_workplace(i) {
-                    let url = this.base_url + this.workplace_list[i].id + '/'
-                    swal({
-                        title: "Czy chcesz zatwierdzić zmiany",
-                        icon: "info",
-                        buttons: true
-                    })
-                        .then((willAdd) => {
-                            if (willAdd) {
-                                axios
-                                    .put(url,
-                                        {
-                                            name: this.workplace_list[i].name
-                                        }
-                                    )
-                                    .then(
-                                        this.fetch_data
-                                    )
-                                    .catch(error => {
-                                            this.response = error.response.data
-                                        }
-                                    )
-
-                            }
-                        });
-
-                }
-            },
-            mounted() {
-                this.fetch_data()
-            }
-        }).mount('#vue-app');
-    </script>
+            }).mount('#vue-app');
+        </script>
+    {% endif %}
 {% endblock vue-content %}

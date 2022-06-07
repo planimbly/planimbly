@@ -65,36 +65,12 @@ class OrganizationCreateView(TemplateView):
             manager = get_user_model().objects.create_user(data['email'], data['username'],
                                                            data['first_name'], data['last_name'], password, org, True)
             send_user_activation_mail(manager, self.request)
-            return HttpResponseRedirect(reverse('home'))
+            return HttpResponseRedirect(reverse('employees_manage'))
         else:
             context = super(OrganizationCreateView, self).get_context_data()
             context['organization_create_form'] = OrganizationCreateForm(self.request.POST)
             context['manager_create_form'] = ManagerCreateForm(self.request.POST)
             return self.render_to_response(context)
-
-
-class EmployeesImportView(TemplateView):
-    template_name = 'organizations/employees_import.html'
-
-    def post(self, request, *args, **kwargs):
-
-        file = request.FILES['employeesList']
-        org = self.request.user.user_org
-        # TODO Sprawdzać kodowanie pliku, jak?
-        # TODO Zabezpieczyć dodawanie plików, sprawdzanie ich poprawności
-        file_data = file.read().decode('utf-8')
-        lines = file_data.split('\r\n')
-        user_list = []
-        for line in lines:
-            user_list.append(line.split(','))
-
-        for line in user_list:
-            password = Employee.objects.make_random_password()
-            employee = get_user_model().objects.create_user(line[0], line[1],
-                                                            line[2], line[3], password, org, False)
-            send_user_activation_mail(employee, self.request)
-
-        return HttpResponseRedirect(reverse('employees_import'))
 
 
 class EmployeesManageView(TemplateView):
@@ -106,6 +82,9 @@ class EmployeeToUnitWorkplaceView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        if not Workplace.objects.filter(workplace_unit__unit_org=self.request.user.user_org).exists():
+            context['is_any_workplace'] = False
+            return context
         units = Unit.objects.all()
         select_unit = list(units.values(
             'id', 'name'))
@@ -117,6 +96,7 @@ class EmployeeToUnitWorkplaceView(TemplateView):
         context['default_unit'] = select_unit[0]['id']
         context['select_unit'] = select_unit
         context['select_workplace'] = select_workplace
+        context['is_any_workplace'] = True
         return context
 
 
@@ -129,8 +109,11 @@ class WorkplaceManageView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        select_unit = list(Unit.objects.all().values(
-            'id', 'name'))
+        if not Unit.objects.filter(unit_org=self.request.user.user_org).exists():
+            context['is_any_unit'] = False
+            return context
+        select_unit = list(Unit.objects.all().values('id', 'name'))
+        context['is_any_unit'] = True
         context['default_unit'] = select_unit[0]['id']
         context['select_unit'] = select_unit
         return context
@@ -168,6 +151,29 @@ class WorkplaceViewSet(viewsets.ModelViewSet):
         workplace.save()
 
 
+class EmployeesImportApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        file = request.FILES['employeesList']
+        org = self.request.user.user_org
+        # TODO Sprawdzać kodowanie pliku, jak?
+        # TODO Zabezpieczyć dodawanie plików, sprawdzanie ich poprawności
+        file_data = file.read().decode('utf-8')
+        lines = file_data.split('\r\n')
+        user_list = []
+        for line in lines:
+            user_list.append(line.split(','))
+
+        for line in user_list:
+            password = Employee.objects.make_random_password()
+            employee = get_user_model().objects.create_user(line[0], line[1],
+                                                            line[2], line[3], password, org, False)
+            send_user_activation_mail(employee, self.request)
+
+        return Response()
+
+
 class EmployeeToUnitApiView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -190,6 +196,8 @@ class EmployeeToUnitApiView(APIView):
                 employee.user_unit.add(unit)
             elif request.data['action'] == 'delete':
                 employee.user_unit.remove(unit)
+                for workplace in Workplace.objects.filter(workplace_unit=unit):
+                    employee.user_workplace.remove(workplace)
             else:
                 return Response()
         return Response()

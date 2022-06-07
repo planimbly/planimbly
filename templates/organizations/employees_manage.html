@@ -19,11 +19,11 @@
             <li class="breadcrumb-item">Nazwa organizacji</li>
             <li class="breadcrumb-item" aria-current="page"><span style="font-weight: 600;">Pracownicy</span></li>
         </ol>
-        <h2 class="mb-4"><a href="{% url 'units_manage' %}"><i class="material-icons" style=" text-align: center; font-size:24px;">arrow_back_ios</i></a>Zarządzenie
+        <h2 class="mb-4"><a href="{% url 'units_manage' %}"><i class="material-icons"
+                                                               style=" text-align: center; font-size:24px;">arrow_back_ios</i></a>Zarządzanie
             pracownikami</h2>
-    <hr class="breadcrumb">
+        <hr class="breadcrumb">
     </nav>
-
     <div id="vue-app">
         <div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="exampleModalLabel"
              aria-hidden="true">
@@ -32,7 +32,8 @@
                     <form v-on:submit.prevent="add_employee">
                         <div class="modal-header">
                             <h5 class="modal-title" id="exampleModalLabel">Dodawanie pracownika</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
                         </div>
 
                         <div class="modal-body">
@@ -72,7 +73,9 @@
         <div class="row">
             <div class="col-10"><h3>Lista pracowników</h3></div>
             <div class="col-2">
-                <button type="button" class="m-1 btn btn-success d-flex justify-content-center align-content-between" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+                <button type="button"
+                        class="m-1 btn btn-success d-flex justify-content-center align-content-between"
+                        data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
                     Dodaj pracownika
                 </button>
             </div>
@@ -93,7 +96,8 @@
             </thead>
             <tbody>
             <tr v-for="(employee, i) in employee_list" :key="employee.id">
-                <th scope="row" style="text-align: center; vertical-align: middle;"><span>[[ employee.id ]]</span></th>
+                <th scope="row" style="text-align: center; vertical-align: middle;"><span>[[ employee.id ]]</span>
+                </th>
                 <td><input type="text" class="form-control" v-model="employee.email"></td>
                 <td><input type="text" class="form-control" v-model="employee.username"></td>
                 <td><input type="text" class="form-control" v-model="employee.first_name"></td>
@@ -115,7 +119,6 @@
 {% endblock content %}
 
 {% block vue-content %}
-{#    <script type="//application/javascript">#}
     <script type="module">
         {#var app = new Vue({#}
         const {createApp} = Vue

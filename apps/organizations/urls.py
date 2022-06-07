@@ -13,13 +13,13 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.contrib.auth.decorators import login_required
 from django.urls import path, include
 from rest_framework import routers
 
-from .views import EmployeesImportView, OrganizationCreateView, EmployeesManageView, UnitsManageView, UnitViewSet, \
+from .views import OrganizationCreateView, EmployeesManageView, UnitsManageView, UnitViewSet, \
     WorkplaceManageView, WorkplaceViewSet, EmployeeToUnitApiView, \
-    EmployeeToWorkplaceApiView, EmployeeToUnitWorkplaceView
-from django.contrib.auth.decorators import login_required
+    EmployeeToWorkplaceApiView, EmployeeToUnitWorkplaceView, EmployeesImportApiView
 
 unit_router = routers.DefaultRouter()
 unit_router.register(r'unit', UnitViewSet, basename='unit')
@@ -29,7 +29,7 @@ workplace_router.register(r'workplace', WorkplaceViewSet, basename='workplace')
 urlpatterns = [
     path('create/', OrganizationCreateView.as_view(template_name='organizations/organization_create.html'),
          name='organization_create'),
-    path('employees_import/', EmployeesImportView.as_view(), name='employees_import'),
+
     path('employees_manage/', EmployeesManageView.as_view(), name='employees_manage'),
     path('units_manage/', UnitsManageView.as_view(), name='units_manage'),
     path('', login_required(UnitsManageView.as_view(), login_url='/accounts/login/'), name='units_manage'),
@@ -42,7 +42,8 @@ urlpatterns = [
     path('api/<int:unit_workplace_pk>/employees_to_unit/', EmployeeToUnitApiView.as_view(),
          name='employee_to_unit_api'),
     path('api/<int:unit_workplace_pk>/employees_to_workplace/', EmployeeToWorkplaceApiView.as_view(),
-         name='employee_to_workplace_api')
+         name='employee_to_workplace_api'),
+    path('api/employees_import/', EmployeesImportApiView.as_view(), name='employees_import_api'),
 ]
 '''path('<int:unit_workplace_pk>/employees_to_workplace/', EmployeeToWorkplaceView.as_view(),
      name='employee_to_workplace'),'''

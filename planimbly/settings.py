@@ -147,7 +147,7 @@ REST_FRAMEWORK = {
 
 # Authorization
 AUTH_USER_MODEL = 'accounts.Employee'
-LOGIN_REDIRECT_URL = "home"
+LOGIN_REDIRECT_URL = "employees_manage"
 # SSL
 if env.bool("ENABLE_SSL", default=True):
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

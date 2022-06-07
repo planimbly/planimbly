@@ -19,6 +19,9 @@ class ShiftTypeManageView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        if not Workplace.objects.filter(workplace_unit__unit_org=self.request.user.user_org).exists():
+            context['is_any_workplace'] = False
+            return context
         units = Unit.objects.all()
         select_unit = list(units.values(
             'id', 'name'))
@@ -30,6 +33,7 @@ class ShiftTypeManageView(TemplateView):
         context['default_unit'] = select_unit[0]['id']
         context['select_unit'] = select_unit
         context['select_workplace'] = select_workplace
+        context['is_any_workplace'] = True
         return context
 
 
@@ -38,6 +42,9 @@ class ScheduleManageView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        if not Workplace.objects.filter(workplace_unit__unit_org=self.request.user.user_org).exists():
+            context['is_any_workplace'] = False
+            return context
         units = Unit.objects.all()
         select_unit = list(units.values(
             'id', 'name'))
@@ -49,6 +56,7 @@ class ScheduleManageView(TemplateView):
         context['default_unit'] = select_unit[0]['id']
         context['select_unit'] = select_unit
         context['select_workplace'] = select_workplace
+        context['is_any_workplace'] = True
         return context
 
 
