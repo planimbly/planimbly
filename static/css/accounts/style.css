@@ -32,4 +32,58 @@ i.breadcrumb-go-back-icon{
     color: #000000;
 }
 
+/*title after breadcrumb, before content*/
+h3.content-title{
+    margin: 10px 5px;
+    padding: 10px 5px;
+    /*text-align: center;*/
+    vertical-align: middle;
+}
 
+/*table styling*/
+.styled-table {
+    border-collapse: collapse;
+    /*margin: 25px 0; !*space top and bottom*!*/
+    font-size: 0.9em;
+    min-width: 400px; /*whole table*/
+    border-radius: 5px;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+}
+
+.styled-table thead tr{  /*header*/
+    background-color: #165DFF;
+    color: #ffffff;
+    text-align: left;
+    font-weight: bold;
+}
+
+.styled-table th,
+.styled-table td {  /*table cells*/
+    text-align: center;
+    vertical-align: middle;
+    padding: 12px 15px;
+}
+
+/*table rows*/
+.styled-table tbody tr {
+    border-bottom: thin solid #F3F3F3;
+}
+
+.styled-table tbody tr:nth-of-type(even) {
+    background-color: #f3f3f3;
+}
+
+.styled-table tbody tr:last-of-type {
+    border-bottom: 2px solid #165DFF;
+}
+
+/*buttons in rows*/
+.table-buttons{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: auto;
+    width: 48px;
+    height: 44px;
+}
