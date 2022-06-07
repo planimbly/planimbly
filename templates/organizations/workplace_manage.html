@@ -26,13 +26,33 @@
         <hr class="breadcrumb">
     </nav>
 
-
     <div id="vue-app">
-        <select v-model="selected_unit" v-on:change="fetch_data">
-            <option v-for="unit in select_unit" :value="unit.id">
-                [[ unit.name ]]
-            </option>
-        </select>
+        <div class="row d-flex justify-content-between align-items-center">
+            <div class="col d-flex justify-content-start">
+                <h3 class="content-title">Lista działów</h3>
+            </div>
+            <div class="col">
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <label class="col-form-label" for="unitSelect">Jednostka:</label>
+                    </div>
+                    <div class="col-auto">
+                        <select id="unitSelect" class="form-select" v-model="selected_unit" v-on:change="fetch_data">
+                            <option v-for="unit in select_unit" :value="unit.id">
+                                [[ unit.name ]]
+                            </option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="col d-flex justify-content-end">
+                <button type="button" class="btn btn-success" data-bs-toggle="modal"
+                        data-bs-target="#addWorkplaceModal">
+                    Dodaj dział
+                </button>
+            </div>
+        </div>
+
         <div class="modal fade" id="addWorkplaceModal" tabindex="-1" aria-labelledby="exampleModalLabel"
              aria-hidden="true">
             <div class="modal-dialog">
@@ -67,18 +87,6 @@
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-10">
-                <h3>Lista działów</h3>
-            </div>
-            <div class="col-2">
-                <button type="button" class="m-1 btn btn-success d-flex justify-content-center align-content-between"
-                        data-bs-toggle="modal" data-bs-target="#addWorkplaceModal">
-                    Dodaj dział
-                </button>
-            </div>
-        </div>
-
         <table class="table styled-table">
             <thead>
             <tr>
@@ -96,15 +104,11 @@
                 </td>
                 <td>
                     <button v-on:click="change_workplace(i)" type="button"
-                            class="btn btn-primary"
-                            style="/*vertical-align: center; text-align: center; */display: flex; align-items: center; justify-content: center;">
-                        <i
-                                class="material-icons">save</i></button>
+                            class="btn btn-primary table-buttons"><i class="material-icons">save</i></button>
                 </td>
                 <td>
                     <button v-on:click="remove_workplace(workplace.id)" type="button"
-                            class="btn btn-danger d-flex justify-content-center align-content-between"><i
-                            class="material-icons">delete</i></button>
+                            class="btn btn-danger table-buttons"><i class="material-icons">delete</i></button>
                 </td>
             </tr>
             </tbody>
