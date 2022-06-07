@@ -24,6 +24,7 @@ html{
     min-height: 7rem;
     background-color: rgb(255, 255, 255);
     /* background-color: inherit; */
+
 }
 
 
@@ -32,7 +33,20 @@ html{
     height: 100%;
     background-color: #E8F3FF;
     border-radius: 2px;
+    overflow: hidden;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
 
+.tile-content:hover{
+    overflow: auto;
+}
+
+.cal-day-label-holder{
+    position: static;
+    margin: 2px;
+    font-size: 28px;
+    text-align: center;
 }
 
 .tile-transparent{
@@ -40,8 +54,21 @@ html{
 }
 
 .shift-tile-container{
-    padding: 4px;
+    padding: 6px;
     font-size: 0.66rem;
+}
+
+.shift-tile{
+    background-color: #BEDAFF;
+    padding: 1px;
+    margin: 1px;
+    margin-bottom: 3px;
+    border-radius: 2px;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.tile-content::-webkit-scrollbar {
+  display: none;
 }
 
 .calendar-weekday-label{
@@ -76,6 +103,17 @@ html{
     display: none;
 }
 
+
+.filter-calendar-container{
+    margin: 0 auto;
+    background-color: rgb(255, 255, 255);
+    display: flex;
+    padding: 0.86rem;
+    gap: 1vw;
+    flex-wrap: wrap;
+}
+
+
 @media screen and (max-width: 800px){
     .calendar-big{
         display: flex;
@@ -94,7 +132,34 @@ html{
     }
 
     .weekday-in-tile-lowres{
-        font-size: 0.8rem;
+        font-size: 0.9rem;
         display: block;
+        margin: 8px;
+    }
+
+    .cal-day-label-holder{
+        margin: 2px;
+        font-size: 28px;
+        margin-left: 10px;
+    }
+    .tile-content-title{
+        display: flex;
+    }
+
+    .shift-tile-container{
+        display: flex;
+        padding: 6px;
+        font-size: 0.66rem;
+        flex-grow: 1;
+        flex-wrap: wrap;
+    }
+
+    .shift-tile{
+    background-color: #BEDAFF;
+    padding: 1px;
+    margin: 1px;
+    margin-bottom: 3px;
+    border-radius: 2px;
+        flex: 1;
     }
 }

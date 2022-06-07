@@ -15,16 +15,26 @@
 {% block content %}
     <nav style aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'units_manage' %}">Strona główna</a></li>
-            <li class="breadcrumb-item">Nazwa organizacji</li>
-            <li class="breadcrumb-item" aria-current="page"><span style="font-weight: 600;">Pracownicy</span></li>
+            <li class="breadcrumb-item"><a href="{% url 'units_manage' %}"
+                                           class="breadcrumb-link">{{ user.user_org }}</a></li>
+            <li class="breadcrumb-item current-subpage">Pracownicy</li>
         </ol>
-        <h2 class="mb-4"><a href="{% url 'units_manage' %}"><i class="material-icons"
-                                                               style=" text-align: center; font-size:24px;">arrow_back_ios</i></a>Zarządzanie
-            pracownikami</h2>
+        <h2 class="breadcrumb-title">Zarządzanie pracownikami</h2>
         <hr class="breadcrumb">
     </nav>
+
     <div id="vue-app">
+        <div class="row d-flex justify-content-between align-items-center">
+            <div class="col d-flex justify-content-start">
+                <h3 class="content-title">Lista pracowników</h3>
+            </div>
+            <div class="col d-flex justify-content-end">
+                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+                    Dodaj pracownika
+                </button>
+            </div>
+        </div>
+
         <div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="exampleModalLabel"
              aria-hidden="true">
             <div class="modal-dialog">
@@ -32,34 +42,45 @@
                     <form v-on:submit.prevent="add_employee">
                         <div class="modal-header">
                             <h5 class="modal-title" id="exampleModalLabel">Dodawanie pracownika</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                    aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
 
                         <div class="modal-body">
                             <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="inputEmail" class="form-label">E-mail</label>
-                                    <input type="email" class="form-control" v-model="email" id="inputEmail">
+                                <div class="col-6">
+                                    <div class="form-floating">
+                                        <input type="email" class="form-control" v-model="email" id="inputEmail"
+                                               placeholder="E-mail">
+                                        <label for="inputEmail">E-mail</label>
+                                    </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <label for="inputLogin" class="form-label">Login</label>
-                                    <input type="text" class="form-control" v-model="username" id="inputLogin">
+                                <div class="col-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" v-model="username" id="inputLogin"
+                                               placeholder="Login">
+                                        <label for="inputLogin">Login</label>
+                                    </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <label for="inputName" class="form-label">Imię</label>
-                                    <input type="text" class="form-control" v-model="first_name" id="inputName">
+                                <div class="col-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" v-model="first_name" id="inputName"
+                                               placeholder="Imię">
+                                        <label for="inputName">Imię</label>
+                                    </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <label for="inputSurname" class="form-label">Nazwisko</label>
-                                    <input type="text" class="form-control" v-model="last_name" id="inputSurname">
+                                <div class="col-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" v-model="last_name" id="inputSurname"
+                                               placeholder="Nazwisko">
+                                        <label for="inputSurname">Nazwisko</label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
-                            <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
+                            <button type="submit" class="btn btn-outline-primary">Dodaj</button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Zamknij</button>
                         </div>
                     </form>
 
@@ -70,19 +91,7 @@
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-10"><h3>Lista pracowników</h3></div>
-            <div class="col-2">
-                <button type="button"
-                        class="m-1 btn btn-success d-flex justify-content-center align-content-between"
-                        data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
-                    Dodaj pracownika
-                </button>
-            </div>
-        </div>
-
-
-        <table class="table table-striped">
+        <table class="table styled-table">
             <thead>
             <tr>
                 <th scope="col">ID</th>
@@ -96,21 +105,18 @@
             </thead>
             <tbody>
             <tr v-for="(employee, i) in employee_list" :key="employee.id">
-                <th scope="row" style="text-align: center; vertical-align: middle;"><span>[[ employee.id ]]</span>
-                </th>
+                <th scope="row"><span>[[ employee.id ]]</span></th>
                 <td><input type="text" class="form-control" v-model="employee.email"></td>
                 <td><input type="text" class="form-control" v-model="employee.username"></td>
                 <td><input type="text" class="form-control" v-model="employee.first_name"></td>
                 <td><input type="text" class="form-control" v-model="employee.last_name"></td>
                 <td>
-                    <button v-on:click="change_employee(i)" type="button"
-                            class="m-1 btn btn-primary d-flex justify-content-center align-content-between"><i
-                            class="material-icons">save</i></button>
+                    <button v-on:click="change_employee(i)" type="button" class="btn btn-primary table-buttons">
+                        <i class="material-icons">save</i></button>
                 </td>
                 <td>
                     <button v-on:click="remove_employee(employee.id)" type="button"
-                            class="m-1 btn btn-danger d-flex justify-content-center align-content-between"><i
-                            class="material-icons">delete</i></button>
+                            class="btn btn-danger table-buttons"><i class="material-icons">delete</i></button>
                 </td>
             </tr>
             </tbody>
@@ -119,6 +125,7 @@
 {% endblock content %}
 
 {% block vue-content %}
+    {#    <script type="//application/javascript">#}
     <script type="module">
         {#var app = new Vue({#}
         const {createApp} = Vue

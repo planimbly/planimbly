@@ -129,8 +129,10 @@ export default {
       <div v-for="filler in grid_blank_fillers" class="tile-transparent"></div>
       <div v-for="day in work_month" class="calendar-tile">
         <div class="tile-content">
-          [[day.day_label]]
-          <div class="weekday-in-tile-lowres">[[day.weekday]]</div>
+          <div class="tile-content-title">
+             <div class="cal-day-label-holder">[[day.day_label]]</div>
+             <div class="weekday-in-tile-lowres">[[day.weekday]]</div>
+          </div>
           <div class="shift-tile-container">
             <div v-for="shift in day.shifts" class="shift-tile">
               [[shift.label]]
