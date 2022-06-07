@@ -87,3 +87,16 @@ h3.content-title{
     width: 48px;
     height: 44px;
 }
+
+select {
+    background-color: white;
+    outline: none;
+    border: 1.8px solid #165DFF;
+    border-radius: 3px;
+    min-width: 200px;
+    padding: 3px;
+    font-size: 24px;
+}
+
+.pn--select{
+}

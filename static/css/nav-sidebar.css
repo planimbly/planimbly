@@ -22,6 +22,7 @@ html{
 .medium-logo-nav{
     width: 8em;
     height: auto;
+    margin-bottom: 6px;
     /* max-width: 20px; */
     /* max-height: 20px; */
 }
