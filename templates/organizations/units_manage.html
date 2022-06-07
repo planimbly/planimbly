@@ -11,49 +11,63 @@
         axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
     </script>
 {% endblock head %}
+
 {% block content %}
     <nav style aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'units_manage' %}">Strona główna</a></li>
-            <li class="breadcrumb-item">Nazwa organizacji</li>
-            <li class="breadcrumb-item" aria-current="page"><span style="font-weight: 600;">Jednostki</span></li>
+            <li class="breadcrumb-item"><a href="{% url 'units_manage' %}"
+                                           class="breadcrumb-link">{{ user.user_org }}</a></li>
+            <li class="breadcrumb-item current-subpage">Jednostki</li>
         </ol>
-
-        <h2 class="mb-4"><a href="{% url 'units_manage' %}"><i class="material-icons" style="text-align: center; font-size:24px;">arrow_back_ios</i></a>Zarządzanie jednostkami</h2>
+        <h2 class="breadcrumb-title">Zarządzanie jednostkami</h2>
         <hr class="breadcrumb">
     </nav>
 
     <div id="vue-app">
-        <div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+        <div class="row d-flex justify-content-between align-items-center">
+            <div class="col d-flex justify-content-start">
+                <h3 class="content-title">Lista jednostek</h3>
+            </div>
+            <div class="col d-flex justify-content-end">
+                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal"
+                        data-bs-target="#addUnitModal">
+                    Dodaj jednostkę
+                </button>
+            </div>
+        </div>
+
+        <div class="modal fade" id="addUnitModal" tabindex="-1" aria-labelledby="addUnitModalLabel"
              aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <form v-on:submit.prevent="add_unit">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="exampleModalLabel">Dodawanie jednostek</h5>
+                            <h5 class="modal-title" id="addUnitModalLabel">Dodaj jednostkę</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
 
                         <div class="modal-body">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label for="inputName" class="form-label">Nazwa</label>
+                            <div class="row g-3 d-flex align-items-center">
+                                <div class="col-4">
+                                    <label for="inputName" class="form-label modal-style">Nazwa</label>
                                 </div>
-                                <div class="col-md-8">
+                                <div class="col-8">
                                     <input type="text" class="form-control" v-model="name" id="inputName">
                                 </div>
-                                <div class="col-md-4">
-                                    <label for="inputPreferences" class="form-label">Preferencje</label>
+                                <div class="col-4">
+                                    <label for="inputPreferences" class="form-label modal-style">Preferencje</label>
                                 </div>
-                                <div class="col-md-8">
-                                    <input type="checkbox" class="form-check-input" value="" v-model="allow_preferences" id="inputPreferences" checked>
+                                <div class="col-8 d-flex align-items-center">
+                                    <input type="checkbox" class="form-check-input" style="margin: 0px;" value=""
+                                           v-model="allow_preferences" id="inputPreferences" checked>
                                 </div>
                             </div>
                         </div>
 
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
-                            <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
+                            <button type="submit" class="btn btn-outline-primary">Dodaj</button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Zamknij
+                            </button>
                         </div>
                     </form>
 
@@ -61,18 +75,6 @@
                         [[ index ]] : [[ field.join('') ]]
                     </p>
                 </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-10">
-                <h3>Lista jednostek</h3>
-            </div>
-            <div class="col-2">
-                <button type="button" class="m-1 btn btn-success d-flex justify-content-center align-content-between"
-                        data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
-                    Dodaj jednostkę
-                </button>
             </div>
         </div>
 
@@ -93,14 +95,13 @@
                 <td><input type="text" class="form-control" v-model="unit.name"></td>
                 <td><input type="checkbox" class="form-check-input" value="" v-model="unit.allow_preferences"></td>
                 <td>
-                    <button v-on:click="change_unit(i)" type="button"
-                            class="btn btn-primary"  style="/*vertical-align: center; text-align: center; */display: flex; align-items: center; justify-content: center;"><i
-                            class="material-icons">save</i></button>
+                    <button v-on:click="change_unit(i)" type="button" class="btn btn-primary table-buttons">
+                        <i class="material-icons">save</i></button>
                 </td>
                 <td>
-                    <button v-on:click="remove_unit(unit.id)" type="button"
-                            class="btn btn-danger d-flex justify-content-center align-content-between"><i
-                            class="material-icons">delete</i></button>
+                    <button v-on:click="remove_unit(unit.id)" type="button" class="btn btn-danger table-buttons">
+                        <i class="material-icons">delete</i>
+                    </button>
                 </td>
             </tr>
             </tbody>

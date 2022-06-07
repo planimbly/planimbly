@@ -1,4 +1,4 @@
-# python manage.py runscript run_algorithm
+# To run main_test_algorithm use: python manage.py runscript run_algorithm --script-args test
 
 # !/usr/bin/env python3
 # Copyright 2010-2021 Google LLC
@@ -18,7 +18,7 @@
 import calendar
 from datetime import datetime, timedelta
 
-from absl import flags
+from absl import app, flags
 from google.protobuf import text_format
 from ortools.sat.python import cp_model
 
@@ -275,12 +275,7 @@ def solve_shift_scheduling(schedule_dict, employees: list[Employee], shift_types
 
     # Shift data
 
-    shifts = []
-
-    for shift__ in shift_types:
-        shifts.append(shift__.id)
-
-    num_shifts = len(shifts)
+    num_shifts = len(shift_types)
 
     # TODO: zrobić z employees listę 2D, która oprócz ID będzie zawierała manualnie przypisane zmiany i preferencje pracownika
     # Fixed assignment: (employee, shift, day).
@@ -505,7 +500,7 @@ def solve_shift_scheduling(schedule_dict, employees: list[Employee], shift_types
             for d in range(1, num_days + 1):
                 for s in range(num_shifts):
                     if solver.BooleanValue(work[e.pk, s, d]):
-                        sched += str(shifts[s]) + ' '
+                        sched += shift_types[s].name + ' '
             print('worker %i: %s' % (e.pk, sched))
         print()
         print('Penalties:')
@@ -532,12 +527,14 @@ def solve_shift_scheduling(schedule_dict, employees: list[Employee], shift_types
                     for s in range(num_shifts):
                         if solver.BooleanValue(work[e.pk, s, d]):
                             shift_day = datetime(year, month, d)
-                            shift_type = next((x for x in shift_types if x.id == shifts[s]), None)
+                            shift_type = shift_types[s]
                             if shift_type.name == "-":
                                 continue
+                            # emp = Employee.objects.filter(id=e).first()
 
                             output_shifts.append(
-                                Shift(date=shift_day.date(), schedule=schedule_dict[shift_type.workplace.id],
+                                Shift(date=shift_day.date(),
+                                      schedule=schedule_dict[shift_type.workplace.id],
                                       employee=e,
                                       shift_type=shift_type))
         return output_shifts
@@ -586,7 +583,7 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month):
 
 
 def main_test_algorithm():
-    emp = [Employee.objects.all()]
+    emp = Employee.objects.all()
     workplace = Workplace.objects.all().first()
     workplace2 = Workplace.objects.all().last()
     # schedule = Schedule.objects.all().first()
@@ -615,5 +612,8 @@ def main_test_algorithm():
     return data
 
 
-'''def run(employee_list):
-    app.run(main)'''
+def run(*args):
+    if 'test' in args:
+        app.run(main_test_algorithm())
+    else:
+        app.run(main_algorithm())

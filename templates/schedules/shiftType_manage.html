@@ -15,14 +15,15 @@
 {% block content %}
     <nav style aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'units_manage' %}">Strona główna</a></li>
-            <li class="breadcrumb-item">Nazwa organizacji</li>
-            <li class="breadcrumb-item" aria-current="page"><span style="font-weight: 600;">Jednostki</span></li>
+            <li class="breadcrumb-item"><a href="{% url 'units_manage' %}"
+                                           class="breadcrumb-link">{{ user.user_org }}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'units_manage' %}" class="breadcrumb-link">Jednostki</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'workplace_manage' %}" class="breadcrumb-link">Działy</a></li>
+            <li class="breadcrumb-item current-subpage">Zmiany</li>
         </ol>
-
-        <h2 class="mb-4"><a href="{% url 'units_manage' %}"><i class="material-icons"
-                                                               style="text-align: center; font-size:24px;">arrow_back_ios</i></a>Zarządzanie
-            zmianami w ramach działu</h2>
+        <h2 class="breadcrumb-title"><a href="{% url 'units_manage' %}">
+            <i class="material-icons breadcrumb-go-back-icon">arrow_back_ios</i></a>Zarządzanie zmianami</h2>
+        </h2>
         <hr class="breadcrumb">
     </nav>
     {% if is_any_workplace %}
@@ -38,115 +39,136 @@
             </div>
         </div>
 
-        <div id="vue-app">
-            <div class="modal fade" id="addShiftModal" tabindex="-1" aria-labelledby="shiftModalLabel"
-                 aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <form v-on:submit.prevent="add_shiftType">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="shiftModalLabel">Dodawanie zmiany</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                        aria-label="Close"></button>
-                            </div>
+    <div id="vue-app">
+        <div class="row d-flex justify-content-between align-items-center">
+            <div class="col d-flex justify-content-start">
+                <h3 class="content-title">Lista zmian</h3>
+            </div>
+            <div class="col-auto">
+                <label class="col-form-label" for="unitSelect">Jednostka:</label>
+            </div>
+            <div class="col-auto">
+                <select id="unitSelect" class="form-select" v-model="selected_unit"
+                        v-on:change="change_workplace">
+                    <option v-for="unit in select_unit" :value="unit.id">
+                        [[ unit.name ]]
+                    </option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <label class="col-form-label" for="workplaceSelect">Dział:</label>
+            </div>
+            <div class="col-auto">
+                <select id="workplaceSelect" class="form-select" v-model="selected_workplace"
+                        v-on:change="fetch_data">
+                    <option v-for="workplace in current_workplace" :value="workplace.id">
+                        [[ workplace.name ]]
+                    </option>
+                </select>
+            </div>
+            <div class="col d-flex justify-content-end">
+                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal"
+                        data-bs-target="#addShiftModal">
+                    Dodaj zmianę
+                </button>
+            </div>
+        </div>
 
-                            <div class="modal-body">
-                                <div class="row g-3">
-                                    <div class="col-md-4">
-                                        <label for="shiftStartDate" class="form-label">Start zmiany</label>
-                                    </div>
-                                    <div class="col-md-8">
-                                        <input type="time" class="form-control" v-model="hour_start"
-                                               id="shiftStartDate">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="shiftEndDate" class="form-label">Koniec zmiany</label>
-                                    </div>
-                                    <div class="col-md-8">
-                                        <input type="time" class="form-control" v-model="hour_end" id="shiftEndDate">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="shiftName" class="form-label">Nazwa</label>
-                                    </div>
-                                    <div class="col-md-8">
-                                        <input type="text" class="form-control" v-model="name" id="shiftName">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="shiftActiveDays" class="form-label">Dni zmiany</label>
-                                    </div>
-                                    <div class="col-md-8">
-                                        <input type="text" class="form-control" v-model="active_days"
-                                               id="shiftActiveDays">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="inputPreferences" class="form-label">Obowiązuje</label>
-                                    </div>
-                                    <div class="col-md-8">
-                                        <input type="checkbox" class="form-check-input" value="" v-model="is_used"
-                                               id="isShiftUsed" checked>
-                                    </div>
+        <div class="modal fade" id="addShiftModal" tabindex="-1" aria-labelledby="shiftModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form v-on:submit.prevent="add_shiftType">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="shiftModalLabel">Dodawanie zmiany</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <div class="row g-3 d-flex align-items-center">
+                                <div class="col-4">
+                                    <label for="shiftStartDate" class="form-label modal-style">Start zmiany</label>
+                                </div>
+                                <div class="col-8">
+                                    <input type="time" class="form-control" v-model="hour_start" id="shiftStartDate">
+                                </div>
+                                <div class="col-4">
+                                    <label for="shiftEndDate" class="form-label modal-style">Koniec zmiany</label>
+                                </div>
+                                <div class="col-8">
+                                    <input type="time" class="form-control" v-model="hour_end" id="shiftEndDate">
+                                </div>
+                                <div class="col-4">
+                                    <label for="shiftName" class="form-label modal-style">Nazwa</label>
+                                </div>
+                                <div class="col-8">
+                                    <input type="text" class="form-control" v-model="name" id="shiftName">
+                                </div>
+                                <div class="col-4">
+                                    <label for="shiftActiveDays" class="form-label modal-style">Aktywne dni</label>
+                                </div>
+                                <div class="col-8">
+                                    <input type="text" class="form-control" v-model="active_days" id="shiftActiveDays">
+                                </div>
+                                <div class="col-4">
+                                    <label for="isShiftUsed" class="form-label modal-style">W użyciu</label>
+                                </div>
+                                <div class="col-8 d-flex align-items-center">
+                                    <input type="checkbox" class="form-check-input" style="margin: 0px;" value=""
+                                           v-model="is_used" id="isShiftUsed" checked>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
-                                <button type="submit" class="btn btn-primary">Dodaj</button>
-                            </div>
-                        </form>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-outline-primary">Dodaj</button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Zamknij
+                            </button>
+                        </div>
+                    </form>
 
-                        <p v-for="(field, index) in response">
-                            [[ index ]] : [[ field.join('') ]]
-                        </p>
-                    </div>
+                    <p v-for="(field, index) in response">
+                        [[ index ]] : [[ field.join('') ]]
+                    </p>
                 </div>
             </div>
-            <select v-model="selected_unit" v-on:change="change_workplace">
-                <option v-for="unit in select_unit" :value="unit.id">
-                    [[ unit.name ]]
-                </option>
-            </select>
-            <select v-model="selected_workplace" v-on:change="fetch_data">
-                <option v-for="workplace in current_workplace" :value="workplace.id">
-                    [[ workplace.name ]]
-                </option>
-            </select>
-            <table class="table styled-table">
-                <thead>
-                <tr>
-                    <th scope="col">ID</th>
-                    <th scope="col">Start zmiany</th>
-                    <th scope="col">Koniec zmiany</th>
-                    <th scope="col">Nazwa</th>
-                    <th scope="col">Aktywne dni</th>
-                    <th scope="col">W użyciu</th>
-                    <th scope="col">Zapisz</th>
-                    <th scope="col">Usuń</th>
-                </tr>
-                </thead>
-
-                <tbody>
-                <tr v-for="(shiftType, i) in shiftType_list" :key="shiftType.id">
-                    <th scope="row"><span>[[ shiftType.id ]]</span></th>
-                    <td><input type="time" class="form-control" v-model="shiftType.hour_start"></td>
-                    <td><input type="time" class="form-control" v-model="shiftType.hour_end"></td>
-                    <td><input type="text" class="form-control" v-model="shiftType.name"></td>
-                    <td><input type="text" class="form-control" v-model="shiftType.active_days"></td>
-                    <td><input type="checkbox" class="form-check-input" value="" v-model="shiftType.is_used"></td>
-                    <td>
-                        <button v-on:click="change_shiftType(i)" type="button"
-                                class="btn btn-primary d-flex justify-content-center align-content-between"><i
-                                class="material-icons">save</i></button>
-                    </td>
-                    <td>
-                        <button v-on:click="remove_shiftType(shiftType.id)" type="button"
-                                class="btn btn-danger d-flex justify-content-center align-content-between"><i
-                                class="material-icons">delete</i></button>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
         </div>
-    {% else %}
+
+        <table class="table styled-table">
+            <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Start zmiany</th>
+                <th scope="col">Koniec zmiany</th>
+                <th scope="col">Nazwa</th>
+                <th scope="col">Aktywne dni</th>
+                <th scope="col">W użyciu</th>
+                <th scope="col">Zapisz</th>
+                <th scope="col">Usuń</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr v-for="(shiftType, i) in shiftType_list" :key="shiftType.id">
+                <th scope="row"><span>[[ shiftType.id ]]</span></th>
+                <td><input type="time" class="form-control" v-model="shiftType.hour_start"></td>
+                <td><input type="time" class="form-control" v-model="shiftType.hour_end"></td>
+                <td><input type="text" class="form-control" v-model="shiftType.name"></td>
+                <td><input type="text" class="form-control" v-model="shiftType.active_days"></td>
+                <td><input type="checkbox" class="form-check-input" value="" v-model="shiftType.is_used"></td>
+                <td>
+                    <button v-on:click="change_shiftType(i)" type="button"
+                            class="btn btn-primary table-buttons"><i class="material-icons">save</i></button>
+                </td>
+                <td>
+                    <button v-on:click="remove_shiftType(shiftType.id)" type="button"
+                            class="btn btn-danger table-buttons"><i class="material-icons">delete</i></button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+        {% else %}
         <span>Brak działów</span>
     {% endif %}
 {% endblock content %}
@@ -304,4 +326,42 @@
             }).mount('#vue-app');
         </script>
     {% endif %}
+                },
+                change_shiftType(i) {
+                    let url = this.base_url + this.shiftType_list[i].id + '/'
+                    swal({
+                        title: "Czy chcesz zatwierdzić zmiany",
+                        icon: "info",
+                        buttons: true,
+                        //dangerMode: true,
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
+                                axios
+                                    .put(url,
+                                        {
+                                            hour_start: this.shiftType_list[i].hour_start,
+                                            hour_end: this.shiftType_list[i].hour_end,
+                                            name: this.shiftType_list[i].name,
+                                            active_days: this.shiftType_list[i].active_days,
+                                            is_used: this.shiftType_list[i].is_used
+                                        }
+                                    )
+                                    .then(
+                                        this.fetch_data
+                                    )
+                                    .catch(error => {
+                                            this.response = error.response.data
+                                        }
+                                    )
+                            }
+                        });
+                }
+            },
+            mounted() {
+                this.selected_workplace = this.select_workplace[this.selected_unit][0]['id']
+                this.fetch_data()
+            }
+        }).mount('#vue-app');
+    </script>
 {% endblock vue-content %}
