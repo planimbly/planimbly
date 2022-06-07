@@ -1,4 +1,4 @@
-# python manage.py runscript run_algorithm
+# To run main_test_algorithm use: python manage.py runscript run_algorithm --script-args test
 
 # !/usr/bin/env python3
 # Copyright 2010-2021 Google LLC
@@ -18,7 +18,7 @@
 import calendar
 from datetime import datetime, timedelta
 
-from absl import flags
+from absl import app, flags
 from google.protobuf import text_format
 from ortools.sat.python import cp_model
 
@@ -221,8 +221,8 @@ def find_overnight_shifts(shifts: list[ShiftType]):
     sc = []
     wsc = []
     for i in range(1, len(shifts)):
-        start = int(shifts[i].hour_start[:2])
-        end = int(shifts[i].hour_end[:2])
+        start = shifts[i].hour_start.hour
+        end = shifts[i].hour_end.hour
         if end < start:
             print(f"Found overnight shift: {shifts[i].name}")
             # between 2 and 3 consecutive days of night shifts, 1 and 4 are possible but penalized.
@@ -244,15 +244,16 @@ def find_illegal_transitions(shifts: list[ShiftType]):
     """
     it = []
     for i in range(1, len(shifts)):
-        i_start = datetime.strptime("1970-01-01" + shifts[i].hour_start, "%Y-%m-%d%H:%M")
-        i_delta = datetime.strptime(shifts[i].hour_end, "%H:%M") - datetime.strptime(shifts[i].hour_start, "%H:%M")
+        i_start = datetime.strptime("1970-01-01" + shifts[i].hour_start.strftime('%H:%M'), "%Y-%m-%d%H:%M")
+        i_delta = datetime.strptime(shifts[i].hour_end.strftime('%H:%M'), "%H:%M") - datetime.strptime(
+            shifts[i].hour_start.strftime('%H:%M'), "%H:%M")
         h = i_delta.seconds // 3600
         # print(f"{shifts[i].name} working time: {h}")
         i_end = i_start + timedelta(hours=h)  # do all of above in case of overnight shifts
         for j in range(1, len(shifts)):
             if i == j:
                 continue
-            j_start = datetime.strptime("1970-01-02" + shifts[j].hour_start, "%Y-%m-%d%H:%M")
+            j_start = datetime.strptime("1970-01-02" + shifts[j].hour_start.strftime('%H:%M'), "%Y-%m-%d%H:%M")
             dt = j_start - i_end
             dt = int(dt.total_seconds() // 3600)
             # print(f"dt between {shifts[i].name} and {shifts[j].name} is {dt}")
@@ -263,10 +264,11 @@ def find_illegal_transitions(shifts: list[ShiftType]):
     return it
 
 
-def solve_shift_scheduling(schedule: Schedule, employees: list[Employee], shift_types: list[ShiftType], year: int,
+def solve_shift_scheduling(schedule_dict, employees: list[Employee], shift_types: list[ShiftType], year: int,
                            month: int, params, output_proto):
     """Solves the shift scheduling problem."""
-
+    # All employes
+    # all_employees = Employee.objects.all()
     # Calendar data
     list_month = get_month_by_weeks(year, month)
     # num_weeks = len(list_month)
@@ -275,12 +277,7 @@ def solve_shift_scheduling(schedule: Schedule, employees: list[Employee], shift_
 
     # Shift data
 
-    shifts = []
-
-    for shift__ in shift_types:
-        shifts.append(shift__.name)
-
-    num_shifts = len(shifts)
+    num_shifts = len(shift_types)
 
     # TODO: zrobić z employees listę 2D, która oprócz ID będzie zawierała manualnie przypisane zmiany i preferencje pracownika
     # Fixed assignment: (employee, shift, day).
@@ -505,7 +502,7 @@ def solve_shift_scheduling(schedule: Schedule, employees: list[Employee], shift_
             for d in range(1, num_days + 1):
                 for s in range(num_shifts):
                     if solver.BooleanValue(work[e.pk, s, d]):
-                        sched += shifts[s] + ' '
+                        sched += shift_types[s].name + ' '
             print('worker %i: %s' % (e.pk, sched))
         print()
         print('Penalties:')
@@ -524,7 +521,7 @@ def solve_shift_scheduling(schedule: Schedule, employees: list[Employee], shift_
 
     # TODO: wywalić nasze modele i zastąpić klasami Mirona
     # Chcemy zwracać na dobrą sprawę tylko listę obiektów shift
-    def output_inflate(shift_types, schedule):
+    def output_inflate(shift_types, schedule_dict):
         output_shifts = []
         if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
             for e in employees:
@@ -532,13 +529,16 @@ def solve_shift_scheduling(schedule: Schedule, employees: list[Employee], shift_
                     for s in range(num_shifts):
                         if solver.BooleanValue(work[e.pk, s, d]):
                             shift_day = datetime(year, month, d)
-                            shift_type = next((x for x in shift_types if x.name == shifts[s]), None)
+                            shift_type = shift_types[s]
                             if shift_type.name == "-":
                                 continue
-                            employe = Employee.objects.filter(id=e).first()
+                            # emp = Employee.objects.filter(id=e).first()
 
-                            output_shifts.append(Shift(date=shift_day.date(), schedule=schedule, employee=employe,
-                                                       shift_type=shift_type))
+                            output_shifts.append(
+                                Shift(date=shift_day.date(),
+                                      schedule=schedule_dict[shift_type.workplace.id],
+                                      employee=e,
+                                      shift_type=shift_type))
         return output_shifts
 
     print()
@@ -548,7 +548,7 @@ def solve_shift_scheduling(schedule: Schedule, employees: list[Employee], shift_
     print('  - branches        : %i' % solver.NumBranches())
     print('  - wall time       : %f s' % solver.WallTime())
 
-    return output_inflate(shift_types, schedule)
+    return output_inflate(shift_types, schedule_dict)
 
 
 def get_letter_for_weekday(day: int):
@@ -567,25 +567,25 @@ def get_letter_for_weekday(day: int):
             return None
 
 
-def main_algorithm(schedule, emp, shift_types):
+def main_algorithm(schedule_dict, emp, shift_types, year, month):
     workplace = Workplace.objects.all().first()
-    # workplace2 = Workplace.objects.all().last()
+
     active_days = '1111111'
     shift_free = ShiftType(hour_start='00:00', hour_end='00:00', name='-', workplace=workplace, active_days=active_days,
                            is_used=True, is_archive=False)
     shift_types.insert(0, shift_free)
 
-    data = solve_shift_scheduling(schedule,
+    data = solve_shift_scheduling(schedule_dict,
                                   emp,  # employee list
                                   shift_types,  # shift type list
-                                  2022, 6,  # date
+                                  year, month,  # date
                                   params=None, output_proto=None)
     print(data)
     return data
 
 
 def main_test_algorithm():
-    emp = [Employee.objects.all()]
+    emp = Employee.objects.all()
     workplace = Workplace.objects.all().first()
     workplace2 = Workplace.objects.all().last()
     # schedule = Schedule.objects.all().first()
@@ -611,9 +611,11 @@ def main_test_algorithm():
                                   shift_types,  # shift type list
                                   2022, 6,  # date
                                   params=None, output_proto=None)
-    print(data)
     return data
 
 
-'''def run(employee_list):
-    app.run(main)'''
+def run(*args):
+    if 'test' in args:
+        app.run(main_test_algorithm())
+    else:
+        app.run(main_algorithm())
