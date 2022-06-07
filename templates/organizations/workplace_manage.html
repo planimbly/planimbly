@@ -111,8 +111,11 @@
                 </td>
             </tr>
             </tbody>
-        </table>
+            </table>
     </div>
+    {% else %}
+        <span>Brak działów</span>
+    {% endif %}
 {% endblock content %}
 {% block vue-content %}
     {% if is_any_unit %}
