@@ -1,1 +1,1 @@
-web:gunicorn planimbly.wsgi
+web: gunicorn planimbly.wsgi
