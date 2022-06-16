@@ -1,4 +1,5 @@
 from apps.organizations.models import Organization, Unit, Workplace
+from planimbly.settings import VUE3_CDN, VUE2_CDN
 
 
 def organization_data(request):
@@ -13,7 +14,9 @@ def organization_data(request):
         return {
             'organization': organization,
             'unit_list': unit_list,
-            'workplace_dict': workplace_dict
+            'workplace_dict': workplace_dict,
+            'vue2_cdn': VUE2_CDN,
+            'vue3_cdn': VUE3_CDN
         }
     else:
         return {
