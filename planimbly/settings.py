@@ -167,6 +167,11 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # Crispy config
 CRISPY_TEMPLATE_PACK = 'bootstrap'
 
+VUE2_CDN = 'https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js'
+VUE3_CDN = 'https://unpkg.com/vue@3.2.37/dist/vue.global.prod.js'
+
 if DEBUG:
     import mimetypes
     mimetypes.add_type("application/javascript", ".js", True)
+    VUE2_CDN = 'https://cdn.jsdelivr.net/npm/vue/dist/vue.js'
+    VUE3_CDN = 'https://unpkg.com/vue@3'
