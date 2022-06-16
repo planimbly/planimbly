@@ -138,7 +138,8 @@
                 computed: {
                     base_url: {
                         get() {
-                            return 'http://{{ request.get_host }}/' + 'organizations/api/' + this.selected_unit + '/workplace/'
+                            {#return 'http://{{ request.get_host }}/' + 'organizations/api/' + this.selected_unit + '/workplace/'#}
+                            return '{% url 'workplace-list' 123456789 %}'.replace(/123456789/, this.selected_unit);
                         }
                     }
                 },
