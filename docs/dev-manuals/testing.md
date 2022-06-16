@@ -46,3 +46,4 @@ $ coverage report
 $ coverage html
 ```
 Coverage report is generated in **./htmlcov/index.html**
+
