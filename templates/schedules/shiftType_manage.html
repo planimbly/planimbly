@@ -189,8 +189,9 @@
                     base_url: {
                         get() {
                             {% comment %}let url = '{% url 'shiftType' 1234 %}'.replace(/1234/, this.selected_workplace){% endcomment %}
-                            let url = 'http://{{ request.get_host }}/' + 'schedules/api/' + this.selected_workplace + '/shiftType/'
-                            return url
+                            {#let url = 'http://{{ request.get_host }}/' + 'schedules/api/' + this.selected_workplace + '/shiftType/'#}
+                            {#return url#}
+                            return '{% url 'shiftType-list' 123456789 %}'.replace(/123456789/, this.selected_workplace);
                         }
                     },
                     current_workplace: {
