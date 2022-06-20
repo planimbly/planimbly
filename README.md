@@ -1,6 +1,6 @@
 ![Tests](https://github.com/SaluSL/planimbly/actions/workflows/tests.yml/badge.svg)
 
-# Konfiguracja projektu pod systemem Windows:
+# Konfiguracja projektu pod systemem Windows i Linux:
 
 1. Klonujemy repozytorium za pomocą komendy: 
 ```
@@ -12,15 +12,19 @@ git clone https://github.com/SaluSL/planimbly.git
 ```
 python -m venv venv
 ```
-5. Przechodzimy do folderu **scripts**
+5. Przechodzimy do folderu **scripts** (Windows)
 ```
 cd venv/Scripts
 ```
-6. Aktywujemy środowsko w konsoli
+6. Aktywujemy środowsko w konsoli (Windows)
 ```
 activate.bat
 ```
-7. Wychodzimy do **planimbly**
+6. Aktywujemy środowsko w konsoli (Linux)
+```
+source ./venv/bin/activate
+```
+7. Wychodzimy do **planimbly** (Windows)
 ```
 cd ../../
 ```
