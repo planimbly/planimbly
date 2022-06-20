@@ -1,17 +1,35 @@
 ![Tests](https://github.com/SaluSL/planimbly/actions/workflows/tests.yml/badge.svg)
 
-<h1>Konfiguracja projektu:</h1>
+# Konfiguracja projektu pod systemem Windows:
 
-1. Tworzymy folder planimbly
-2. Klonujemy repozytorium
-3. Pobieramy plik z discorda .env, wrzucamy go do głównego folderu
-4. (jeszcze nie wiem co z bazą danych)
-5. Otwieramy konsolę w folderze planimbly
-6. Wpisujemy: python -m venv venv
-7. CD venv
-8. CD Scripts
-9. activate.bat
-10. CD .. CD ..
-11. python -m pip install -r requirements.txt
-12. python -m pip install -r requirements_dev.txt
-13. Ważna uwaga, pamiętajcie, że jeżeli instalujecie jakikolwiek pakiet, musicie dodać go do requirements.txt poprzez komendę: python -m pip freeze > requirements.txt
+1. Klonujemy repozytorium za pomocą komendy: 
+```
+git clone https://github.com/SaluSL/planimbly.git
+```
+2. Pobieramy plik z discorda .env oraz db.sqlite3 i umieszczamy je w utworzonym folderze **planimbly**
+3. Otwieramy konsolę w folderze **planimbly**
+4. Tworzymy środowisko wirtualne:
+```
+python -m venv venv
+```
+5. Przechodzimy do folderu **scripts**
+```
+cd venv/Scripts
+```
+6. Aktywujemy środowsko w konsoli
+```
+activate.bat
+```
+7. Wychodzimy do **planimbly**
+```
+cd ../../
+```
+8. Instalujemy wymagane biblioteki
+```
+python -m pip install -r requirements.txt
+python -m pip install -r requirements_dev.txt
+```
+
+
+### Uwaga, jeżeli instalujecie jakikolwiek pakiet, musicie dodać go do requirements.txt poprzez komendę: python -m pip freeze > requirements.txt
+
