@@ -1,5 +1,12 @@
 ![Tests](https://github.com/SaluSL/planimbly/actions/workflows/tests.yml/badge.svg)
 
+# Dokumentacja
+- [quick start (PL)](README.md)
+- [dokumentacja architektury (PL)](docs/dev-manuals/sys_arch.md)
+- [strategia branchowania (ENG)](docs/dev-manuals/source_control.md)
+- [testowanie (ENG)](docs/dev-manuals/testing.md)
+- [struktura projektu (ENG)](docs/dev-manuals/proj_tree.md)
+
 # Konfiguracja projektu pod systemem Windows i Linux:
 
 1. Klonujemy repozytorium za pomocą komendy: 
@@ -16,11 +23,11 @@ python -m venv venv
 ```
 cd venv/Scripts
 ```
-6. Aktywujemy środowsko w konsoli (Windows)
+6a. Aktywujemy środowsko w konsoli (Windows)
 ```
 activate.bat
 ```
-6. Aktywujemy środowsko w konsoli (Linux)
+6b. Aktywujemy środowsko w konsoli (Linux)
 ```
 source ./venv/bin/activate
 ```
