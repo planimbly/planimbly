@@ -394,7 +394,7 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
         for d in range(1, num_days + 1):
             model.AddExactlyOne(work[e.pk, s, d] for s in range(num_shifts))
             for s in range(num_shifts):
-                if s != 0 and e not in emp_for_workplaces[shift_types[s].workplace.id]:  # make employees only be able to work within workplaces assigned to them
+                if s != 0 and e not in emp_for_workplaces[shift_types[s].workplace.id]:  # filter shifts by workplaces
                     model.Add(work[e.pk, s, d] == 0)
 
     # Fixed assignments.
@@ -517,7 +517,7 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
             candidates.sort(key=lambda x: work_time[x[0].pk])
             # for c in candidates:
             #     print(f'{c[0].pk}: work_time: {work_time[c[0].pk]}')
-            
+
             candidates.pop(0)
             # winner = candidates.pop(0)
             # print(f'Candidate with the lowest work time: {winner}, {work_time[winner[0].pk]}')  # pop candidate with the lowest work time
