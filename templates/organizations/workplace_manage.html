@@ -22,16 +22,16 @@
         </ol>
         <h2 class="breadcrumb-title"><a href="{% url 'units_manage' %}">
             <i class="material-icons breadcrumb-go-back-icon">arrow_back_ios</i></a>Zarządzanie działami</h2>
-        <hr class="breadcrumb">
+        <hr class="breadcrumb" style="opacity: 1">
     </nav>
     {% if is_any_unit %}
     <div id="vue-app">
         <div class="row d-flex justify-content-between align-items-center">
-            <div class="col d-flex justify-content-start">
+            <div class="col d-flex justify-content-start mb-1">
                 <h3 class="content-title">Lista działów</h3>
             </div>
             <div class="col">
-                <div class="row align-items-center">
+                <div class="row align-items-center mb-1">
                     <div class="col-auto">
                         <label class="col-form-label" for="unitSelect">Jednostka:</label>
                     </div>
@@ -45,7 +45,7 @@
                 </div>
             </div>
 
-            <div class="col d-flex justify-content-end">
+            <div class="col d-flex justify-content-end mb-2">
                 <button type="button" class="btn btn-outline-success" data-bs-toggle="modal"
                         data-bs-target="#addWorkplaceModal">
                     Dodaj dział

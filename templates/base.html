@@ -38,8 +38,8 @@
 
     <div id="app">
         <nav class="navbar">
-            <i v-on:click="changeSidebarState" class="material-icons navbar-style" title="Burger" id="burger"
-               style="font-size: 24px;">menu</i>
+            <div v-on:click="changeSidebarState" class="material-icons navbar-style" title="Burger" id="burger"
+               style="font-size: 24px;">menu</div>
             <a href="{% url 'units_manage' %}">
                 <img src="{% static 'img/Logo-Main-Big2.svg' %}" alt="Nav logo" class="medium-logo-nav">
             </a>
@@ -47,7 +47,7 @@
             <nav class="right-nav-menu">
 
             <div class="dropdown">
-                    <i class="dropdown-toggle material-icons navbar-style" id="dropdownMenuButton"
+                    <i class="material-icons navbar-style" id="dropdownMenuButton"
                        data-bs-toggle="dropdown" aria-expanded="false">account_circle</i>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
                         <li><a class="dropdown-item" href="{% url 'password_change' %}">Zmień hasło</a></li>
@@ -73,7 +73,7 @@
                             </li>
                             <li class="sidebar-item"><a href="{% url 'employee_to_unit_workplace' %}"
                                                         class="del-def-style-a">Pracownicy</a></li>
-                            <li class="sidebar-item"><a href="#" class="del-def-style-a"> ==== </a></li>
+                            
                             <li class="sidebar-item"><a href="{% url 'employees_manage' %}" class="del-def-style-a">Zarządzanie
                                 pracownikami</a></li>
                             <li class="sidebar-item"><a href="{% url 'organization_create' %}" class="del-def-style-a">Nowa
@@ -86,7 +86,7 @@
 
             <div class="proper-main margin-remove" v-bind:style="`margin-left: ${moveMainWithSidebar};`">
                 <div v-pre>
-                    <div class="container">
+                    <div class="container-fluid">
                         {% block content %}
 
                         {% endblock content %}

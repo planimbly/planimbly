@@ -15,19 +15,20 @@
         <div class="col">
             <div class="text-center">
                 {% if user.is_authenticated %}
-                    <h3 class="mb-3 font-weight-normal text-center">Logged in</h3>
+                    <h3 class="mb-3 font-weight-normal text-center">Zalogowano</h3>
                     <div class="mt-4">
                         <a class="btn btn-lg btn-primary" href="{% url 'units_manage' %}" role="button"> Home page </a>
                     </div>
                 {% else %}
                     <form method="post" class="form--input--style">
                         {% csrf_token %}
-                        <h3 class="mb-3 font-weight-normal">Please log in:</h3>
-                        {% render_field form.username class+="form-control mb-1" placeholder="Username" %}
-                        {% render_field form.password class+="form-control mb-1" placeholder="Password" %}
+                        <h3 class="mb-3 font-weight-normal">Zaloguj się:</h3>
+                        {% render_field form.username class+="form-control mb-1" placeholder="Nazwa użytkownika" %}
+                        {% render_field form.password class+="form-control mb-1" placeholder="Hasło" %}
+                        
+                        <a href="{% url 'password_reset' %}" style="text-decoration: none; color: #7c7c7c;font-size:0.8rem">Zapomniałeś hasła?</a>
                         <div class="mt-4">
-                            <input type="submit" class="btn btn-lg btn-primary">
-                            <a class="btn btn-lg btn-primary" href="{% url 'password_reset' %}">Resetuj hasło</a>
+                            <input type="submit" class="btn btn-lg btn-primary" value="Zaloguj">
                         </div>
                     </form>
                 {% endif %}
