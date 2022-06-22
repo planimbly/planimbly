@@ -17,12 +17,12 @@ html{
     align-items: center;
     padding-left: 0.75rem;
     gap: 1rem;
+    flex-wrap: nowrap;
 }
 
 .medium-logo-nav{
     width: 8em;
     height: auto;
-    margin-bottom: 6px;
     /* max-width: 20px; */
     /* max-height: 20px; */
 }
@@ -56,7 +56,7 @@ html{
 }
 
 .main{
-    /* z-index: 1; */
+    z-index: -1;
     padding-top: 2.5rem;
 }
 
