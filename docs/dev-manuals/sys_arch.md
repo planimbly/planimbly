@@ -1,3 +1,10 @@
+### Dokumentacja
+- [quick start (PL)](README.md)
+- [dokumentacja architektury (PL)](docs/dev-manuals/sys_arch.md)
+- [strategia branchowania (ENG)](docs/dev-manuals/source_control.md)
+- [testowanie (ENG)](docs/dev-manuals/testing.md)
+- [struktura projektu (ENG)](docs/dev-manuals/proj_tree.md)
+
 # Architektura Systemu [PL]
 ## Stack technologiczny
 Cały backend aplikacji wykonany jest w języku **python** w wersji 3.10
