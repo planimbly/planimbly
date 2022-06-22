@@ -213,7 +213,6 @@ def flatten(t: list):
 # TODO: przerobić funkcję do weekly constraintów żeby mogła przyjmować sumę shiftów
 def find_overnight_shifts(shifts: list[ShiftType]):
     """Determines which shifts are happening overnight
-
     Returns a tuple of given structure for each overnight shift constraint:
     (shift, hard_min, soft_min, min_penalty,
             soft_max, hard_max, max_penalty)
@@ -221,8 +220,8 @@ def find_overnight_shifts(shifts: list[ShiftType]):
     sc = []
     wsc = []
     for i in range(1, len(shifts)):
-        start = shifts[i].hour_start.hour
-        end = shifts[i].hour_end.hour
+        start = int(shifts[i].hour_start[:2])
+        end = int(shifts[i].hour_end[:2])
         if end < start:
             print(f"Found overnight shift: {shifts[i].name}")
             # between 2 and 3 consecutive days of night shifts, 1 and 4 are possible but penalized.
@@ -235,7 +234,6 @@ def find_overnight_shifts(shifts: list[ShiftType]):
 # TODO: opracować ustawianie kar za nieoptymalne (???) przejścia
 def find_illegal_transitions(shifts: list[ShiftType]):
     """Finds illegal transitions between shift types
-
     Returns a list of tuples of given structure:
     (i, j, p)
     i - index of shift that is transitioning to 'j'
@@ -244,16 +242,16 @@ def find_illegal_transitions(shifts: list[ShiftType]):
     """
     it = []
     for i in range(1, len(shifts)):
-        i_start = datetime.strptime("1970-01-01" + shifts[i].hour_start.strftime('%H:%M'), "%Y-%m-%d%H:%M")
-        i_delta = datetime.strptime(shifts[i].hour_end.strftime('%H:%M'), "%H:%M") - datetime.strptime(
-            shifts[i].hour_start.strftime('%H:%M'), "%H:%M")
+        i_start = datetime.strptime("1970-01-01" + shifts[i].hour_start, "%Y-%m-%d%H:%M")
+        i_delta = datetime.strptime(shifts[i].hour_end, "%H:%M") - datetime.strptime(
+            shifts[i].hour_start, "%H:%M")
         h = i_delta.seconds // 3600
         # print(f"{shifts[i].name} working time: {h}")
         i_end = i_start + timedelta(hours=h)  # do all of above in case of overnight shifts
         for j in range(1, len(shifts)):
             if i == j:
                 continue
-            j_start = datetime.strptime("1970-01-02" + shifts[j].hour_start.strftime('%H:%M'), "%Y-%m-%d%H:%M")
+            j_start = datetime.strptime("1970-01-02" + shifts[j].hour_start, "%Y-%m-%d%H:%M")
             dt = j_start - i_end
             dt = int(dt.total_seconds() // 3600)
             # print(f"dt between {shifts[i].name} and {shifts[j].name} is {dt}")
@@ -262,6 +260,13 @@ def find_illegal_transitions(shifts: list[ShiftType]):
                 print(f"Found illegal transition: {shifts[i].name} to {shifts[j].name}")
                 it.append((i, j, 0))
     return it
+
+
+# TODO: zmienić wszystkie jednostki czasu pracy z godzin na minuty (w przypadku połówek godzin czy coś)
+#       !!! godziny żeby łatwiej się testowało !!!
+def get_shift_work_time(shift_type: ShiftType):
+    work_time = datetime.strptime(shift_type.hour_end, "%H:%M") - datetime.strptime(shift_type.hour_start, "%H:%M")
+    return (work_time.seconds // 60) // 60  # get work time in hours
 
 
 def solve_shift_scheduling(schedule_dict, employees: list[Employee], shift_types: list[ShiftType], year: int,
@@ -369,10 +374,10 @@ def solve_shift_scheduling(schedule_dict, employees: list[Employee], shift_types
     ]
 
     # TODO: zamienić 1 na parametr daily cover demand który będzie w klasie shift_type
-    weekly_cover_demands = [tuple(1 for x in shift_types) for _ in range(7)]
+    weekly_cover_demands = [tuple(1 for x in range(len(shift_types)-1)) for _ in range(7)]
 
     # Penalty for exceeding the cover constraint per shift type.
-    excess_cover_penalties = tuple(20 for x in shift_types)
+    excess_cover_penalties = tuple(20 for x in range(len(shift_types)-1))
 
     model = cp_model.CpModel()
 
@@ -380,7 +385,7 @@ def solve_shift_scheduling(schedule_dict, employees: list[Employee], shift_types
     for e in employees:
         for s in range(num_shifts):
             for d in range(1, num_days + 1):
-                work[e.pk, s, d] = model.NewBoolVar('work%i_%i_%i' % (e.pk, s, d))
+                    work[e.pk, s, d] = model.NewBoolVar('work%i_%i_%i' % (e.pk, s, d))
 
     # Linear terms of the objective in a minimization context.
     obj_int_vars = []
@@ -392,14 +397,17 @@ def solve_shift_scheduling(schedule_dict, employees: list[Employee], shift_types
     for e in employees:
         for d in range(1, num_days + 1):
             model.AddExactlyOne(work[e.pk, s, d] for s in range(num_shifts))
+            for s in range(num_shifts):
+                if s != 0 and shift_types[s].workplace not in emp_workplaces[e.pk]:
+                    model.Add(work[e.pk, s, d] == 0)
 
     # Fixed assignments.
     for e, s, d in fixed_assignments:
-        model.Add(work[e, s, d] == 1)
+        model.Add(work[e.pk, s, d] == 1)
 
     # Employee requests
     for e, s, d, w in requests:
-        obj_bool_vars.append(work[e, s, d])
+        obj_bool_vars.append(work[e.pk, s, d])
         obj_bool_coeffs.append(w)
 
     # Shift constraints
@@ -487,10 +495,100 @@ def solve_shift_scheduling(schedule_dict, employees: list[Employee], shift_types
     solution_printer = cp_model.ObjectiveSolutionPrinter()
     status = solver.Solve(model, solution_printer)
 
+    def update_working_hours():
+        for e in employees:
+            for d in range(1, num_days + 1):
+                for s in range(num_shifts):
+                    if solver.BooleanValue(work[e.pk, s, d]):
+                        shift_type = shift_types[s]
+                        if shift_type.name == "-":
+                            continue
+                        working_hours[e.pk] += get_shift_work_time(shift_type)
+
+        print(working_hours)
+
+    excess_shifts = []
+
+    """ # TODO: pomyśleć nad optymalnością tej strategii i wprowadzić ją w życie
+    Strategia usuwania nadmiaru zmian:
+    1. Sprawdzamy, czy istnieją pracownicy, którzy nie będą brani pod uwagę w następnej iteracji
+    (nie pracują w innych miejscach pracy niż te, które zostały dotychczas rostrzygnięte)
+    - jeśli istnieje więcej niż jeden taki pracownik lub nie ma takich pracowników to postępujemy dalej poniższymi krokami
+    - jeśli istnieje dokładnie jeden taki pracownik, to usuwamy shifty dla reszty osób i na tym kończymy rozważanie dla tej zmiany
+    2. Sprawdzamy czy pracownik wyrobił cały etat
+    - ktoś wyrobił swoje godziny, ale nie każdy - zawężamy grono poszukiwanych i usuwamy shifty dla osób, które wyrobiły już swój etat
+    3. Sprawdzamy kto ile powinien pracować i wybieramy osobę z najmniejszym zakresem godzinowym
+    """
+    def delete_excess_shifts():
+        for s, d, v in excess_shifts:
+            print(f"{v} excess shift(s): {s} on day: {d}")
+            candidates = [[e, s, d] for e in employees if solver.BooleanValue(work[e.pk, s, d])]
+
+            # Step 1
+            # for c in list(candidates):
+            #     if len(candidates) <= 1:    # goal reached
+            #         break
+            #     em, sh, da = c
+            #     if len(emp_workplaces[em.pk]) > 1:
+            #         print(f'Step 1: Shift {em.pk}, {sh}, {da}: deleted')
+            #         work[em.pk, sh, da] = 0
+            #         work[em.pk, 0, da] = 1  # add free shift in place of deleted shift
+            #         v -= 1
+            #         working_hours[em.pk] -= get_shift_work_time(shift_types[sh])
+            #         candidates.remove(c)
+            
+            # Step 2
+            # for c in list(candidates):
+            #     if len(candidates) <= 1:    # goal reached
+            #         break
+            #     em, sh, da = c
+            #     print(f'working_hours[{em.pk}] = {working_hours[em.pk]}, {em.pk}.job_time = {em.job_time}')
+            #     if working_hours[em.pk] > em.job_time:
+            #         print(f'Step 2: Shift {em.pk}, {sh}, {da}: deleted')
+            #         work[em.pk, sh, da] = 0
+            #         work[em.pk, 0, da] = 1  # add free shift in place of deleted shift 
+            #         v -= 1
+            #         working_hours[em.pk] -= get_shift_work_time(shift_types[sh])
+            #         candidates.remove(c)
+
+            # Step 3 
+            candidates.sort(key = lambda x : working_hours[x[0].pk])
+            for c in candidates:
+                print(f'{c[0].pk}: work_time: {working_hours[c[0].pk]}')
+            winner = candidates.pop(0)
+            #print(f'Candidate with the lowest job time: {winner}, jt: {winner[0].job_time}')  # pop candidate with the lowest work time
+            
+            while len(candidates) > 0:  # delete all the other candidates
+                em, sh, da = candidates.pop(0)
+                print(f'Shift [{em.pk}, {sh}, {da}] deleted')
+                work[em.pk, sh, da] = 0
+                work[em.pk, 0, da] = 1  # add free shift in place of deleted shift
+                v -= 1
+                working_hours[em.pk] -= get_shift_work_time(shift_types[sh])
+
+            if v < 0:
+                raise ValueError(f'All of {s} shifts for day:{d} have been deleted. This should not ever happen.')
+            elif v > 0:
+                raise ValueError(f'There are still {v} excess shifts for shift{shift_types[s].name} on day{d}.\nList of excess shifts:{candidates}')
+
     # Print solution.
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+        update_working_hours()
+
+        for i, var in enumerate(obj_int_vars):
+            if solver.Value(var) > 0:
+                print('  %s violated by %i, linear penalty=%i' %
+                      (var.Name(), solver.Value(var), obj_int_coeffs[i]))
+                if var.Name().startswith('excess_demand'):  # TODO: DO SOMETHING TO AVOID THIS ABOMINABLE CRINGEFEST
+                    s = int(var.Name()[var.Name().find('t=')+2:].split(',')[0])
+                    d = int(var.Name()[var.Name().find('y=')+2:].split(')')[0])
+                    v = solver.Value(var)
+                    excess_shifts.append((s, d, v))
+
+        delete_excess_shifts()
+
         print()
-        header = '          '
+        header = '           '
         for w, week in enumerate(list_month):
             for d in week:
                 header += get_letter_for_weekday(d[1]) + " "
@@ -530,7 +628,6 @@ def solve_shift_scheduling(schedule_dict, employees: list[Employee], shift_types
                             shift_type = shift_types[s]
                             if shift_type.name == "-":
                                 continue
-                            # emp = Employee.objects.filter(id=e).first()
 
                             output_shifts.append(
                                 Shift(date=shift_day.date(),
@@ -545,6 +642,8 @@ def solve_shift_scheduling(schedule_dict, employees: list[Employee], shift_types
     print('  - conflicts       : %i' % solver.NumConflicts())
     print('  - branches        : %i' % solver.NumBranches())
     print('  - wall time       : %f s' % solver.WallTime())
+
+    print(working_hours)
 
     return output_inflate(shift_types, schedule_dict)
 
@@ -573,23 +672,32 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month):
                            is_used=True, is_archive=False)
     shift_types.insert(0, shift_free)
 
+    global working_hours    # dict z aktualnie przypisanymi godzinami (kluczem jest pk pracownika)
+    working_hours = dict()
+
+    for e in emp:
+        working_hours[e.pk] = 0
+
     data = solve_shift_scheduling(schedule_dict,
                                   emp,  # employee list
                                   shift_types,  # shift type list
                                   year, month,  # date
-                                  params=None, output_proto=None)
+                                  params='max_time_in_seconds:30.0', output_proto=None)
     print(data)
     return data
 
 
 def main_test_algorithm():
+    year = 2022
+    month = 6
     emp = Employee.objects.all()
     workplace = Workplace.objects.all().first()
     workplace2 = Workplace.objects.all().last()
     # schedule = Schedule.objects.all().first()
     active_days = '1111111'
-    schedule = Schedule(date_start="2022-05-15", date_end="2022-05-16",
-                        workplace=workplace)
+    schedule_dict = {}
+    schedule_dict.update({workplace.id: Schedule(year=year, month=month, workplace=workplace)})
+    schedule_dict.update({workplace2.id: Schedule(year=year, month=month, workplace=workplace2)})
     shift_free = ShiftType(hour_start='00:00', hour_end='00:00', name='-', workplace=workplace, active_days=active_days,
                            is_used=True, is_archive=False)
     shift_m1 = ShiftType(hour_start='06:00', hour_end='14:00', name='M', workplace=workplace, active_days=active_days,
@@ -604,11 +712,29 @@ def main_test_algorithm():
                         is_used=True, is_archive=False)
     shift_types = [shift_free, shift_m1, shift_m2, shift_a1, shift_a2, shift_n]
 
-    data = solve_shift_scheduling(schedule,
+    global working_hours    # dict z aktualnie przypisanymi godzinami (kluczem jest pk pracownika)
+    working_hours = {}
+
+    for e in emp:
+        working_hours[e.pk] = 0
+
+    global emp_workplaces
+    emp_workplaces = {}
+
+    for e in emp:
+        emp_workplaces[e.pk] = [workplace]
+
+    emp_workplaces[18].append(workplace2)
+    emp_workplaces[40].append(workplace2)
+    emp_workplaces[37].append(workplace2)
+    emp_workplaces[19].append(workplace2)
+    emp_workplaces[20].append(workplace2)
+
+    data = solve_shift_scheduling(schedule_dict,
                                   emp,  # employee list
                                   shift_types,  # shift type list
                                   2022, 6,  # date
-                                  params=None, output_proto=None)
+                                  params='max_time_in_seconds:30.0', output_proto=None)
     return data
 
 
