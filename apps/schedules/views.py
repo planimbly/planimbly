@@ -112,7 +112,7 @@ class ShiftGetApiView(APIView):
                         'id': shift.id,
                         'shift_type_id': shift.shift_type.id,
                         'time_start': shift.shift_type.hour_start,
-                        'time_end': shift.shift_type.hour_start,
+                        'time_end': shift.shift_type.hour_end,
                         'name': shift.shift_type.name,
                         'worker': {
                             'id': shift.employee.id,

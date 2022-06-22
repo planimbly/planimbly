@@ -25,9 +25,12 @@ export default {
         const weekdays = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
         var workMonth = [];
 
+
+
         if (this.show_for_workplace && this.schedule) {
 
           const element = this.schedule;
+          
 
             if(element.unit_id === this.unit_id &&
                element.workplace_id === this.workplace_id){
@@ -59,12 +62,13 @@ export default {
 
                           } else //add new shift for a given day
                           {
+
                             currShifts.push({
                               id: element.days[day][shift].id,
                               shift_type_id: element.days[day][shift].shift_type_id,
                               time_start: element.days[day][shift].time_start,
                               time_end: element.days[day][shift].time_end,
-                              label: element.days[day][shift].time_start + "-" + element.days[day][shift].time_end,
+                              label: element.days[day][shift].time_start.toString().slice(0, 5) + "-" + element.days[day][shift].time_end.toString().slice(0, 5),
                               workers: [
                                 element.days[day][shift].worker
                               ]
