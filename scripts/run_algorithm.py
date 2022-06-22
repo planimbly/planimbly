@@ -220,8 +220,8 @@ def find_overnight_shifts(shifts: list[ShiftType]):
     sc = []
     wsc = []
     for i in range(1, len(shifts)):
-        start = int(shifts[i].hour_start[:2])
-        end = int(shifts[i].hour_end[:2])
+        start = shifts[i].hour_start.hour
+        end = shifts[i].hour_end.hour
         if end < start:
             print(f"Found overnight shift: {shifts[i].name}")
             # between 2 and 3 consecutive days of night shifts, 1 and 4 are possible but penalized.
@@ -242,16 +242,16 @@ def find_illegal_transitions(shifts: list[ShiftType]):
     """
     it = []
     for i in range(1, len(shifts)):
-        i_start = datetime.strptime("1970-01-01" + shifts[i].hour_start, "%Y-%m-%d%H:%M")
-        i_delta = datetime.strptime(shifts[i].hour_end, "%H:%M") - datetime.strptime(
-            shifts[i].hour_start, "%H:%M")
+        i_start = datetime.strptime("1970-01-01" + shifts[i].hour_start.strftime('%H:%M'), "%Y-%m-%d%H:%M")
+        i_delta = datetime.strptime(shifts[i].hour_end.strftime('%H:%M'), "%H:%M") - datetime.strptime(
+            shifts[i].hour_start.strftime('%H:%M'), "%H:%M")
         h = i_delta.seconds // 3600
         # print(f"{shifts[i].name} working time: {h}")
         i_end = i_start + timedelta(hours=h)  # do all of above in case of overnight shifts
         for j in range(1, len(shifts)):
             if i == j:
                 continue
-            j_start = datetime.strptime("1970-01-02" + shifts[j].hour_start, "%Y-%m-%d%H:%M")
+            j_start = datetime.strptime("1970-01-02" + shifts[j].hour_start.strftime('%H:%M'), "%Y-%m-%d%H:%M")
             dt = j_start - i_end
             dt = int(dt.total_seconds() // 3600)
             # print(f"dt between {shifts[i].name} and {shifts[j].name} is {dt}")
@@ -265,11 +265,11 @@ def find_illegal_transitions(shifts: list[ShiftType]):
 # TODO: zmienić wszystkie jednostki czasu pracy z godzin na minuty (w przypadku połówek godzin czy coś)
 #       !!! godziny żeby łatwiej się testowało !!!
 def get_shift_work_time(shift_type: ShiftType):
-    work_time = datetime.strptime(shift_type.hour_end, "%H:%M") - datetime.strptime(shift_type.hour_start, "%H:%M")
+    work_time = datetime.strptime(shift_type.hour_end.strftime('%H:%M'), "%H:%M") - datetime.strptime(shift_type.hour_start.strftime('%H:%M'), "%H:%M")
     return (work_time.seconds // 60) // 60  # get work time in hours
 
 
-def solve_shift_scheduling(schedule_dict, employees: list[Employee], shift_types: list[ShiftType], year: int,
+def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Employee], shift_types: list[ShiftType], year: int,
                            month: int, params, output_proto):
     """Solves the shift scheduling problem."""
     # Calendar data
@@ -385,7 +385,7 @@ def solve_shift_scheduling(schedule_dict, employees: list[Employee], shift_types
     for e in employees:
         for s in range(num_shifts):
             for d in range(1, num_days + 1):
-                    work[e.pk, s, d] = model.NewBoolVar('work%i_%i_%i' % (e.pk, s, d))
+                work[e.pk, s, d] = model.NewBoolVar('work%i_%i_%i' % (e.pk, s, d))
 
     # Linear terms of the objective in a minimization context.
     obj_int_vars = []
@@ -398,7 +398,7 @@ def solve_shift_scheduling(schedule_dict, employees: list[Employee], shift_types
         for d in range(1, num_days + 1):
             model.AddExactlyOne(work[e.pk, s, d] for s in range(num_shifts))
             for s in range(num_shifts):
-                if s != 0 and shift_types[s].workplace not in emp_workplaces[e.pk]:
+                if s != 0 and e not in emp_for_workplaces[shift_types[s].workplace.id]:
                     model.Add(work[e.pk, s, d] == 0)
 
     # Fixed assignments.
@@ -536,7 +536,6 @@ def solve_shift_scheduling(schedule_dict, employees: list[Employee], shift_types
             #         v -= 1
             #         working_hours[em.pk] -= get_shift_work_time(shift_types[sh])
             #         candidates.remove(c)
-            
             # Step 2
             # for c in list(candidates):
             #     if len(candidates) <= 1:    # goal reached
@@ -546,18 +545,18 @@ def solve_shift_scheduling(schedule_dict, employees: list[Employee], shift_types
             #     if working_hours[em.pk] > em.job_time:
             #         print(f'Step 2: Shift {em.pk}, {sh}, {da}: deleted')
             #         work[em.pk, sh, da] = 0
-            #         work[em.pk, 0, da] = 1  # add free shift in place of deleted shift 
+            #         work[em.pk, 0, da] = 1  # add free shift in place of deleted shift
             #         v -= 1
             #         working_hours[em.pk] -= get_shift_work_time(shift_types[sh])
             #         candidates.remove(c)
 
-            # Step 3 
-            candidates.sort(key = lambda x : working_hours[x[0].pk])
+            # Step 3
+            candidates.sort(key=lambda x: working_hours[x[0].pk])
             for c in candidates:
                 print(f'{c[0].pk}: work_time: {working_hours[c[0].pk]}')
             winner = candidates.pop(0)
-            #print(f'Candidate with the lowest job time: {winner}, jt: {winner[0].job_time}')  # pop candidate with the lowest work time
-            
+            print(f'Candidate with the lowest work time: {winner}, {working_hours[winner[0].pk]}')  # pop candidate with the lowest work time
+
             while len(candidates) > 0:  # delete all the other candidates
                 em, sh, da = candidates.pop(0)
                 print(f'Shift [{em.pk}, {sh}, {da}] deleted')
@@ -665,7 +664,6 @@ def get_letter_for_weekday(day: int):
 
 
 def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workplaces):
-    print(emp_for_workplaces)
 
     workplace = Workplace.objects.all().first()
 
@@ -680,12 +678,12 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
     for e in emp:
         working_hours[e.pk] = 0
 
-    data = solve_shift_scheduling(schedule_dict,
+    data = solve_shift_scheduling(emp_for_workplaces,
+                                  schedule_dict,
                                   emp,  # employee list
                                   shift_types,  # shift type list
                                   year, month,  # date
                                   params='max_time_in_seconds:30.0', output_proto=None)
-    print(data)
     return data
 
 
