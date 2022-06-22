@@ -1,9 +1,9 @@
 ### Dokumentacja
-- [quick start (PL)](README.md)
-- [dokumentacja architektury (PL)](docs/dev-manuals/sys_arch.md)
-- [strategia branchowania (ENG)](docs/dev-manuals/source_control.md)
-- [testowanie (ENG)](docs/dev-manuals/testing.md)
-- [struktura projektu (ENG)](docs/dev-manuals/proj_tree.md)
+- [quick start (PL)](SaluSL/planimbly/README.md)
+- [dokumentacja architektury (PL)](SaluSL/planimbly/docs/dev-manuals/sys_arch.md)
+- [strategia branchowania (ENG)](SaluSL/planimbly/docs/dev-manuals/source_control.md)
+- [testowanie (ENG)](SaluSL/planimbly/docs/dev-manuals/testing.md)
+- [struktura projektu (ENG)](SaluSL/planimbly/docs/dev-manuals/proj_tree.md)
 
 # Architektura Systemu [PL]
 ## Stack technologiczny
