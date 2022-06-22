@@ -80,9 +80,15 @@ class ScheduleCreateApiView(APIView):
             schedule_dict.setdefault(workplace.id, schedule)
 
         shiftType_list = list(ShiftType.objects.filter(workplace_id__in=workplace_list))
+
+        emp_for_workplaces = {}
+
+        for work_id in workplace_list:
+            emp_for_workplaces[work_id] = Employee.objects.filter(user_workplace__in=Workplace.objects.filter(id__in=[work_id])).distinct().order_by('id')
+
         employee_list = Employee.objects.filter(user_workplace__in=workplace_query).distinct().order_by('id')
 
-        data = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month)
+        data = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month, emp_for_workplaces)
         for shift in data:
             shift.save()
         return Response()
