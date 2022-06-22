@@ -78,6 +78,18 @@ export default {
 
                         }
                       }
+                      
+                      
+
+                      currShifts.sort(function(shiftA, shiftB){
+      
+                        var shiftAstart = new Date("1970-01-01 " + shiftA.time_start);
+                        var shiftBstart = new Date("1970-01-01 " + shiftB.time_start);
+            
+                        return shiftAstart - shiftBstart;
+                      })
+                      
+                      
 
                       workMonth.push({
                         day: new Date(day),
