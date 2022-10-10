@@ -3,7 +3,7 @@ import calendar
 import datetime
 
 from django.views.generic import TemplateView
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, mixins
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -11,7 +11,7 @@ import scripts.run_algorithm
 from apps.accounts.models import Employee
 from apps.organizations.models import Workplace, Unit
 from apps.schedules.models import ShiftType, Shift, Schedule
-from apps.schedules.serializers import ShiftTypeSerializer
+from apps.schedules.serializers import ShiftTypeSerializer,
 
 
 class ShiftTypeManageView(TemplateView):
@@ -19,10 +19,11 @@ class ShiftTypeManageView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if not Workplace.objects.filter(workplace_unit__unit_org=self.request.user.user_org).exists():
+        user_org = self.request.user.user_org
+        if not Workplace.objects.filter(workplace_unit__unit_org=user_org).exists():
             context['is_any_workplace'] = False
             return context
-        units = Unit.objects.all()
+        units = Unit.objects.filter(unit_org=user_org)
         select_unit = list(units.values(
             'id', 'name'))
         workplace_list = Workplace.objects.filter(workplace_unit__in=units)
@@ -42,10 +43,11 @@ class ScheduleManageView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        user_org = self.request.user.user_org
         if not Workplace.objects.filter(workplace_unit__unit_org=self.request.user.user_org).exists():
             context['is_any_workplace'] = False
             return context
-        units = Unit.objects.all()
+        units = Unit.objects.filter(unit_org=user_org)
         select_unit = list(units.values(
             'id', 'name'))
         workplace_list = Workplace.objects.filter(workplace_unit__in=units)
@@ -84,17 +86,19 @@ class ScheduleCreateApiView(APIView):
         emp_for_workplaces = {}
 
         for work_id in workplace_list:
-            emp_for_workplaces[work_id] = Employee.objects.filter(user_workplace__in=Workplace.objects.filter(id__in=[work_id])).distinct().order_by('id')
+            emp_for_workplaces[work_id] = Employee.objects.filter(
+                user_workplace__in=Workplace.objects.filter(id__in=[work_id])).distinct().order_by('id')
 
         employee_list = Employee.objects.filter(user_workplace__in=workplace_query).distinct().order_by('id')
 
-        data = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month, emp_for_workplaces)
+        data = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month,
+                                                    emp_for_workplaces)
         for shift in data:
             shift.save()
         return Response()
 
 
-class ShiftGetApiView(APIView):
+class ScheduleGetApiView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, workplace_pk):
@@ -106,7 +110,6 @@ class ShiftGetApiView(APIView):
             workplace = Workplace.objects.filter(id=workplace_pk).first()
             shifts = Shift.objects.filter(schedule__workplace=workplace).filter(schedule__month=month).filter(
                 schedule__year=year).order_by('date')
-            print(shifts)
             days_num = calendar.monthrange(int(year), int(month))[1]
             days = {}
             for x in range(1, days_num + 1):
@@ -135,6 +138,53 @@ class ShiftGetApiView(APIView):
             return Response(data=response)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class ShiftManageApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        date = datetime.date.fromisoformat(self.request.data.get("Date"))
+        employee = self.request.data.get("Employee")
+        shift_type = self.request.data.get("Shift_type")
+        workplace = self.request.data.get("Workplace")
+        if date and employee and shift_type and workplace:
+            schedule = Schedule.objects.filter(year=date.year).filter(month=date.month).first()
+            shift_type = ShiftType.objects.filter(pk=shift_type).first()
+            employee = Employee.objects.filter(pk=employee).first()
+            if not shift_type or not employee:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            if not schedule:
+                workplace = Workplace.objects.filter(pk=workplace).first()
+                if not workplace:
+                    return Response(status=status.HTTP_400_BAD_REQUEST)
+                schedule = Schedule(year=date.year, month=date.month, workplace=workplace)
+                schedule.save()
+            Shift(date=date, employee=employee, schedule=schedule, shift_type=shift_type).save()
+
+        return Response()
+
+    def put(self, request):
+        employee = self.request.data.get("Employee")
+        shift = self.request.data.get("Shift")
+        if shift and employee:
+            shift = Shift.objects.filter(pk=shift).first()
+            employee = Employee.objects.filter(pk=employee).first()
+            if not shift or not employee:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            shift.employee = employee
+            shift.save()
+        return Response()
+
+    def delete(self, request):
+        shift = self.request.data.get("Shift")
+        if shift:
+            Shift.objects.filter(pk=shift).delete()
+        return Response()
+
+
+class PreferenceViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+    serializer_class = PreferenceSerializer
 
 
 class ShiftTypeViewSet(viewsets.ModelViewSet):

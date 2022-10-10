@@ -9,9 +9,6 @@ class Organization(models.Model):
         return self.name
 
 
-# TODO LISTA PREFERENCJI W ORGANIZACJI DO STWORZENIA:
-
-
 # Jednostka
 class Unit(models.Model):
     name = models.CharField(max_length=512)

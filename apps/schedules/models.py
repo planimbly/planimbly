@@ -20,6 +20,12 @@ class ShiftType(models.Model):
     is_archive = models.BooleanField(default=False)
 
 
+class Preference(models.Model):
+    shift_type = models.ForeignKey(ShiftType, on_delete=models.CASCADE, verbose_name="Typ zmiany")
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, verbose_name="Pracownik")
+    active_days = models.TextField(verbose_name="Aktywne dni")
+
+
 class Shift(models.Model):
     date = models.DateField(verbose_name='Data zmiany')
     schedule = models.ForeignKey(Schedule, on_delete=models.CASCADE, verbose_name="Grafik")
