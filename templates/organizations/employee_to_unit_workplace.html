@@ -21,7 +21,7 @@
 {% endblock head %}
 
 {% block content %}
-    {% if is_any_workplace %}
+
     <div id="vue-app">
         <nav style aria-label="breadcrumb">
             <ol class="breadcrumb">
@@ -41,9 +41,9 @@
             <h2 class="breadcrumb-title"><a href="{% url 'employees_manage' %}">
                 <i class="material-icons breadcrumb-go-back-icon">arrow_back_ios</i></a>Zarządzanie pracownikami
             </h2>
-            <hr class="breadcrumb" style="opacity: 1"> 
+            <hr class="breadcrumb" style="opacity: 1">
         </nav>
-
+        {% if is_any_workplace %}
         <div class="col">
             <div class="row my-2 d-flex align-items-center">
                 <div class="col-auto d-flex justify-content-center align-items-center mb-1">

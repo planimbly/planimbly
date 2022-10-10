@@ -6,7 +6,7 @@ from apps.organizations.models import Organization, Workplace, Unit
 
 
 class MyAccountManager(BaseUserManager):
-    def create_user(self, email, username, first_name, last_name, password=None, user_org=None, is_supervisor=None):
+    def create_user(self, email, username, first_name, last_name, password=None, user_org=None, is_supervisor=False):
         if not email:
             raise ValueError("Users must have email")
         if not username:

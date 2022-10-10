@@ -81,11 +81,12 @@ class EmployeeToUnitWorkplaceView(TemplateView):
     template_name = 'organizations/employee_to_unit_workplace.html'
 
     def get_context_data(self, **kwargs):
+        user_org = self.request.user.user_org
         context = super().get_context_data(**kwargs)
-        if not Workplace.objects.filter(workplace_unit__unit_org=self.request.user.user_org).exists():
+        if not Workplace.objects.filter(workplace_unit__unit_org=user_org).exists():
             context['is_any_workplace'] = False
             return context
-        units = Unit.objects.all()
+        units = Unit.objects.filter(unit_org=user_org)
         select_unit = list(units.values(
             'id', 'name'))
         workplace_list = Workplace.objects.filter(workplace_unit__in=units)
@@ -109,10 +110,11 @@ class WorkplaceManageView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if not Unit.objects.filter(unit_org=self.request.user.user_org).exists():
+        user_org = self.request.user.user_org
+        if not Unit.objects.filter(unit_org=user_org).exists():
             context['is_any_unit'] = False
             return context
-        select_unit = list(Unit.objects.all().values('id', 'name'))
+        select_unit = list(Unit.objects.filter(unit_org=user_org).values('id', 'name'))
         context['is_any_unit'] = True
         context['default_unit'] = select_unit[0]['id']
         context['select_unit'] = select_unit
