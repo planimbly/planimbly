@@ -10,6 +10,13 @@ export default {
       schedule: Object
     },
 
+    data () {
+      return {
+        clickedTileDate: null
+      }
+
+    },
+
     methods:{
       abbreviate_name(firstName, surname){
         if (typeof firstName == "string" && typeof surname == "string") {
@@ -132,19 +139,19 @@ export default {
 
     template: `
     <div class="calendar-weekday-label">
-      <div class="weekday-label-tile"><div class="weekday-label">Mon</div></div>
-      <div class="weekday-label-tile"><div class="weekday-label">Tue</div></div>
-      <div class="weekday-label-tile"><div class="weekday-label">Wed</div></div>
-      <div class="weekday-label-tile"><div class="weekday-label">Thu</div></div>
-      <div class="weekday-label-tile"><div class="weekday-label">Fri</div></div>
-      <div class="weekday-label-tile"><div class="weekday-label">Sat</div></div>
-      <div class="weekday-label-tile"><div class="weekday-label">Sun</div></div>
+      <div class="weekday-label-tile"><div class="weekday-label">Pon</div></div>
+      <div class="weekday-label-tile"><div class="weekday-label">Wt</div></div>
+      <div class="weekday-label-tile"><div class="weekday-label">Śr</div></div>
+      <div class="weekday-label-tile"><div class="weekday-label">Czw</div></div>
+      <div class="weekday-label-tile"><div class="weekday-label">Pt</div></div>
+      <div class="weekday-label-tile"><div class="weekday-label">Sb</div></div>
+      <div class="weekday-label-tile"><div class="weekday-label">Nd</div></div>
     </div>
 
     <div class="calendar-big">
       <div v-for="filler in grid_blank_fillers" class="tile-transparent"></div>
       <div v-for="day in work_month" class="calendar-tile">
-        <div class="tile-content">
+        <div @click="clickedTileDate = day.day.toLocaleDateString()" class="tile-content"  data-bs-toggle="modal" data-bs-target="#changeDayScheduleModal">
           <div class="tile-content-title">
              <div class="cal-day-label-holder">[[day.day_label]]</div>
              <div class="weekday-in-tile-lowres">[[day.weekday]]</div>
@@ -159,6 +166,18 @@ export default {
           </div>
         </div>
       </div>
+    </div>
+    
+    <div class="modal fade" id="changeDayScheduleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                      <h5 class="modal-title" id="changeDayScheduleLabel">[[ this.clickedTileDate ]]</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                Test
+            </div>
+        </div>
     </div>
     `
 }
