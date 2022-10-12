@@ -11,7 +11,7 @@ import scripts.run_algorithm
 from apps.accounts.models import Employee
 from apps.organizations.models import Workplace, Unit
 from apps.schedules.models import ShiftType, Shift, Schedule
-from apps.schedules.serializers import ShiftTypeSerializer,
+from apps.schedules.serializers import PreferenceSerializer, ShiftTypeSerializer
 
 
 class ShiftTypeManageView(TemplateView):
