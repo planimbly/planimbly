@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 import scripts.run_algorithm
 from apps.accounts.models import Employee
 from apps.organizations.models import Workplace, Unit
-from apps.schedules.models import ShiftType, Shift, Schedule
+from apps.schedules.models import ShiftType, Shift, Schedule, Preference
 from apps.schedules.serializers import ShiftTypeSerializer, PreferenceSerializer
 
 
@@ -183,8 +183,18 @@ class ShiftManageApiView(APIView):
         return Response()
 
 
-class PreferenceViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+class PreferenceViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin,
+                        viewsets.GenericViewSet):
+    queryset = Preference.objects.all()
     serializer_class = PreferenceSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        if request.query_params.get('employee'):
+            queryset = Preference.objects.filter(employee_id=request.query_params.get('employee'))
+        serializer = PreferenceSerializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class ShiftTypeViewSet(viewsets.ModelViewSet):
@@ -195,6 +205,7 @@ class ShiftTypeViewSet(viewsets.ModelViewSet):
         queryset = ShiftType.objects.filter(is_archive=False).filter(workplace_id=self.kwargs['workplace_pk'])
         return queryset
 
+    # TODO Zmienić update na działający
     def perform_create(self, serializer):
         v_data = serializer.validated_data
         workplace = Workplace.objects.filter(pk=self.kwargs['workplace_pk']).first()
