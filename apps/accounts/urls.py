@@ -17,7 +17,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import path, include
 from rest_framework import routers
 
-from .views import EmployeeViewSet
+from .views import EmployeeViewSet, EmployeeOptionView
 
 router = routers.DefaultRouter()
 router.register(r'employee', EmployeeViewSet, basename='employee')
@@ -38,6 +38,7 @@ urlpatterns = [
     path('reset/done/',
          auth_views.PasswordResetCompleteView.as_view(template_name='accounts/password_reset_complete.html'),
          name='password_reset_complete'),
+    path('employee/<int:pk>/', EmployeeOptionView.as_view(), name='employee_option'),
 
     # API urls
     path('api/', include(router.urls)),
