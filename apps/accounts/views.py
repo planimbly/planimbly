@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.views.generic import TemplateView
 from rest_framework import viewsets, permissions
 
 from apps.accounts.models import Employee
@@ -22,3 +23,7 @@ class EmployeeViewSet(viewsets.ModelViewSet):
                                                         v_data['first_name'], v_data['last_name'], password,
                                                         self.request.user.user_org, False)
         send_user_activation_mail(employee, self.request)
+
+
+class EmployeeOptionView(TemplateView):
+    template_name = 'accounts/employee_option.html'

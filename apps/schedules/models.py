@@ -19,6 +19,9 @@ class ShiftType(models.Model):
     is_used = models.BooleanField(default=False)
     is_archive = models.BooleanField(default=False)
 
+    def __str__(self):
+        return self.name
+
 
 class Preference(models.Model):
     shift_type = models.ForeignKey(ShiftType, on_delete=models.CASCADE, verbose_name="Typ zmiany")

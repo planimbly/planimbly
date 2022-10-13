@@ -1,3 +1,4 @@
+
 from rest_framework import serializers
 
 from .models import ShiftType, Preference
@@ -12,7 +13,13 @@ class ShiftTypeSerializer(serializers.HyperlinkedModelSerializer):
         }
 
 
-class PreferenceSerializer(serializers.HyperlinkedModelSerializer):
+class PreferenceSerializer(serializers.ModelSerializer):
+    def validate(self, data):
+        """Check if user in shift_type workplace"""
+        if data['shift_type'].workplace not in data['employee'].user_workplace.all():
+            raise serializers.ValidationError("User is not assigned to workplace")
+        return data
+
     class Meta:
         model = Preference
         fields = ['id', 'shift_type', 'employee', 'active_days']
