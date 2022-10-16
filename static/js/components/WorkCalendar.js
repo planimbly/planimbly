@@ -7,12 +7,29 @@ export default {
       workplace_id: Number,
       employee_id: Number,
       show_for_workplace: Boolean,
-      schedule: Object
+      schedule: Object,
+      available_workers: Object,
+      available_shift_types: Object
     },
 
     data () {
       return {
-        clickedTileDate: null
+        clickedTileDay: {
+          day: new Date("1970-01-01"),
+          day_label: null,
+          weekday: null,
+          shifts: [
+            {
+              shift_type_id: null,
+              time_start: null,
+              time_end: null,
+              label: null,
+              workers: [
+                {shift_id: null, worker: {id: null, first_name: null, last_name: null}}
+              ],
+            }
+          ]
+        }
       }
 
     },
@@ -24,6 +41,9 @@ export default {
         } else {
           return 'Error'
         }
+      },
+      print(string){
+        console.log(string);
       }
     },
 
@@ -32,7 +52,9 @@ export default {
         const weekdays = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
         var workMonth = [];
 
-
+        console.log(this.schedule);
+        console.log(this.available_workers);
+        console.log(this.available_shift_types);
 
         if (this.show_for_workplace && this.schedule) {
 
@@ -63,7 +85,7 @@ export default {
                             for (const currShift in currShifts) {
 
                               if (currShifts[currShift].shift_type_id === element.days[day][shift].shift_type_id) {
-                                currShifts[currShift].workers.push(element.days[day][shift].worker);
+                                currShifts[currShift].workers.push({shift_id: element.days[day][shift].id, worker: element.days[day][shift].worker});
                               }
                             }
 
@@ -71,13 +93,13 @@ export default {
                           {
 
                             currShifts.push({
-                              id: element.days[day][shift].id,
+                              //id: element.days[day][shift].id,
                               shift_type_id: element.days[day][shift].shift_type_id,
                               time_start: element.days[day][shift].time_start,
                               time_end: element.days[day][shift].time_end,
                               label: element.days[day][shift].time_start.toString().slice(0, 5) + "-" + element.days[day][shift].time_end.toString().slice(0, 5),
                               workers: [
-                                element.days[day][shift].worker
+                                {shift_id: element.days[day][shift].id, worker: element.days[day][shift].worker}
                               ]
                             })
 
@@ -151,7 +173,7 @@ export default {
     <div class="calendar-big">
       <div v-for="filler in grid_blank_fillers" class="tile-transparent"></div>
       <div v-for="day in work_month" class="calendar-tile">
-        <div @click="clickedTileDate = day.day.toLocaleDateString()" class="tile-content"  data-bs-toggle="modal" data-bs-target="#changeDayScheduleModal">
+        <div @click="clickedTileDay = day" class="tile-content"  data-bs-toggle="modal" data-bs-target="#changeDayScheduleModal">
           <div class="tile-content-title">
              <div class="cal-day-label-holder">[[day.day_label]]</div>
              <div class="weekday-in-tile-lowres">[[day.weekday]]</div>
@@ -159,8 +181,8 @@ export default {
           <div class="shift-tile-container">
             <div v-for="shift in day.shifts" class="shift-tile">
               [[shift.label]]
-              <div v-for="worker in shift.workers" class="employee-tile">
-                [[abbreviate_name(worker.first_name, worker.last_name)]]
+              <div v-for="employee in shift.workers" class="employee-tile">
+                  [[employee.worker.first_name]] [[employee.worker.last_name]]               
               </div>
             </div>
           </div>
@@ -172,10 +194,20 @@ export default {
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                      <h5 class="modal-title" id="changeDayScheduleLabel">[[ this.clickedTileDate ]]</h5>
+                      <h5 class="modal-title" id="changeDayScheduleLabel">[[ this.clickedTileDay.day.toLocaleDateString() ]]</h5>
                       <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                Test
+                <div v-for="shift in clickedTileDay.shifts">
+                    [[shift.label]] <button @click="print('usuniecie zmiany')" type="button">Usuń</button>
+                    <ul>                        
+                        <li v-for="worker_shift in shift.workers">
+                            <div @click="print('podmiana pracownika')">[[worker_shift.shift_id]] [[worker_shift.worker]]</div>
+                            <button @click="print('usuniecie pracownika')" type="button">Usuń</button>
+                        </li>
+                        <li> <button @click="print('dodanie pracownika')" type="button">Dodaj pracownika</button> </li>
+                    </ul>
+                </div>
+                <button @click="print('dodanie zmiany')" type="button">Dodaj zmianę</button>
             </div>
         </div>
     </div>

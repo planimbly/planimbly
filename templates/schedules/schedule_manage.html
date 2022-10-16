@@ -78,7 +78,9 @@
                 :workplace_id="selected_workplace"
                 :employee_id="employee_id"
                 :show_for_workplace="show_for_workplace"
-                :schedule="fetched_schedule">
+                :schedule="fetched_schedule"
+                :available_workers="available_workers"
+                :available_shift_types="available_shift_types">
         </work-calendar>
 
             {#    END/added calendar#}
@@ -171,6 +173,9 @@
                     month_cal: new Date().getMonth()+1,
                     checked_workplace: [],
                     loading: false,
+                    available_workers: null,
+                    available_shift_types: null,
+
                     month_labels: [
                         {id: 1, name: 'Styczeń'},
                         {id: 2, name: 'Luty'},
@@ -219,7 +224,19 @@
                         .then(response => {
                                 this.fetched_schedule = response.data;
                             }
-                        )
+                        );
+                    axios
+                        .get(this.employee_list_url)
+                        .then(response => {
+                                this.available_workers = response.data;
+                            }
+                        );
+                    axios
+                        .get(this.shift_type_list_url)
+                        .then(response => {
+                                this.available_shift_types = response.data;
+                            }
+                        );
                 },
                 change_workplace() {
                     try {
@@ -234,6 +251,16 @@
                 base_url: {
                     get() {
                         return '{% url 'schedule_get' 123456789 %}'.replace(/123456789/, this.selected_workplace);
+                    }
+                },
+                employee_list_url: {
+                    get() {
+                        return '{% url 'employee-list' %}';
+                    }
+                },
+                shift_type_list_url: {
+                    get() {
+                        return '{% url 'shiftType-list' 123456789 %}'.replace(/123456789/, this.selected_workplace);
                     }
                 },
                 current_workplace: {
