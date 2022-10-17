@@ -283,7 +283,7 @@ export default {
                       <div class="list-group">
                             <div v-for="worker in available_workers" @click="add_new_employee_for_existing_shift(worker.id)" 
                             class="list-group-item list-group-item-action" data-bs-target="#changeDayScheduleModal" data-bs-toggle="modal" data-bs-dismiss="modal">
-                                <div class="fw-bold">[[worker.first_name]] [[worker.last_name]]</div> [[worker.username]]
+                                <div class="fw-bold">[[worker.first_name]] [[worker.last_name]]</div> [[worker.username]] // ADD HERE UNIT NAME AS WELL - DISABLE IF THE EMPLOYEE IS ON HOLIDAYS
                             </div>                       
                       </div>
                 </div>
