@@ -1,0 +1,33 @@
+.emp_option_small_box {
+    justify-content: space-between; 
+    column-gap: 10px;
+    margin: 5px;
+}
+
+.emp_option_big_box {
+    justify-content: flex-start;
+    row-gap: 20px;
+    column-gap: 20px
+}
+
+h5 {
+    width: 235px;
+    margin: 5px;
+}
+
+input, select, textarea{
+    color: rgb(82, 82, 82);
+}
+
+textarea:focus, input:focus {
+    color: rgb(82, 82, 82);
+}
+
+.emp_option_big_box, .emp_option_small_box {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+/* 
+row-gap: 10px;
+column-gap: 20px; */
