@@ -29,7 +29,13 @@ export default {
               ],
             }
           ]
-        }
+        },
+        //addEmployeeToExistingShift_EmployeeID: null,
+        addEmployeeToExistingShift_ShiftTypeID: null,
+        addNewShift_EmployeeID: null,
+        addNewShift_ShiftTypeID: null,
+        //updateEmployeeInExistingShift_EmployeeID: null,
+        updateEmployeeInExistingShift_ShiftID: null,
       }
 
     },
@@ -44,7 +50,23 @@ export default {
       },
       print(string){
         console.log(string);
+      },
+
+      update_employee_for_existing_shift(employee_id){
+        console.log('PUT: '+this.updateEmployeeInExistingShift_ShiftID+' employee: '+employee_id);
+      },
+
+      add_new_employee_for_existing_shift(employee_id){
+        if (this.employee_exists_in_worktype(employee_id, this.addEmployeeToExistingShift_ShiftTypeID)){
+          return;
+        }
+        console.log('ADD NEW: '+this.addEmployeeToExistingShift_ShiftTypeID+' employee: '+employee_id);
+      },
+
+      employee_exists_in_worktype(employee_id, worktype){
+        return false;
       }
+
     },
 
     computed:{
@@ -197,17 +219,98 @@ export default {
                       <h5 class="modal-title" id="changeDayScheduleLabel">[[ this.clickedTileDay.day.toLocaleDateString() ]]</h5>
                       <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div v-for="shift in clickedTileDay.shifts">
-                    [[shift.label]] <button @click="print('usuniecie zmiany')" type="button">Usuń</button>
-                    <ul>                        
-                        <li v-for="worker_shift in shift.workers">
-                            <div @click="print('podmiana pracownika')">[[worker_shift.shift_id]] [[worker_shift.worker]]</div>
-                            <button @click="print('usuniecie pracownika')" type="button">Usuń</button>
-                        </li>
-                        <li> <button @click="print('dodanie pracownika')" type="button">Dodaj pracownika</button> </li>
-                    </ul>
+                <div class="modal-body">
+                  <ul v-for="shift in clickedTileDay.shifts" class="list-group">
+                      <li class="list-group-item mb-2">
+                        <div class="container mb-1">
+                          <div class="row">
+                            <div class="fw-bold col">[[shift.label]] </div>
+                            <button @click="print('usuniecie zmiany')" type="button" class="btn btn-outline-danger btn-sm col col-lg-2">Usuń</button>
+                          </div>
+                        </div>
+                        <ul class="list-group"> 
+                            <div class="container">                     
+                              <li v-for="worker_shift in shift.workers" class="list-group-item row">
+                                  <div @click="updateEmployeeInExistingShift_ShiftID = worker_shift.shift_id" data-bs-target="#pickEmployeeForUpdateModal"
+                                   data-bs-toggle="modal" data-bs-dismiss="modal" class="col">
+                                      [[worker_shift.shift_id]] [[worker_shift.worker]]
+                                  </div>
+                                  <button @click="print('usuniecie pracownika')" type="button" class="btn btn-outline-danger btn-sm col col-lg-2">Usuń</button>
+                              </li>
+                            </div>  
+                            <li class="list-group-item"> <button @click="addEmployeeToExistingShift_ShiftTypeID = shift.shift_type_id" type="button" 
+                            data-bs-target="#pickEmployeeAddToExistingModal" data-bs-toggle="modal" data-bs-dismiss="modal" class="btn btn-outline-primary btn-sm">
+                            Dodaj pracownika
+                                </button> 
+                            </li>
+                        </ul>
+                      </li>
+                  </ul> 
+                 <button @click="print('dodanie zmiany')" type="button" class="btn btn-primary">Dodaj zmianę</button>                   
                 </div>
-                <button @click="print('dodanie zmiany')" type="button">Dodaj zmianę</button>
+                
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="pickEmployeeForUpdateModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                      <h5 class="modal-title" id="pickEmployeeForUpdateLabel">Wybierz pracownika</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                      <div class="list-group">
+                            <div v-for="worker in available_workers" @click="update_employee_for_existing_shift(worker.id)" 
+                            class="list-group-item list-group-item-action" data-bs-target="#changeDayScheduleModal" data-bs-toggle="modal" data-bs-dismiss="modal">
+                                <div class="fw-bold">[[worker.first_name]] [[worker.last_name]]</div> [[worker.username]]
+                            </div>                       
+                      </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="pickEmployeeAddToExistingModal" tabindex="-1">  
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                      <h5 class="modal-title" id="pickEmployeeAddToExistingLabel">Wybierz pracownika</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                      <div class="list-group">
+                            <div v-for="worker in available_workers" @click="add_new_employee_for_existing_shift(worker.id)" 
+                            class="list-group-item list-group-item-action" data-bs-target="#changeDayScheduleModal" data-bs-toggle="modal" data-bs-dismiss="modal">
+                                <div class="fw-bold">[[worker.first_name]] [[worker.last_name]]</div> [[worker.username]]
+                            </div>                       
+                      </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="addNewShiftTypeModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                      <h5 class="modal-title" id="addNewShiftTypeLabel">Wybierz zmianę</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="pickShiftTypeModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                      <h5 class="modal-title" id="pickShiftTypeLabel">Wybierz zmianę</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
             </div>
         </div>
     </div>
