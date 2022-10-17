@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+
+{% block head %}
+    <link rel="stylesheet" href="{% static 'css/accounts/employee_option.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script>
+        axios.defaults.xsrfCookieName = 'csrftoken';
+        axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
+    </script>
+{% endblock head %}
+
+{% block content %}
+
+<div id="vue-app">
+    <nav style aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'units_manage' %}"
+                                        class="breadcrumb-link">{{ user.user_org }}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'employees_manage' %}"
+                class="breadcrumb-link">Zarządzanie pracownikami</a></li>
+            <li class="breadcrumb-item current-subpage">[[ employee_info.first_name ]] [[ employee_info.last_name ]]</li>
+        </ol>
+        <h2 class="breadcrumb-title">Zarządzanie pracownikiem </h2>
+        <hr class="breadcrumb" style="opacity: 1">
+    </nav>
+
+<div class="emp_option_big_box">
+    <div>
+        <div class="emp_option_small_box"><h5>Imię</h5><input type="text" v-model="employee_info.first_name"></div>
+        <div class="emp_option_small_box"><h5>Nazwisko</h5><input type="text" v-model="employee_info.last_name"></div>
+        <div class="emp_option_small_box"><h5>Nazwa Użytkownika</h5><input type="text" v-model="employee_info.username"></div>
+    </div>
+    <div>
+        <div class="emp_option_small_box"><h5>ID</h5><input type="text" v-model="employee_info.id"></div>
+        <div class="emp_option_small_box"><h5>E-mail</h5><input type="text" v-model="employee_info.email"></div>
+        <div class="emp_option_small_box"><h5>Etat</h5><input type="text" v-model="employee_info.job_time"></div>
+    </div>
+</div>
+
+</div>
+
+{% endblock content %}
+
+{% block vue-content %}
+    {#    <script type="//application/javascript">#}
+    <script type="module">  
+        {#var app = new Vue({#}
+        const {createApp} = Vue
+        var vue_app = createApp({
+            delimiters: ["[[", "]]"],
+            {#el: '#vue-app',#}
+            data() {
+                return {
+                    employee_id: {{ pk }},
+                    email: '',
+                    username: '',
+                    first_name: '',
+                    last_name: '',
+                    job_time: 0,
+
+                    employee_list: null,
+                    response: null,
+                    base_url: '{% url 'employee-list' %}',
+                    
+                }
+            },
+            computed: {
+                employee_info() {
+                    if (this.employee_list != null){
+                        return this.employee_list.find((Object) => Object.id == this.employee_id);
+                    }
+                    else{
+                        return { email: null, first_name: null, id: null, job_time: null, last_name: null, username: null }
+                    }
+                    
+                },
+            },
+            methods: {
+                fetch_data() {
+                    axios
+                        .get(this.base_url)
+                        .then(response => (this.employee_list = response.data))
+                },
+                add_employee() {
+                    swal({
+                        title: "Potwierdź dodanie pracownika",
+                        icon: "info",
+                        buttons: true
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
+
+                                axios
+                                    .post(this.base_url,
+                                        {
+                                            email: this.email, username: this.username,
+                                            first_name: this.first_name, last_name: this.last_name
+                                        }
+                                    )
+                                    .then(
+                                        this.fetch_data
+                                    )
+                                    .catch(error => {
+                                            this.response = error.response.data
+                                        }
+                                    )
+                                this.email = ''
+                                this.username = ''
+                                this.first_name = ''
+                                this.last_name = ''
+                            }
+                        });
+                },
+                search_employee() {
+                    const employee = this.employee_list.find((Object) => Object.id == 2);
+                    console.log(employee)
+                    this.email = employee.email;
+                    this.username = employee.username;
+                    this.first_name = employee.first_name;
+                    this.job_time = employee.job_tmie;
+                    this.last_name = employee.last_name;
+                },
+                remove_employee(id) {
+                    swal({
+                        title: "Czy na pewno chcesz usunąć pracownika?",
+                        icon: "warning",
+                        buttons: true,
+                        dangerMode: true,
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
+                                let url = this.base_url + id + '/'
+                                axios
+                                    .delete(url,
+                                        {
+                                            id: id
+                                        }
+                                    )
+                                    .then(
+                                        this.fetch_data
+                                    )
+                                    .catch(error => {
+                                            this.response = error.response.data
+                                        }
+                                    )
+                            }
+                        });
+
+                },
+                change_employee(i) {
+                    let url = this.base_url + this.employee_list[i].id + '/'
+                    swal({
+                        title: "Czy chcesz zatwierdzić zmiany",
+                        icon: "info",
+                        buttons: true,
+                        //dangerMode: true,
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
+                                axios
+                                    .put(url,
+                                        {
+                                            email: this.employee_list[i].email,
+                                            username: this.employee_list[i].username,
+                                            first_name: this.employee_list[i].first_name,
+                                            last_name: this.employee_list[i].last_name
+                                        }
+                                    )
+                                    .then(
+                                        this.fetch_data
+                                    )
+                                    .catch(error => {
+                                            this.response = error.response.data
+                                        }
+                                    )
+
+                            }
+                        });
+
+                }
+            },
+            mounted() {
+                this.fetch_data()
+            }
+        }).mount('#vue-app');
+    </script>
+{% endblock vue-content %}
