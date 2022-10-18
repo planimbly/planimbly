@@ -20,7 +20,7 @@ class ShiftType(models.Model):
     is_archive = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.name
+        return self.workplace.name + ' ' + self.name
 
 
 class Preference(models.Model):
@@ -34,3 +34,15 @@ class Shift(models.Model):
     schedule = models.ForeignKey(Schedule, on_delete=models.CASCADE, verbose_name="Grafik")
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, verbose_name="Pracownik")
     shift_type = models.ForeignKey(ShiftType, on_delete=models.CASCADE, verbose_name="Typ zmiany")
+
+
+class Absence(models.Model):
+    start = models.DateField(verbose_name="Początek nieobecności")
+    end = models.DateField(verbose_name="Koniec nieobecności")
+    employee = models.ForeignKey(Employee, verbose_name="Pracownik", on_delete=models.CASCADE)
+    ABSENCE_TYPE = [
+        ('SICK', 'Zwolnienie L4'),
+        ('VAC', 'Urlop wypoczynkowy')
+    ]
+    type = models.CharField(max_length=256, verbose_name="Typ nieobecności", choices=ABSENCE_TYPE)
+    hours_number = models.IntegerField(verbose_name="Liczba godzin nieobecności")

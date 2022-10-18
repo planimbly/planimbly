@@ -10,8 +10,15 @@ from rest_framework.views import APIView
 import scripts.run_algorithm
 from apps.accounts.models import Employee
 from apps.organizations.models import Workplace, Unit
-from apps.schedules.models import ShiftType, Shift, Schedule, Preference
-from apps.schedules.serializers import ShiftTypeSerializer, PreferenceSerializer
+from apps.schedules.models import ShiftType, Shift, Schedule, Preference, Absence
+from apps.schedules.serializers import ShiftTypeSerializer, PreferenceSerializer, AbsenceSerializer
+
+
+def filter_queryset_by_employee(queryset, req, serializer):
+    if req.query_params.get('employee'):
+        queryset = queryset.filter(employee_id=req.query_params.get('employee'))
+    ser = serializer(queryset, many=True)
+    return ser.data
 
 
 class ShiftTypeManageView(TemplateView):
@@ -35,6 +42,15 @@ class ShiftTypeManageView(TemplateView):
         context['select_unit'] = select_unit
         context['select_workplace'] = select_workplace
         context['is_any_workplace'] = True
+        return context
+
+
+class AbsenceManageView(TemplateView):
+    template_name = 'schedules/absence_manage.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['absence'] = Absence.ABSENCE_TYPE
         return context
 
 
@@ -72,6 +88,8 @@ class ScheduleCreateApiView(APIView):
         workplace_list = self.request.data.get('workplace_list')
         workplace_query = Workplace.objects.filter(id__in=workplace_list)
         schedule_dict = dict()
+
+        # Sprawdzamy czy istnieją już jakieś grafiki, jeżeli tak usuwamy wszystkie
         for workplace in workplace_query:
             old_schedule = Schedule.objects.filter(year=year).filter(month=month).filter(workplace=workplace).first()
             if old_schedule is not None:
@@ -190,11 +208,8 @@ class PreferenceViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, mixin
     permission_classes = [permissions.IsAuthenticated]
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        if request.query_params.get('employee'):
-            queryset = Preference.objects.filter(employee_id=request.query_params.get('employee'))
-        serializer = PreferenceSerializer(queryset, many=True)
-        return Response(serializer.data)
+        data = filter_queryset_by_employee(self.queryset, request, self.serializer_class)
+        return Response(data)
 
 
 class ShiftTypeViewSet(viewsets.ModelViewSet):
@@ -219,3 +234,14 @@ class ShiftTypeViewSet(viewsets.ModelViewSet):
 
     '''def perform_update(self, serializer):
         pass'''
+
+
+class AbsenceViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin,
+                     viewsets.GenericViewSet, mixins.RetrieveModelMixin):
+    queryset = Absence.objects.all()
+    serializer_class = AbsenceSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+        data = filter_queryset_by_employee(self.queryset, request, self.serializer_class)
+        return Response(data)

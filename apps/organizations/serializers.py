@@ -3,7 +3,7 @@ from rest_framework import serializers
 from .models import Unit, Workplace
 
 
-class UnitSerializer(serializers.HyperlinkedModelSerializer):
+class UnitSerializer(serializers.ModelSerializer):
     class Meta:
         model = Unit
         fields = ['id', 'name', 'allow_preferences']
