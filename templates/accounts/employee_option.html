@@ -45,18 +45,12 @@
         <div>
             <h5>Jednostki</h5>
             <div class="list-group">
-                <div class="list-group-item list-group-item-action">
+                <div v-for="unit in employee_info.user_unit" :key="unit.id" class="list-group-item list-group-item-action">
                     <div class="emp_option_table_box">
-                        <div>siemanko</div>
-                        <i class="material-icons">delete_outline</i>
+                        <div>[[ unit.name ]]</div>
+                        <button v-on:click="remove_unit_for_employee(unit.id, unit.name)" class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
                     </div>
                 </div>  
-                <div class="list-group-item list-group-item-action">
-                    <div>siemanko</div>
-                </div>  
-                <div class="list-group-item list-group-item-action">
-                    <div>siemanko</div>
-                </div> 
             </div> 
             <button class="btn btn-outline-primary" style="margin-top: 15px;">Dodaj</button>                 
         </div>
@@ -64,15 +58,12 @@
         <div>
             <h5>Działy</h5>
             <div class="list-group">
-                <div class="list-group-item list-group-item-action">
-                    <div>siemanko</div>
-                </div>  
-                <div class="list-group-item list-group-item-action">
-                    <div>siemanko</div>
-                </div>  
-                <div class="list-group-item list-group-item-action">
-                    <div>siemanko</div>
-                </div>  
+                <div v-for="workplace in employee_info.user_workplace" :key="workplace.id" class="list-group-item list-group-item-action">
+                    <div class="emp_option_table_box">
+                        <div>[[ workplace.name ]]</div>
+                        <button v-on:click="remove_workplace_for_employee(workplace.id, workplace.name)" class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
+                    </div>
+                </div>
             </div>
             <button class="btn btn-outline-primary" style="margin-top: 15px;">Dodaj</button>
         </div>
@@ -81,14 +72,11 @@
             <h5>Preferencje zmianowe</h5>
             <div class="list-group">
                 <div class="list-group-item list-group-item-action">
-                    <div>siemanko</div>
-                </div>  
-                <div class="list-group-item list-group-item-action">
-                    <div>siemanko</div>
-                </div>  
-                <div class="list-group-item list-group-item-action">
-                    <div>siemanko</div>
-                </div> 
+                    <div class="emp_option_table_box">
+                        <div>siemanko</div>
+                        <button v-on:click="remove_workplace_for_employee()" class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
+                    </div>
+                </div>
             </div>
             <button class="btn btn-outline-primary" style="margin-top: 15px;">Dodaj</button>
         </div>
@@ -111,126 +99,118 @@
                     last_name: '',
                     job_time: 0,
 
-                    employee_list: null,
-                    response: null,
-                    base_url: '{% url 'employee-list' %}',
-                    
+                    employee_values: null,
+                    response_emp_data: null,
+                    response_unit_data: null,
+                    response_workplace_data: null,
+                    base_url: '',
+                    units_url: '',
+                    workplaces_url: '',
                 }
             },
             computed: {
                 employee_info() {
-                    if (this.employee_list != null){
-                        return this.employee_list.find((Object) => Object.id == this.employee_id);
+                    if (this.employee_values != null){
+                        console.log(this.employee_values);
+                        return this.employee_values
                     }
                     else{
-                        return { email: null, first_name: null, id: null, job_time: null, last_name: null, username: null }
+                        return { email: null, first_name: null, id: null, job_time: null, last_name: null, username: null, user_unit: null, user_workplace: null }
                     }
                     
                 },
             },
             methods: {
                 fetch_data() {
+                    this.base_url = '{% url 'employee-detail' 123456789 %}'.replace(/123456789/, this.employee_id)
                     axios
                         .get(this.base_url)
-                        .then(response => (this.employee_list = response.data))
+                        .then(response_emp_data => (this.employee_values = response_emp_data.data))
                 },
-                add_employee() {
+                remove_unit_for_employee(unit_id, unit_name) {
                     swal({
-                        title: "Potwierdź dodanie pracownika",
-                        icon: "info",
-                        buttons: true
-                    })
-                        .then((willAdd) => {
-                            if (willAdd) {
-
-                                axios
-                                    .post(this.base_url,
-                                        {
-                                            email: this.email, username: this.username,
-                                            first_name: this.first_name, last_name: this.last_name
-                                        }
-                                    )
-                                    .then(
-                                        this.fetch_data
-                                    )
-                                    .catch(error => {
-                                            this.response = error.response.data
-                                        }
-                                    )
-                                this.email = ''
-                                this.username = ''
-                                this.first_name = ''
-                                this.last_name = ''
-                            }
-                        });
-                },
-                search_employee() {
-                    const employee = this.employee_list.find((Object) => Object.id == 2);
-                    console.log(employee)
-                    this.email = employee.email;
-                    this.username = employee.username;
-                    this.first_name = employee.first_name;
-                    this.job_time = employee.job_tmie;
-                    this.last_name = employee.last_name;
-                },
-                remove_employee(id) {
-                    swal({
-                        title: "Czy na pewno chcesz usunąć pracownika?",
+                        title: "Czy na pewno chcesz usunąć jednostkę " + unit_name,
                         icon: "warning",
                         buttons: true,
                         dangerMode: true,
                     })
                         .then((willAdd) => {
                             if (willAdd) {
-                                let url = this.base_url + id + '/'
+                                let remove_unit_url = '{% url 'employee_to_unit_api' 123456789 %}'.replace(/123456789/, unit_id);
                                 axios
-                                    .delete(url,
-                                        {
-                                            id: id
-                                        }
-                                    )
-                                    .then(
-                                        this.fetch_data
-                                    )
-                                    .catch(error => {
-                                            this.response = error.response.data
-                                        }
-                                    )
+                                .post(remove_unit_url,
+                                    {
+                                        pk: this.employee_id,
+                                        action: 'delete'
+                                    }
+                                )
                             }
                         });
 
                 },
-                change_employee(i) {
-                    let url = this.base_url + this.employee_list[i].id + '/'
+                add_unit_for_employee(unit_id, unit_name) {
                     swal({
-                        title: "Czy chcesz zatwierdzić zmiany",
-                        icon: "info",
+                        title: "Czy na pewno chcesz usunąć jednostkę " + unit_name,
+                        icon: "warning",
                         buttons: true,
-                        //dangerMode: true,
+                        dangerMode: true,
                     })
                         .then((willAdd) => {
                             if (willAdd) {
+                                let remove_unit_url = '{% url 'employee_to_unit_api' 123456789 %}'.replace(/123456789/, unit_id);
                                 axios
-                                    .put(url,
-                                        {
-                                            email: this.employee_list[i].email,
-                                            username: this.employee_list[i].username,
-                                            first_name: this.employee_list[i].first_name,
-                                            last_name: this.employee_list[i].last_name
-                                        }
-                                    )
-                                    .then(
-                                        this.fetch_data
-                                    )
-                                    .catch(error => {
-                                            this.response = error.response.data
-                                        }
-                                    )
-
+                                .post(remove_unit_url,
+                                    {
+                                        pk: this.employee_id,
+                                        action: 'add'
+                                    }
+                                )
                             }
                         });
 
-                }
+                },
+                remove_workplace_for_employee(workplace_id, workplace_name) {
+                    swal({
+                        title: "Potwierdź dodanie jednostki " + workplace_name,
+                        icon: "info",
+                        buttons: true,
+                        dangerMode: false,
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
+                                let remove_workplace_url = '{% url 'employee_to_workplace_api' 123456789 %}'.replace(/123456789/, workplace_id);
+                                axios
+                                .post(remove_workplace_url,
+                                    {
+                                        pk: this.employee_id,
+                                        action: 'delete'
+                                    }
+                                )
+                            }
+                        });
+
+                },
+                add_workplace_for_employee(workplace_id, workplace_name) {
+                    swal({
+                        title: "Potwierdź dodanie działu " + workplace_name,
+                        icon: "info",
+                        buttons: true,
+                        dangerMode: false,
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
+                                let remove_workplace_url = '{% url 'employee_to_workplace_api' 123456789 %}'.replace(/123456789/, workplace_id);
+                                axios
+                                .post(remove_workplace_url,
+                                    {
+                                        pk: this.employee_id,
+                                        action: 'add'
+                                    }
+                                )
+                            }
+                        });
+
+                },
             },
             mounted() {
                 this.fetch_data()
