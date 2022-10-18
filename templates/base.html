@@ -76,9 +76,12 @@
                             </li>
                             <li class="sidebar-item"><a href="{% url 'employee_to_unit_workplace' %}"
                                                         class="del-def-style-a">Pracownicy</a></li>
-                            
+
                             <li class="sidebar-item"><a href="{% url 'employees_manage' %}" class="del-def-style-a">Zarządzanie
                                 pracownikami</a></li>
+                            <li class="sidebar-item"><a href="{% url 'absence_manage' user.pk %}"
+                                                        class="del-def-style-a">Zarządzanie
+                                nieobecnościami</a></li>
                             <li class="sidebar-item"><a href="{% url 'organization_create' %}" class="del-def-style-a">Nowa
                                 organizacja</a></li>
                         {% else %}

@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+
+{#START/added calendar#}
+{% block head %}
+    <!--<link rel="stylesheet" href="{% static 'css/schedules/absence.css' %}">-->
+    <script type="application/javascript" src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script type="application/javascript" src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script>
+        axios.defaults.xsrfCookieName = 'csrftoken';
+        axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
+    </script>
+{% endblock head %}
+
+{% block content %}
+    <div id="vue-app">
+        <form id="schedule_form" v-on:submit.prevent="create_absence">
+            {% csrf_token %}
+            <input type="date" class="form-control" v-model="start" required>
+            <input type="date" class="form-control" v-model="end" required>
+            <select class="form-control" v-model="type" required>
+                <option value="volvo">Volvo</option>
+                <option value="saab">Saab</option>
+            </select>
+            <input type="number" class="form-control" v-model="hours_number" required>
+            <input type="submit" value="Zapisz">
+        </form>
+
+        Lista:
+        <ul>
+            <li v-for="absence in absence_list" :value="absence.id">
+                [[ absence.id ]]
+            </li>
+        </ul>
+    </div>
+{% endblock %}
+
+{% block vue-content %}
+
+    <script type="module">
+
+        const {createApp} = Vue
+        createApp({
+            delimiters: ["[[", "]]"],
+            data() {
+                return {
+                    absence_list: null,
+                    employee_id: {{ employee_pk }},
+                    absence_url: '{% url 'absence-list' %}',
+                    start: '',
+                    end: '',
+                    type: '',
+                    hours_number: '',
+                }
+            },
+            methods: {
+                create_absence() {
+                    axios
+                        .post(this.absence_url,
+                            {
+                                start: this.start,
+                                end: this.end,
+                                employee: this.employee_id,
+                                type: this.type,
+                                hours_number: this.hours_number
+                            }
+                        )
+                        .then(response => {
+                                this.fetch_data()
+                            }
+                        )
+                },
+                fetch_data() {
+                    axios
+                        .get(this.absence_url)
+                        .then(response => {
+                                this.absence_list = response.data;
+                            }
+                        );
+                },
+                delete_absence() {
+                    axios
+                        .delete(this.absence_url + this.employee_id + '/')
+                        .then(response => {
+                                this.fetch_data()
+                            }
+                        )
+                },
+            },
+            computed: {},
+            mounted() {
+            },
+        }).mount('#vue-app');
+
+    </script>
+{% endblock vue-content %}
