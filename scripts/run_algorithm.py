@@ -359,18 +359,34 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
 
     # daily demands for work shifts (morning, afternoon, night) for each day
     # of the week starting on Monday.
-    weekly_cover_demands = [
-        (1, 1, 1, 1, 1),  # Monday
-        (1, 1, 1, 1, 1),  # Tuesday
-        (1, 1, 1, 1, 1),  # Wednesday
-        (1, 1, 1, 1, 1),  # Thursday
-        (1, 1, 1, 1, 1),  # Friday
-        (1, 1, 1, 1, 1),  # Saturday
-        (1, 1, 1, 1, 1),  # Sunday
-    ]
+    # weekly_cover_demands = [
+    #     (1, 1, 1, 1, 1),  # Monday
+    #     (1, 1, 1, 1, 1),  # Tuesday
+    #     (1, 1, 1, 1, 1),  # Wednesday
+    #     (1, 1, 1, 1, 1),  # Thursday
+    #     (1, 1, 1, 1, 1),  # Friday
+    #     (1, 1, 1, 1, 1),  # Saturday
+    #     (1, 1, 1, 1, 1),  # Sunday
+    # ]
 
     # TODO: zamienić 1 na parametr daily cover demand który będzie w klasie shift_type
     weekly_cover_demands = [tuple(1 for x in range(len(shift_types)-1)) for _ in range(7)]
+
+    num_month_weekdays = []
+
+    for d in range(len(weekly_cover_demands)):
+        num_month_weekdays.append(sum([x[1] == d for x in flatten(list_month)]))
+
+    total_hours = int()
+
+    for d in range(len(weekly_cover_demands)):
+        for s in range(len(weekly_cover_demands[d])):  # s for num_month_weekdays, s+1 for shift_types
+            if shift_types[s+1].name == "-":
+                continue
+            else:
+                total_hours += num_month_weekdays[d] * get_shift_work_time(shift_types[s+1]) // 60
+
+    print(total_hours)
 
     # Penalty for exceeding the cover constraint per shift type.
     excess_cover_penalties = tuple(20 for x in range(len(shift_types)-1))
@@ -464,10 +480,8 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
                 model.Add(worked == sum(works))
                 over_penalty = excess_cover_penalties[s - 1]
                 if over_penalty > 0:
-                    name = 'excess_demand(shift=%i, week=%i, day=%i)' % (s, w,
-                                                                         d[0])
-                    excess = model.NewIntVar(0, len(employees) - min_demand,
-                                             name)
+                    name = 'excess_demand(shift=%i, week=%i, day=%i)' % (s, w, d[0])
+                    excess = model.NewIntVar(0, len(employees) - min_demand, name)
                     model.Add(excess == worked - min_demand)
                     obj_int_vars.append(excess)
                     obj_int_coeffs.append(over_penalty)
