@@ -27,31 +27,81 @@
         <hr class="breadcrumb" style="opacity: 1">
     </nav>
 
-<div class="emp_option_big_box">
-    <div>
-        <div class="emp_option_small_box"><h5>Imię</h5><input type="text" v-model="employee_info.first_name"></div>
-        <div class="emp_option_small_box"><h5>Nazwisko</h5><input type="text" v-model="employee_info.last_name"></div>
-        <div class="emp_option_small_box"><h5>Nazwa Użytkownika</h5><input type="text" v-model="employee_info.username"></div>
+    <div class="emp_option_big_box">
+        <div>
+            <div class="emp_option_small_box"><h5>Imię</h5><input type="text" class="w-50 form-control" v-model="employee_info.first_name"></div>
+            <div class="emp_option_small_box"><h5>Nazwisko</h5><input type="text" class="w-50 form-control" v-model="employee_info.last_name"></div>
+            <div class="emp_option_small_box"><h5>Nazwa Użytkownika</h5><input type="text" class="w-50 form-control" v-model="employee_info.username" diasabled readonly></div>
+        </div>
+        <div>
+            <div class="emp_option_small_box"><h5>ID</h5><input type="text" class="w-50 form-control" v-model="employee_info.id" diasabled readonly></div>
+            <div class="emp_option_small_box"><h5>E-mail</h5><input type="text" class="w-50 form-control" v-model="employee_info.email"></div>
+            <div class="emp_option_small_box"><h5>Etat</h5><input type="text" class="w-50 form-control" v-model="employee_info.job_time"></div>
+        </div>
     </div>
-    <div>
-        <div class="emp_option_small_box"><h5>ID</h5><input type="text" v-model="employee_info.id"></div>
-        <div class="emp_option_small_box"><h5>E-mail</h5><input type="text" v-model="employee_info.email"></div>
-        <div class="emp_option_small_box"><h5>Etat</h5><input type="text" v-model="employee_info.job_time"></div>
-    </div>
-</div>
 
+    <div class="emp_option_wide_box">
+
+        <div>
+            <h5>Jednostki</h5>
+            <div class="list-group">
+                <div class="list-group-item list-group-item-action">
+                    <div class="emp_option_table_box">
+                        <div>siemanko</div>
+                        <i class="material-icons">delete_outline</i>
+                    </div>
+                </div>  
+                <div class="list-group-item list-group-item-action">
+                    <div>siemanko</div>
+                </div>  
+                <div class="list-group-item list-group-item-action">
+                    <div>siemanko</div>
+                </div> 
+            </div> 
+            <button class="btn btn-outline-primary" style="margin-top: 15px;">Dodaj</button>                 
+        </div>
+
+        <div>
+            <h5>Działy</h5>
+            <div class="list-group">
+                <div class="list-group-item list-group-item-action">
+                    <div>siemanko</div>
+                </div>  
+                <div class="list-group-item list-group-item-action">
+                    <div>siemanko</div>
+                </div>  
+                <div class="list-group-item list-group-item-action">
+                    <div>siemanko</div>
+                </div>  
+            </div>
+            <button class="btn btn-outline-primary" style="margin-top: 15px;">Dodaj</button>
+        </div>
+        
+        <div>
+            <h5>Preferencje zmianowe</h5>
+            <div class="list-group">
+                <div class="list-group-item list-group-item-action">
+                    <div>siemanko</div>
+                </div>  
+                <div class="list-group-item list-group-item-action">
+                    <div>siemanko</div>
+                </div>  
+                <div class="list-group-item list-group-item-action">
+                    <div>siemanko</div>
+                </div> 
+            </div>
+            <button class="btn btn-outline-primary" style="margin-top: 15px;">Dodaj</button>
+        </div>
+    </div>
 </div>
 
 {% endblock content %}
 
 {% block vue-content %}
-    {#    <script type="//application/javascript">#}
     <script type="module">  
-        {#var app = new Vue({#}
         const {createApp} = Vue
         var vue_app = createApp({
             delimiters: ["[[", "]]"],
-            {#el: '#vue-app',#}
             data() {
                 return {
                     employee_id: {{ pk }},
