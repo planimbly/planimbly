@@ -386,7 +386,20 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
             else:
                 total_hours += num_month_weekdays[d] * get_shift_work_time(shift_types[s+1]) // 60
 
-    print(total_hours)
+    total_job_time = sum(e.job_time for e in employees)
+    job_time_multiplier = total_hours / total_job_time
+
+    for e in employees:
+        print("employee %d job time: %d" % (e.pk, e.job_time))
+    
+    print("total hours: %d" % total_hours)
+    print("total job time: %d" % total_job_time)
+    print("job time multiplier: %f" % job_time_multiplier)
+
+    # Monthly sum constraints on shifts days:
+    #     (shift, hard_min, soft_min, min_penalty,
+    #             soft_max, hard_max, max_penalty)
+    monthly_sum_constraints = []
 
     # Penalty for exceeding the cover constraint per shift type.
     excess_cover_penalties = tuple(20 for x in range(len(shift_types)-1))
@@ -450,6 +463,20 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
                     (e.pk, shift, w))
                 obj_int_vars.extend(variables)
                 obj_int_coeffs.extend(coeffs)
+
+    # [WIP] Monthly sum constraints
+    # This is supposed to maintain balance between employees desired work time
+    for ct in monthly_sum_constraints:
+        shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = ct
+        for e in employees:
+            works = [work[e.pk, shift, d[0]] for d in range(1, num_days + 1)]
+            variables, coeffs = add_soft_sum_constraint(
+                model, works, hard_min, soft_min, min_cost, soft_max,
+                hard_max, max_cost,
+                'monthly_sum_constraint(employee %i, shift %i, day %i)' %
+                (e.pk, shift, d))
+            obj_int_vars.extend(variables)
+            obj_int_coeffs.extend(coeffs)
 
     # Penalized transitions
     for previous_shift, next_shift, cost in penalized_transitions:
@@ -589,7 +616,7 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
             print('employee %i: %s' % (e.pk, sched))
         print()
 
-    # Chcemy zwracać na dobrą sprawę tylko listę obiektów shift
+    # We only return a list of shift objects
     def output_inflate(shift_types, schedule_dict):
         output_shifts = []
         if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
@@ -648,8 +675,15 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
                            is_used=True, is_archive=False)
     shift_types.insert(0, shift_free)
 
-    global work_time    # dict z aktualnie przypisanymi godzinami (kluczem jest pk pracownika)
+    # Dictionary with work time assigned for each employee (key is emp.pk)
+    global work_time
     work_time = dict()
+
+    # Only consider employees with set job time
+    emp = [e for e in emp if e.job_time != 0]
+
+    # Sort employees by their job time
+    emp = sorted(emp, key=lambda e: e.job_time)
 
     for e in emp:
         work_time[e.pk] = 0
