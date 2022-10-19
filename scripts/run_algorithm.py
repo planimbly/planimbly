@@ -391,7 +391,6 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
 
     for e in employees:
         print("employee %d job time: %d" % (e.pk, e.job_time))
-
     print("total hours: %d" % total_hours)
     print("total job time: %d" % total_job_time)
     print("job time multiplier: %f" % job_time_multiplier)
