@@ -52,7 +52,7 @@
                     </div>
                 </div>  
             </div> 
-            <button class="btn btn-outline-primary" style="margin-top: 15px;">Dodaj</button>                 
+            <button data-bs-target="#pickUnitForEmployee" data-bs-toggle="modal" data-bs-dismiss="modal" class="btn btn-outline-primary" style="margin-top: 15px;">Dodaj</button>                 
         </div>
 
         <div>
@@ -65,7 +65,7 @@
                     </div>
                 </div>
             </div>
-            <button class="btn btn-outline-primary" style="margin-top: 15px;">Dodaj</button>
+            <button data-bs-target="#pickWorkplaceForEmployee" data-bs-toggle="modal" data-bs-dismiss="modal" class="btn btn-outline-primary" style="margin-top: 15px;">Dodaj</button> 
         </div>
         
         <div>
@@ -81,6 +81,43 @@
             <button class="btn btn-outline-primary" style="margin-top: 15px;">Dodaj</button>
         </div>
     </div>
+
+    <div class="modal fade" id="pickUnitForEmployee" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                      <h5 class="modal-title">Wybierz jednostkę</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                      <div class="list-group">
+                            {% comment %} <div v-for="" @click="" class="list-group-item list-group-item-action"> {% endcomment %}
+                                <div class="fw-bold"> siemanko </div>
+                            {% comment %} </div> {% endcomment %}
+                      </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="pickWorklpaceForEmployee" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                      <h5 class="modal-title">Wybierz jednostkę</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                      <div class="list-group">
+                            {% comment %} <div v-for="" @click="" class="list-group-item list-group-item-action"> {% endcomment %}
+                                <div class="fw-bold"> siemanko </div>
+                            {% comment %} </div> {% endcomment %}
+                      </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 {% endblock content %}
@@ -146,7 +183,6 @@
                                 )
                             }
                         });
-
                 },
                 add_unit_for_employee(unit_id, unit_name) {
                     swal({
@@ -167,7 +203,6 @@
                                 )
                             }
                         });
-
                 },
                 remove_workplace_for_employee(workplace_id, workplace_name) {
                     swal({
@@ -188,7 +223,6 @@
                                 )
                             }
                         });
-
                 },
                 add_workplace_for_employee(workplace_id, workplace_name) {
                     swal({
@@ -209,7 +243,6 @@
                                 )
                             }
                         });
-
                 },
             },
             mounted() {
