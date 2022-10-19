@@ -52,7 +52,7 @@
                     </div>
                 </div>  
             </div> 
-            <button class="btn btn-outline-primary" style="margin-top: 15px;">Dodaj</button>                 
+            <button data-bs-target="#pickUnitForEmployee" data-bs-toggle="modal" data-bs-dismiss="modal" class="btn btn-outline-primary" style="margin-top: 15px;">Dodaj</button>                 
         </div>
 
         <div>
@@ -65,7 +65,7 @@
                     </div>
                 </div>
             </div>
-            <button class="btn btn-outline-primary" style="margin-top: 15px;">Dodaj</button>
+            <button data-bs-target="#pickWorklpaceForEmployee" data-bs-toggle="modal" data-bs-dismiss="modal" class="btn btn-outline-primary" style="margin-top: 15px;">Dodaj</button> 
         </div>
         
         <div>
@@ -73,7 +73,7 @@
             <div class="list-group">
                 <div class="list-group-item list-group-item-action">
                     <div class="emp_option_table_box">
-                        <div>siemanko</div>
+                        <div> siemanko </div>
                         <button v-on:click="remove_workplace_for_employee()" class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
                     </div>
                 </div>
@@ -81,6 +81,50 @@
             <button class="btn btn-outline-primary" style="margin-top: 15px;">Dodaj</button>
         </div>
     </div>
+
+    <div class="modal fade" id="pickUnitForEmployee" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                      <h5 class="modal-title">Wybierz jednostkę</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                      <div class="list-group">
+                            <div v-for="unit in unit_list" v-on:click="add_unit_for_employee(unit.id, unit.name)" class="list-group-item list-group-item-action">
+                                <div class="fw-bold"> [[ unit.name ]] </div>
+                            </div>
+                      </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="pickWorklpaceForEmployee" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                      <h5 class="modal-title">Wybierz jednostkę</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <select id="unitSelect" class="form-select" v-model="selected_unit" v-on:change="workplace_list_fetch">
+                    <option v-for="unit in employee_info.user_unit" :value="unit.id">
+                        [[ unit.name ]]
+                    </option>
+                </select>
+
+                <div class="modal-body">
+                      <div class="list-group">
+                            <div v-for="workplace in workplaces_list" v-on:click="add_workplace_for_employee(workplace.id, workplace.name)" class="list-group-item list-group-item-action">
+                                <div class="fw-bold"> [[ workplace.name ]]</div>
+                            </div>
+                      </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 {% endblock content %}
@@ -100,18 +144,26 @@
                     job_time: 0,
 
                     employee_values: null,
+                    unit_list: null,
+                    workplaces_list: null,
+                    selected_unit: null,
+
                     response_emp_data: null,
                     response_unit_data: null,
                     response_workplace_data: null,
+
                     base_url: '',
                     units_url: '',
-                    workplaces_url: '',
                 }
             },
             computed: {
+                workplace_url: {
+                    get() {
+                        return '{% url 'workplace-list' 123456789 %}'.replace(/123456789/, this.selected_unit);
+                    }
+                },
                 employee_info() {
                     if (this.employee_values != null){
-                        console.log(this.employee_values);
                         return this.employee_values
                     }
                     else{
@@ -122,10 +174,24 @@
             },
             methods: {
                 fetch_data() {
-                    this.base_url = '{% url 'employee-detail' 123456789 %}'.replace(/123456789/, this.employee_id)
+                    this.base_url = '{% url 'employee-detail' 123456789 %}'.replace(/123456789/, this.employee_id);
                     axios
                         .get(this.base_url)
-                        .then(response_emp_data => (this.employee_values = response_emp_data.data))
+                        .then(response_emp_data => (this.employee_values = response_emp_data.data))                    
+                },
+                fetch_unit_data(){
+                    this.units_url = '{% url 'unit-list' %}';
+                    axios
+                        .get(this.units_url)
+                        .then(response_unit_data => (this.unit_list = response_unit_data.data));
+                },
+                workplace_list_fetch() {
+                    axios
+                        .get(this.workplace_url)
+                        .then(response_workplace_data => (this.workplaces_list = response_workplace_data.data))
+                },
+                select_unit(id){
+                    this.selected_unit = id
                 },
                 remove_unit_for_employee(unit_id, unit_name) {
                     swal({
@@ -143,17 +209,18 @@
                                         pk: this.employee_id,
                                         action: 'delete'
                                     }
-                                )
+                                ).then(() => this.fetch_data());
+                                
                             }
                         });
-
+                        this.update_data()
                 },
                 add_unit_for_employee(unit_id, unit_name) {
                     swal({
-                        title: "Czy na pewno chcesz usunąć jednostkę " + unit_name,
-                        icon: "warning",
+                        title: "Potwierdź dodanaie jednostki " + unit_name,
+                        icon: "info",
                         buttons: true,
-                        dangerMode: true,
+                        dangerMode: false,
                     })
                         .then((willAdd) => {
                             if (willAdd) {
@@ -164,10 +231,10 @@
                                         pk: this.employee_id,
                                         action: 'add'
                                     }
-                                )
+                                ).then(() => this.fetch_data());
+                                
                             }
                         });
-
                 },
                 remove_workplace_for_employee(workplace_id, workplace_name) {
                     swal({
@@ -185,10 +252,9 @@
                                         pk: this.employee_id,
                                         action: 'delete'
                                     }
-                                )
+                                ).then(() => this.fetch_data());
                             }
                         });
-
                 },
                 add_workplace_for_employee(workplace_id, workplace_name) {
                     swal({
@@ -206,14 +272,15 @@
                                         pk: this.employee_id,
                                         action: 'add'
                                     }
-                                )
+                                ).then(() => this.fetch_data());
                             }
                         });
-
                 },
             },
             mounted() {
                 this.fetch_data()
+                this.fetch_unit_data()
+                this.workplace_list_fetch()
             }
         }).mount('#vue-app');
     </script>
