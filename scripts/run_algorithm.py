@@ -451,7 +451,7 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
     print("job time multiplier: %f" % job_time_multiplier)
 
     # Penalty for exceeding the cover constraint per shift type.
-    excess_cover_penalties = tuple(0 for x in range(len(shift_types)-1))
+    excess_cover_penalties = tuple(20 for x in range(len(shift_types)-1))
 
     model = cp_model.CpModel()
 
@@ -502,7 +502,8 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
     #     shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = ct
     for e in employees:
         if e.job_time == 160:
-            continue
+            print("SIEMA 160")
+            shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = 0, 6, 7, 100, 8, 9, 100
         elif e.job_time == 80:
             print("SIEMA 80")
             shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = 0, 12, 15, 100, 16, 18, 4
@@ -560,14 +561,14 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
             for d in week:
                 works = [work[e.pk, s, d[0]] for e in employees]
                 # Ignore Off shift.
-                min_demand = weekly_cover_demands[d[1]][s - 1]
-                worked = model.NewIntVar(min_demand, min_demand, '')
-                model.Add(worked <= sum(works))
+                demand = weekly_cover_demands[d[1]][s - 1]
+                worked = model.NewIntVar(demand, len(employees), '')
+                model.Add(worked == sum(works))
                 over_penalty = excess_cover_penalties[s - 1]
                 if over_penalty > 0:
                     name = 'excess_demand(shift=%i, week=%i, day=%i)' % (s, w, d[0])
-                    excess = model.NewIntVar(0, len(employees) - min_demand, name)
-                    model.Add(excess == worked - min_demand)
+                    excess = model.NewIntVar(0, len(employees) - demand, name)
+                    model.Add(excess == worked - demand)
                     obj_int_vars.append(excess)
                     obj_int_coeffs.append(over_penalty)
 
@@ -607,15 +608,51 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
     """ # TODO: pomyśleć nad strategią usuwania nadmiarowych shiftów przy implementacji etatowości
     Na razie konflikty shiftowe rozwiązujemy usuwając shift dla pracownika, który ma najwięcej godzin.
     """
+    # najpierw zderzajacych sie full timerow obslugujemy
     def delete_excess_shifts():
+        s_excess_shifts = dict()
+        job_times = sorted(set(e.job_time for e in employees), reverse = True)
+
         for s, d, v in excess_shifts:
-            print(f"{v} excess shift(s): \'{shift_types[s].name}\' on day {d}")
+            candidates = [[e, s, d] for e in employees if solver.BooleanValue(work[e.pk, s, d])]
+            hours = job_times
+            cand_job_times = [c[0].job_time for c in candidates]
+            for h in range(len(hours)):
+                x = cand_job_times.count(160)
+                hours[h] = x
+            s_excess_shifts[(s, d, v)] = hours
+
+        print(s_excess_shifts)
+
+        for s, d, v in excess_shifts:
+            # print(f"{v} excess shift(s): \'{shift_types[s].name}\' on day {d}")
             candidates = [[e, s, d] for e in employees if solver.BooleanValue(work[e.pk, s, d])]
 
+            candidates.sort(key=lambda x: work_time[x[0].pk] // 60 - x[0].job_time)
+            for c in candidates:
+                print("employee %d job time %d work time %d diff %d" % (c[0].pk, c[0].job_time, work_time[c[0].pk] // 60, work_time[c[0].pk] // 60 - c[0].job_time))
+
             # Step 1
+            # See if there are employees who fulfilled their job time
+            full_timers = list(filter(lambda x: work_time[x[0].pk] // 60 >= x[0].job_time, candidates))
+
+            if full_timers != candidates:
+                if len(full_timers) > 0:
+                    for ft in full_timers:
+                        candidates.remove(ft)
+
+                # Delete their shifts
+                while len(full_timers) > 0:
+                    em, sh, da = full_timers.pop(0)
+                    print(f'[FULL TIMER] Deleted shift: \'{shift_types[sh].name}\' for employee {em.pk} with job time of {em.job_time} and work time {work_time[em.pk] // 60} on day {da}')
+                    work[em.pk, sh, da] = 0
+                    work[em.pk, 0, da] = 1  # add free shift in place of deleted shift
+                    v -= 1
+                    work_time[em.pk] -= get_shift_work_time(shift_types[sh])
+
+            # Step 2
+            # Sort employees by their work time and remove shifts evenly
             candidates.sort(key=lambda x: work_time[x[0].pk])
-            # for c in candidates:
-            #     print(f'{c[0].pk}: work_time: {work_time[c[0].pk]}')
 
             candidates.pop(0)
             # winner = candidates.pop(0)
@@ -623,7 +660,7 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
 
             while len(candidates) > 0:  # delete all the other candidates
                 em, sh, da = candidates.pop(0)
-                print(f'Deleted shift: \'{shift_types[sh].name}\' for employee {em.pk}, on day {da}')
+                print(f'Deleted shift: \'{shift_types[sh].name}\' for employee {em.pk} with job time of {em.job_time} and work time {work_time[em.pk] // 60} on day {da}')
                 work[em.pk, sh, da] = 0
                 work[em.pk, 0, da] = 1  # add free shift in place of deleted shift
                 v -= 1
@@ -702,8 +739,10 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
     print('  - wall time       : %f s' % solver.WallTime())
 
     print('  - employees work time:')
-    for w in work_time:
-        print(f"    * employee {w}: {work_time[w] // 60} hrs")
+    for e in employees:
+        print(f"    * employee {e.pk} (job time {e.job_time}): {work_time[e.pk] // 60} hrs")
+    # for w in work_time:
+    #     print(f"    * employee {w} (job time {employees[w].job_time}): {work_time[w] // 60} hrs")
 
     return output_inflate(shift_types, schedule_dict)
 
