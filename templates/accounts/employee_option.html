@@ -65,6 +65,7 @@
                 <div v-for="workplace in employee_info.user_workplace" :key="workplace.id" class="list-group-item list-group-item-action">
                     <div class="emp_option_table_box">
                         <div>[[ workplace.name ]]</div>
+                        <div>[[ employee_info.user_unit[workplace.workplace_unit - 1].name ]]</div>
                         <button v-on:click="remove_workplace_for_employee(workplace.id, workplace.name)" class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
                     </div>
                 </div>
@@ -121,7 +122,7 @@
 
                     <div class="list-group" style="margin-top: 15px">
                         <div v-for="workplace in workplaces_list" v-on:click="add_workplace_for_employee(workplace.id, workplace.name)" class="list-group-item list-group-item-action">
-                            <div class="fw-bold"> [[ workplace.name ]]</div>
+                            <div class="fw-bold">[[ workplace.name ]]</div>
                         </div>
                     </div>
                 </div>
@@ -138,23 +139,23 @@
                 </div>
                 <div class="modal-body">
 
-                    <select id="unitSelect" class="form-select" v-model="selected_unit" v-on:change="workplace_list_fetch">
+                    {% comment %} <select id="unitSelect" class="form-select" v-model="selected_unit" v-on:change="workplace_list_fetch">
                         <option v-for="unit in employee_info.user_unit" :value="unit.id">
                             [[ unit.name ]]
                         </option>
-                    </select>
+                    </select> {% endcomment %}
 
                     <h5 class="modal-title" style="margin-bottom: 15px">Wybierz dział</h5>
 
                     <select id="workplaceSelect" class="form-select" v-model="selected_workplace" v-on:change="shiftType_list_fetch">
-                        <option v-for="workplace in workplaces_list" :value="workplace.id">
-                            <div v-if="employee_info.user_workplace.includes(workplace)">[[ workplace.name ]]</div>
+                        <option v-for="workplace of employee_info.user_workplace" :value="workplace.id">
+                            <div class="fw-bold">[[ workplace.name ]]: [[ employee_info.user_unit[workplace.workplace_unit - 1].name ]]</div>
                         </option>
                     </select>
 
                     <div class="list-group" style="margin-top: 15px">
                         <div v-for="shiftType in shiftType_list" v-on:click="add_preference(shiftType.id)" class="list-group-item list-group-item-action">
-                            <div class="fw-bold"> [[ shiftType.id ]]</div>
+                            <div class="fw-bold"> ID: [[ shiftType.id ]] Nazwa: [[ shiftType.name ]] </div>
                         </div>
                     </div>
 
@@ -235,7 +236,8 @@
                     this.base_url = '{% url 'employee-detail' 123456789 %}'.replace(/123456789/, this.employee_id);
                     axios
                         .get(this.base_url)
-                        .then(response_emp_data => (this.employee_values = response_emp_data.data))                    
+                        .then(response_emp_data => (this.employee_values = response_emp_data.data))
+                        .then(() => console.log(this.employee_values))
                 },
                 post_emp_data(){
                     swal({
@@ -277,17 +279,24 @@
                 },
                 workplace_list_filter(){
                     if (this.workplaces_list != null){
-                        for(workplace in this.workplaces_list){
-                            for(wrorkplace2 in this.employee_info.user_workplace)
+                        for(let workplace of this.workplaces_list){
+                            let flag = true;
+                            for(let workplace2 of this.employee_info.user_workplace){
+                                if (workplace.id == workplace2.id){
+                                    flag = false;
+                                }
+                            }
+                            if (flag == false) {
+                                this.workplaces_list.splice(this.workplaces_list.indexOf(workplace), 1);
+                            }
                         }
                     }
-                }
+                },
                 workplace_list_fetch() {
                     if (this.selected_unit != null){
                         axios
                             .get(this.workplace_url)
                             .then(response_workplace_data => (this.workplaces_list = response_workplace_data.data))
-                            .then()
                     }
                     
                 },
