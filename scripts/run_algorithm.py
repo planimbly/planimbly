@@ -133,7 +133,67 @@ def add_soft_sequence_constraint(model, works, hard_min, soft_min, min_cost,
     return cost_literals, cost_coefficients
 
 
-def add_soft_sum_constraint(model, works, hard_min, soft_min, min_cost,
+def add_weekly_soft_sum_constraint(model, works, hard_min, soft_min, min_cost,
+                                   soft_max, hard_max, max_cost, prefix):
+    """Sum constraint with soft and hard bounds.
+
+  This constraint counts the variables assigned to true from works.
+  If forbids sum < hard_min or > hard_max.
+  Then it creates penalty terms if the sum is < soft_min or > soft_max.
+
+  Args:
+    model: the sequence constraint is built on this model.
+    works: a list of Boolean variables.
+    hard_min: any sequence of true variables must have a sum of at least
+      hard_min.
+    soft_min: any sequence should have a sum of at least soft_min, or a linear
+      penalty on the delta will be added to the objective.
+    min_cost: the coefficient of the linear penalty if the sum is less than
+      soft_min.
+    soft_max: any sequence should have a sum of at most soft_max, or a linear
+      penalty on the delta will be added to the objective.
+    hard_max: any sequence of true variables must have a sum of at most
+      hard_max.
+    max_cost: the coefficient of the linear penalty if the sum is more than
+      soft_max.
+    prefix: a base name for penalty variables.
+
+  Returns:
+    a tuple (variables_list, coefficient_list) containing the different
+    penalties created by the sequence constraint.
+  """
+    cost_variables = []
+    cost_coefficients = []
+    sum_var = model.NewIntVar(hard_min, hard_max, '')
+    # This adds the hard constraints on the sum.
+    model.Add(sum_var == sum(works))
+
+    # print("Sum_works:", sum(works))
+    # print("sum_var:", sum_var)
+    # print("Compare:", sum_var == sum(works))
+
+    # Penalize sums below the soft_min target.
+    if soft_min > hard_min and min_cost > 0:
+        delta = model.NewIntVar(-len(works), len(works), '')
+        model.Add(delta == soft_min - sum_var)
+        # TODO(user): Compare efficiency with only excess >= soft_min - sum_var.
+        excess = model.NewIntVar(0, 7, prefix + ': under_sum')
+        model.AddMaxEquality(excess, [delta, 0])
+        cost_variables.append(excess)
+        cost_coefficients.append(min_cost)
+
+    # Penalize sums above the soft_max target.
+    if soft_max < hard_max and max_cost > 0:
+        delta = model.NewIntVar(-7, 7, '')
+        model.Add(delta == sum_var - soft_max)
+        excess = model.NewIntVar(0, 7, prefix + ': over_sum')
+        model.AddMaxEquality(excess, [delta, 0])
+        cost_variables.append(excess)
+        cost_coefficients.append(max_cost)
+
+    return cost_variables, cost_coefficients
+
+def add_monthly_soft_sum_constraint(model, works, hard_min, soft_min, min_cost,
                             soft_max, hard_max, max_cost, prefix):
     """Sum constraint with soft and hard bounds.
 
@@ -168,21 +228,25 @@ def add_soft_sum_constraint(model, works, hard_min, soft_min, min_cost,
     # This adds the hard constraints on the sum.
     model.Add(sum_var == sum(works))
 
+    # print("Sum_works:", sum(works))
+    # print("sum_var:", sum_var)
+    # print("Compare:", sum_var == sum(works))
+
     # Penalize sums below the soft_min target.
     if soft_min > hard_min and min_cost > 0:
         delta = model.NewIntVar(-len(works), len(works), '')
         model.Add(delta == soft_min - sum_var)
         # TODO(user): Compare efficiency with only excess >= soft_min - sum_var.
-        excess = model.NewIntVar(0, 7, prefix + ': under_sum')
+        excess = model.NewIntVar(0, num_days, prefix + ': under_sum')
         model.AddMaxEquality(excess, [delta, 0])
         cost_variables.append(excess)
         cost_coefficients.append(min_cost)
 
     # Penalize sums above the soft_max target.
     if soft_max < hard_max and max_cost > 0:
-        delta = model.NewIntVar(-7, 7, '')
+        delta = model.NewIntVar(-num_days, num_days, '')
         model.Add(delta == sum_var - soft_max)
-        excess = model.NewIntVar(0, 7, prefix + ': over_sum')
+        excess = model.NewIntVar(0, num_days, prefix + ': over_sum')
         model.AddMaxEquality(excess, [delta, 0])
         cost_variables.append(excess)
         cost_coefficients.append(max_cost)
@@ -271,11 +335,7 @@ def get_shift_work_time(shift_type: ShiftType):
 def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Employee], shift_types: list[ShiftType], year: int,
                            month: int, params, output_proto):
     """Solves the shift scheduling problem."""
-    # Calendar data
-    list_month = get_month_by_weeks(year, month)
-    # num_weeks = len(list_month)
-    num_days = list_month[-1][-1][0]
-    # num_sundays = sum([x[1] == 6 for x in flatten(list_month)])
+
 
     # Shift data
 
@@ -334,9 +394,16 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
     #             soft_max, hard_max, max_penalty)
     weekly_sum_constraints = [
         # Constraints on rests per week.
-        (0, 1, 2, 7, 2, 3, 4),
+        (0, 1, 2, 7, 2, 3, 4)
         # At least 1 night shift per week (penalized). At most 4 (hard).
         # (5, 0, 1, 3, 4, 4, 0),
+    ]
+
+    # Monthly sum constraints on shifts days:
+    #     (shift, hard_min, soft_min, min_penalty,
+    #             soft_max, hard_max, max_penalty)
+    monthly_sum_constraints = [
+        (0, 12, 15, 28, 16, 18, 4)
     ]
 
     # overnight shift constraints
@@ -356,18 +423,6 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
     ]
 
     penalized_transitions = find_illegal_transitions(shift_types)
-
-    # daily demands for work shifts (morning, afternoon, night) for each day
-    # of the week starting on Monday.
-    # weekly_cover_demands = [
-    #     (1, 1, 1, 1, 1),  # Monday
-    #     (1, 1, 1, 1, 1),  # Tuesday
-    #     (1, 1, 1, 1, 1),  # Wednesday
-    #     (1, 1, 1, 1, 1),  # Thursday
-    #     (1, 1, 1, 1, 1),  # Friday
-    #     (1, 1, 1, 1, 1),  # Saturday
-    #     (1, 1, 1, 1, 1),  # Sunday
-    # ]
 
     # TODO: zamienić 1 na parametr daily cover demand który będzie w klasie shift_type
     weekly_cover_demands = [tuple(1 for x in range(len(shift_types)-1)) for _ in range(7)]
@@ -395,13 +450,8 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
     print("total job time: %d" % total_job_time)
     print("job time multiplier: %f" % job_time_multiplier)
 
-    # Monthly sum constraints on shifts days:
-    #     (shift, hard_min, soft_min, min_penalty,
-    #             soft_max, hard_max, max_penalty)
-    monthly_sum_constraints = []
-
     # Penalty for exceeding the cover constraint per shift type.
-    excess_cover_penalties = tuple(20 for x in range(len(shift_types)-1))
+    excess_cover_penalties = tuple(0 for x in range(len(shift_types)-1))
 
     model = cp_model.CpModel()
 
@@ -446,6 +496,29 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
             obj_bool_vars.extend(variables)
             obj_bool_coeffs.extend(coeffs)
 
+    # [WIP] Monthly sum constraints
+    # This is supposed to maintain balance between employees desired work time
+    # for ct in monthly_sum_constraints:
+    #     shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = ct
+    for e in employees:
+        if e.job_time == 160:
+            continue
+        elif e.job_time == 80:
+            print("SIEMA 80")
+            shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = 0, 12, 15, 100, 16, 18, 4
+        elif e.job_time == 120:
+            print("SIEMA 120")
+            shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = 0, 10, 12, 100, 14, 16, 4
+
+        works = [work[e.pk, shift, d] for d in range(1, num_days + 1)]
+        variables, coeffs = add_monthly_soft_sum_constraint(
+            model, works, hard_min, soft_min, min_cost, soft_max,
+            hard_max, max_cost,
+            'monthly_sum_constraint(employee %i, job_time %i)' %
+            (e.pk, e.job_time))
+        obj_int_vars.extend(variables)
+        obj_int_coeffs.extend(coeffs)
+
     # Weekly sum constraints
     # BUG: when dealing with 6 week months, the algorithm fails because of this constraint
     for ct in weekly_sum_constraints:
@@ -455,27 +528,13 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
                 if len(week) < 3:  # temporary fix..
                     continue
                 works = [work[e.pk, shift, d[0]] for d in week]
-                variables, coeffs = add_soft_sum_constraint(
+                variables, coeffs = add_weekly_soft_sum_constraint(
                     model, works, hard_min, soft_min, min_cost, soft_max,
                     hard_max, max_cost,
                     'weekly_sum_constraint(employee %i, shift %i, week %i)' %
                     (e.pk, shift, w))
                 obj_int_vars.extend(variables)
                 obj_int_coeffs.extend(coeffs)
-
-    # [WIP] Monthly sum constraints
-    # This is supposed to maintain balance between employees desired work time
-    for ct in monthly_sum_constraints:
-        shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = ct
-        for e in employees:
-            works = [work[e.pk, shift, d[0]] for d in range(1, num_days + 1)]
-            variables, coeffs = add_soft_sum_constraint(
-                model, works, hard_min, soft_min, min_cost, soft_max,
-                hard_max, max_cost,
-                'monthly_sum_constraint(employee %i, shift %i, day %i)' %
-                (e.pk, shift, d))
-            obj_int_vars.extend(variables)
-            obj_int_coeffs.extend(coeffs)
 
     # Penalized transitions
     for previous_shift, next_shift, cost in penalized_transitions:
@@ -502,8 +561,8 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
                 works = [work[e.pk, s, d[0]] for e in employees]
                 # Ignore Off shift.
                 min_demand = weekly_cover_demands[d[1]][s - 1]
-                worked = model.NewIntVar(min_demand, len(employees), '')
-                model.Add(worked == sum(works))
+                worked = model.NewIntVar(min_demand, min_demand, '')
+                model.Add(worked <= sum(works))
                 over_penalty = excess_cover_penalties[s - 1]
                 if over_penalty > 0:
                     name = 'excess_demand(shift=%i, week=%i, day=%i)' % (s, w, d[0])
@@ -670,6 +729,13 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
     workplace = Workplace.objects.all().first()
 
     active_days = '1111111'
+    # Calendar data
+    global list_month, num_days
+    list_month = get_month_by_weeks(year, month)
+    # num_weeks = len(list_month)
+    num_days = list_month[-1][-1][0]
+    # num_sundays = sum([x[1] == 6 for x in flatten(list_month)])
+
     shift_free = ShiftType(hour_start='00:00', hour_end='00:00', name='-', workplace=workplace, active_days=active_days,
                            is_used=True, is_archive=False)
     shift_types.insert(0, shift_free)
