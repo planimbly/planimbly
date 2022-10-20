@@ -18,6 +18,8 @@
 import calendar
 from datetime import datetime, timedelta
 
+import operator
+
 from absl import app, flags
 from google.protobuf import text_format
 from ortools.sat.python import cp_model
@@ -615,14 +617,15 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
 
         for s, d, v in excess_shifts:
             candidates = [[e, s, d] for e in employees if solver.BooleanValue(work[e.pk, s, d])]
-            hours = job_times
-            cand_job_times = [c[0].job_time for c in candidates]
-            for h in range(len(hours)):
-                x = cand_job_times.count(160)
-                hours[h] = x
-            s_excess_shifts[(s, d, v)] = hours
+            s_excess_shifts[(s, d, v)] = [[c[0].job_time for c in candidates].count(jt) for jt in job_times]
 
-        print(s_excess_shifts)
+        excess_full_timers = {k: v for k, v in s_excess_shifts.items() if sum(v) == v[0]}
+        excess_rest = {k: v for k, v in s_excess_shifts.items() if sum(v) != v[0]}
+
+        sorted_excess_rest = dict(sorted(excess_rest.items(), key=operator.itemgetter(1), reverse=True))
+
+        sorted_excess_shifts = excess_full_timers | sorted_excess_rest
+
 
         for s, d, v in excess_shifts:
             # print(f"{v} excess shift(s): \'{shift_types[s].name}\' on day {d}")
