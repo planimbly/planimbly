@@ -40,6 +40,10 @@
         </div>
     </div>
 
+    <button v-on:click="post_emp_data()" type="button" class="btn btn-outline-success" style="margin-bottom: 50px; margin-left: 10px">
+        Zapisz zmiany
+    </button>
+
     <div class="emp_option_wide_box">
 
         <div>
@@ -52,7 +56,7 @@
                     </div>
                 </div>  
             </div> 
-            <button data-bs-target="#pickUnitForEmployee" data-bs-toggle="modal" data-bs-dismiss="modal" class="btn btn-outline-primary" style="margin-top: 15px;">Dodaj</button>                 
+            <button data-bs-target="#pickUnitForEmployee" data-bs-toggle="modal" data-bs-dismiss="modal" class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj</button>                 
         </div>
 
         <div>
@@ -65,36 +69,37 @@
                     </div>
                 </div>
             </div>
-            <button data-bs-target="#pickWorkplaceForEmployee" data-bs-toggle="modal" data-bs-dismiss="modal" class="btn btn-outline-primary" style="margin-top: 15px;">Dodaj</button> 
+            <button data-bs-target="#pickWorkplaceForEmployee" data-bs-toggle="modal" data-bs-dismiss="modal" class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj</button> 
         </div>
         
         <div>
             <h5>Preferencje zmianowe</h5>
             <div class="list-group">
-                <div class="list-group-item list-group-item-action">
+                <div v-for="preference in preferences_list" :key="preference.id" class="list-group-item list-group-item-action">
                     <div class="emp_option_table_box">
-                        <div> siemanko </div>
-                        <button v-on:click="remove_workplace_for_employee()" class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
+                        <div>[[ preference.shift_type ]] [[ preference.active_days ]]</div>
+                        <button v-on:click="remove_preference(preference.id)" class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
                     </div>
                 </div>
             </div>
-            <button class="btn btn-outline-primary" style="margin-top: 15px;">Dodaj</button>
+            <button data-bs-target="#addPreferenceModal" data-bs-toggle="modal" data-bs-dismiss="modal" class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj</button> 
         </div>
     </div>
 
     <div class="modal fade" id="pickUnitForEmployee" tabindex="-1">
         <div class="modal-dialog modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header">
-                      <h5 class="modal-title">Wybierz jednostkę</h5>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
                 <div class="modal-body">
-                      <div class="list-group">
-                            <div v-for="unit in unit_list" v-on:click="add_unit_for_employee(unit.id, unit.name)" class="list-group-item list-group-item-action">
-                                <div class="fw-bold"> [[ unit.name ]] </div>
-                            </div>
-                      </div>
+                    <div class="modal-header">
+                        <h5 class="modal-title">Wybierz jednostkę</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    
+                    <div class="list-group">
+                        <div v-for="unit in unit_list" v-on:click="add_unit_for_employee(unit.id, unit.name)" class="list-group-item list-group-item-action">
+                            <div class="fw-bold"> [[ unit.name ]] </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -107,19 +112,56 @@
                       <h5 class="modal-title">Wybierz jednostkę</h5>
                       <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-
-                <select id="unitSelect" class="form-select" v-model="selected_unit" v-on:change="workplace_list_fetch">
-                    <option v-for="unit in employee_info.user_unit" :value="unit.id">
-                        [[ unit.name ]]
-                    </option>
-                </select>
-
                 <div class="modal-body">
-                      <div class="list-group">
-                            <div v-for="workplace in workplaces_list" v-on:click="add_workplace_for_employee(workplace.id, workplace.name)" class="list-group-item list-group-item-action">
-                                <div class="fw-bold"> [[ workplace.name ]]</div>
-                            </div>
-                      </div>
+                    <select id="unitSelect" class="form-select" v-model="selected_unit" v-on:change="workplace_list_fetch">
+                        <option v-for="unit in employee_info.user_unit" :value="unit.id">
+                            [[ unit.name ]]
+                        </option>
+                    </select>
+
+                    <div class="list-group" style="margin-top: 15px">
+                        <div v-for="workplace in workplaces_list" v-on:click="add_workplace_for_employee(workplace.id, workplace.name)" class="list-group-item list-group-item-action">
+                            <div class="fw-bold"> [[ workplace.name ]]</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addPreferenceModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                      <h5 class="modal-title">Wybierz jednostkę</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <select id="unitSelect" class="form-select" v-model="selected_unit" v-on:change="workplace_list_fetch">
+                        <option v-for="unit in employee_info.user_unit" :value="unit.id">
+                            [[ unit.name ]]
+                        </option>
+                    </select>
+
+                    <h5 class="modal-title" style="margin-bottom: 15px">Wybierz dział</h5>
+
+                    <select id="workplaceSelect" class="form-select" v-model="selected_workplace" v-on:change="shiftType_list_fetch">
+                        <option v-for="workplace in workplaces_list" :value="workplace.id">
+                            <div v-if="employee_info.user_workplace.includes(workplace)">[[ workplace.name ]]</div>
+                        </option>
+                    </select>
+
+                    <div class="list-group" style="margin-top: 15px">
+                        <div v-for="shiftType in shiftType_list" v-on:click="add_preference(shiftType.id)" class="list-group-item list-group-item-action">
+                            <div class="fw-bold"> [[ shiftType.id ]]</div>
+                        </div>
+                    </div>
+
+                    <h5 class="modal-title" style="margin-top: 15px">Wpisz active days</h5>
+
+                    <input type="text" class="form-control" style="margin-top: 15px" v-model="preference_active_days">
+
                 </div>
             </div>
         </div>
@@ -142,24 +184,40 @@
                     first_name: '',
                     last_name: '',
                     job_time: 0,
+                    preference_active_days: '',
 
                     employee_values: null,
                     unit_list: null,
                     workplaces_list: null,
+                    shiftType_list: null,
                     selected_unit: null,
+                    selected_workplace: null,
+                    preferences_list: null,
+                    shift_list: null,
 
+                    response: null,
                     response_emp_data: null,
                     response_unit_data: null,
                     response_workplace_data: null,
+                    response_shiftType_data: null,
+                    response_pref_data: null,
 
                     base_url: '',
                     units_url: '',
+                    emp_preferences_url: '',
+
+                    // API COUNTER: 7
                 }
             },
             computed: {
                 workplace_url: {
                     get() {
                         return '{% url 'workplace-list' 123456789 %}'.replace(/123456789/, this.selected_unit);
+                    }
+                },
+                shiftType_url: {
+                    get() {
+                        return '{% url 'shiftType-list' 123456789 %}'.replace(/123456789/, this.selected_workplace);
                     }
                 },
                 employee_info() {
@@ -179,19 +237,76 @@
                         .get(this.base_url)
                         .then(response_emp_data => (this.employee_values = response_emp_data.data))                    
                 },
+                post_emp_data(){
+                    swal({
+                        title: "Czy chcesz zatwierdzić zmiany?",
+                        icon: "info",
+                        buttons: true,
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
+                                axios
+                                    .put(this.base_url,
+                                        {
+                                            email: this.employee_info.email,
+                                            username: this.employee_info.username,
+                                            first_name: this.employee_info.first_name,
+                                            last_name: this.employee_info.last_name,
+                                            job_time: this.employee_info.job_time,
+                                        }
+                                    )
+                                    .then(() => this.fetch_data())
+                                    .catch(error => {
+                                            this.response = error.response.data
+                                            }
+                                    )
+                            }
+                        });
+                },
+                fetch_preferences_data(){
+                    this.emp_preferences_url = '{% url 'preference-list' %}' + '?employee=' + this.employee_id
+                    axios
+                        .get(this.emp_preferences_url)
+                        .then(response_pref_data => (this.preferences_list = response_pref_data.data))
+                },
                 fetch_unit_data(){
                     this.units_url = '{% url 'unit-list' %}';
                     axios
                         .get(this.units_url)
                         .then(response_unit_data => (this.unit_list = response_unit_data.data));
                 },
+                workplace_list_filter(){
+                    if (this.workplaces_list != null){
+                        for(workplace in this.workplaces_list){
+                            for(wrorkplace2 in this.employee_info.user_workplace)
+                        }
+                    }
+                }
                 workplace_list_fetch() {
-                    axios
-                        .get(this.workplace_url)
-                        .then(response_workplace_data => (this.workplaces_list = response_workplace_data.data))
+                    if (this.selected_unit != null){
+                        axios
+                            .get(this.workplace_url)
+                            .then(response_workplace_data => (this.workplaces_list = response_workplace_data.data))
+                            .then()
+                    }
+                    
                 },
-                select_unit(id){
-                    this.selected_unit = id
+                shiftType_list_fetch() {
+                    if (this.selected_workplace != null){
+                        axios
+                            .get(this.shiftType_url)
+                            .then(response_shiftType_data => (this.shiftType_list = response_shiftType_data.data))
+                    }
+                    
+                },
+                remove_preference(pref_id){
+                    let remove_preference_url = '{% url 'preference-list' %}' + pref_id
+                    axios
+                    .delete(remove_preference_url,
+                        {
+                            id: pref_id,
+                        }
+                    ).then(() => this.fetch_preferences_data());
                 },
                 remove_unit_for_employee(unit_id, unit_name) {
                     swal({
@@ -275,11 +390,34 @@
                             }
                         });
                 },
+                add_preference(shifttype){
+                    swal({
+                        title: "Potwierdź dodanaie preferencji",
+                        icon: "info",
+                        buttons: true,
+                        dangerMode: false,
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
+                                let add_preference_url = '{% url 'preference-list' %}'
+                                axios
+                                .post(add_preference_url, 
+                                    {
+                                        shift_type: shifttype,
+                                        employee: this.employee_id,
+                                        active_days: this.preference_active_days.toString(),
+                                    }
+                                ).then(() => this.fetch_preferences_data());
+                                
+                            }
+                        });
+                },
             },
             mounted() {
                 this.fetch_data()
                 this.fetch_unit_data()
                 this.workplace_list_fetch()
+                this.fetch_preferences_data()
             }
         }).mount('#vue-app');
     </script>
