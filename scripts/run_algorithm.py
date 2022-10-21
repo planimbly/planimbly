@@ -446,12 +446,6 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
     total_job_time = sum(e.job_time for e in employees)
     job_time_multiplier = total_hours / total_job_time
 
-    for e in employees:
-        print("employee %d job time: %d" % (e.pk, e.job_time))
-    print("total hours: %d" % total_hours)
-    print("total job time: %d" % total_job_time)
-    print("job time multiplier: %f" % job_time_multiplier)
-
     # Penalty for exceeding the cover constraint per shift type.
     excess_cover_penalties = tuple(20 for x in range(len(shift_types)-1))
 
@@ -498,6 +492,12 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
             obj_bool_vars.extend(variables)
             obj_bool_coeffs.extend(coeffs)
 
+    # TODO: Calculate constraints on free shifts for every job time
+    job_times = sorted(set(e.job_time for e in employees), reverse = True)
+    desired_free_shifts = {}
+    # for jt in job_times:
+    #     desired_free_shifts[jt] = total_hours
+    
     # [WIP] Monthly sum constraints
     # This is supposed to maintain balance between employees desired work time
     # for ct in monthly_sum_constraints:
@@ -505,13 +505,13 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
     for e in employees:
         if e.job_time == 160:
             print("SIEMA 160")
-            shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = 0, 6, 7, 100, 8, 9, 100
+            shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = 0, 6, 7, 100, 7, 8, 100
         elif e.job_time == 80:
             print("SIEMA 80")
-            shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = 0, 12, 15, 100, 16, 18, 4
+            shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = 0, 7, 15, 20, 16, 18, 4
         elif e.job_time == 120:
             print("SIEMA 120")
-            shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = 0, 10, 12, 100, 14, 16, 4
+            shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = 0, 7, 12, 20, 14, 16, 4
 
         works = [work[e.pk, shift, d] for d in range(1, num_days + 1)]
         variables, coeffs = add_monthly_soft_sum_constraint(
@@ -607,10 +607,7 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
 
     excess_shifts = []
 
-    """ # TODO: pomyśleć nad strategią usuwania nadmiarowych shiftów przy implementacji etatowości
-    Na razie konflikty shiftowe rozwiązujemy usuwając shift dla pracownika, który ma najwięcej godzin.
-    """
-    # najpierw zderzajacych sie full timerow obslugujemy
+    # Delete excess shifts according to assigned working hours
     def delete_excess_shifts():
         s_excess_shifts = dict()
         job_times = sorted(set(e.job_time for e in employees), reverse = True)
@@ -626,36 +623,40 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
 
         sorted_excess_shifts = excess_full_timers | sorted_excess_rest
 
+        print(sorted_excess_shifts)
 
-        for s, d, v in excess_shifts:
+        for s, d, v in sorted_excess_shifts:
             # print(f"{v} excess shift(s): \'{shift_types[s].name}\' on day {d}")
             candidates = [[e, s, d] for e in employees if solver.BooleanValue(work[e.pk, s, d])]
 
-            candidates.sort(key=lambda x: work_time[x[0].pk] // 60 - x[0].job_time)
+            candidates = sorted(sorted(candidates, key=lambda x: x[0].job_time, reverse=True), key=lambda x: work_time[x[0].pk] // 60 - x[0].job_time)
+
             for c in candidates:
                 print("employee %d job time %d work time %d diff %d" % (c[0].pk, c[0].job_time, work_time[c[0].pk] // 60, work_time[c[0].pk] // 60 - c[0].job_time))
 
             # Step 1
             # See if there are employees who fulfilled their job time
-            full_timers = list(filter(lambda x: work_time[x[0].pk] // 60 >= x[0].job_time, candidates))
+            full_timers = list(filter(lambda x: work_time[x[0].pk] // 60 > x[0].job_time, candidates))
 
             if full_timers != candidates:
                 if len(full_timers) > 0:
                     for ft in full_timers:
                         candidates.remove(ft)
 
-                # Delete their shifts
+                # Delete their excess shifts
                 while len(full_timers) > 0:
                     em, sh, da = full_timers.pop(0)
-                    print(f'[FULL TIMER] Deleted shift: \'{shift_types[sh].name}\' for employee {em.pk} with job time of {em.job_time} and work time {work_time[em.pk] // 60} on day {da}')
+                    print(f'[EXCESS FULL TIMER] Deleted shift: \'{shift_types[sh].name}\' for employee {em.pk} with job time of {em.job_time} and work time {work_time[em.pk] // 60} on day {da}')
                     work[em.pk, sh, da] = 0
-                    work[em.pk, 0, da] = 1  # add free shift in place of deleted shift
+                    work[em.pk, 0, da] = 1
                     v -= 1
                     work_time[em.pk] -= get_shift_work_time(shift_types[sh])
 
+
+            # TODO: sprawdzać czy są pracownicy z pełnym etatem o diffie 0 i wtedy priorytezować usuwanie ludzi o mniejszym etacie nawet przy ujemnym diffie!!
+            
             # Step 2
             # Sort employees by their work time and remove shifts evenly
-            candidates.sort(key=lambda x: work_time[x[0].pk])
 
             candidates.pop(0)
             # winner = candidates.pop(0)
@@ -744,6 +745,10 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
     print('  - employees work time:')
     for e in employees:
         print(f"    * employee {e.pk} (job time {e.job_time}): {work_time[e.pk] // 60} hrs")
+    
+    print("total hours: %d" % total_hours)
+    print("total job time: %d" % total_job_time)
+    print("job time multiplier: %f" % job_time_multiplier)
     # for w in work_time:
     #     print(f"    * employee {w} (job time {employees[w].job_time}): {work_time[w] // 60} hrs")
 
@@ -790,10 +795,12 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
     emp = [e for e in emp if e.job_time != 0]
 
     # Sort employees by their job time
-    emp = sorted(emp, key=lambda e: e.job_time)
+    emp = sorted(emp, key=lambda e: e.job_time, reverse = True)
 
     for e in emp:
         work_time[e.pk] = 0
+
+    print(shift_types)
 
     data = solve_shift_scheduling(emp_for_workplaces,
                                   schedule_dict,
