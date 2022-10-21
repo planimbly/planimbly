@@ -103,6 +103,7 @@
                 <th scope="col">Login</th>
                 <th scope="col">Imię</th>
                 <th scope="col">Nazwisko</th>
+                <th scope="col">Zrządzaj</th>
                 <th scope="col">Zapisz</th>
                 <th scope="col">Usuń</th>
             </tr>
@@ -114,6 +115,12 @@
                 <td><input type="text" class="form-control" v-model="employee.username"></td>
                 <td><input type="text" class="form-control" v-model="employee.first_name"></td>
                 <td><input type="text" class="form-control" v-model="employee.last_name"></td>
+                <td>
+                    <a v-bind:href="return_reference_url(employee.id)">
+                        <button type="button" class="btn btn-primary table-buttons">
+                            <i class="material-icons">settings</i></button>
+                    </a>
+                </td>
                 <td>
                     <button v-on:click="change_employee(i)" type="button" class="btn btn-primary table-buttons">
                         <i class="material-icons">save</i></button>
@@ -145,10 +152,14 @@
                     employee_list: null,
                     response: null,
                     base_url: '{% url 'employee-list' %}',
+                    reference_url: '{% url 'employee_option' 123456789 %}'.replace(/123456789/, 3),
 
                 }
             },
             methods: {
+                return_reference_url(id){
+                    return '{% url 'employee_option' 123456789 %}'.replace(/123456789/, id);
+                },
                 fetch_data() {
                     axios
                         .get(this.base_url)
