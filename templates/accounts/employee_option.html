@@ -65,7 +65,7 @@
                 <div v-for="workplace in employee_info.user_workplace" :key="workplace.id" class="list-group-item list-group-item-action">
                     <div class="emp_option_table_box">
                         <div>[[ workplace.name ]]</div>
-                        <div>[[ employee_info.user_unit[workplace.workplace_unit - 1].name ]]</div>
+                        <div>[[ get_unit_name(workplace) ]]</div>
                         <button v-on:click="remove_workplace_for_employee(workplace.id, workplace.name)" class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
                     </div>
                 </div>
@@ -149,7 +149,7 @@
 
                     <select id="workplaceSelect" class="form-select" v-model="selected_workplace" v-on:change="shiftType_list_fetch">
                         <option v-for="workplace of employee_info.user_workplace" :value="workplace.id">
-                            <div class="fw-bold">[[ workplace.name ]]: [[ employee_info.user_unit[workplace.workplace_unit - 1].name ]]</div>
+                            <div class="fw-bold">[[ workplace.name ]]: [[ employee_info.user_unit ]]</div>
                         </option>
                     </select>
 
@@ -232,6 +232,12 @@
                 },
             },
             methods: {
+                get_unit_name(workplace) {
+                    if (this.employee_info != null){
+                        return this.employee_info.user_unit.find((Object) => Object.id == workplace.workplace_unit).name
+                    }
+                    
+                },
                 fetch_data() {
                     this.base_url = '{% url 'employee-detail' 123456789 %}'.replace(/123456789/, this.employee_id);
                     axios
@@ -421,6 +427,15 @@
                             }
                         });
                 },
+                st_numbers_to_list(numbers){
+
+                },
+                st_list_to_text(){
+
+                },
+                st_list_to_numbers(){
+
+                }
             },
             mounted() {
                 this.fetch_data()
