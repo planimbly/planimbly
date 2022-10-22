@@ -20,10 +20,11 @@
             <li class="breadcrumb-item"><a href="{% url 'units_manage' %}"
                                         class="breadcrumb-link">{{ user.user_org }}</a></li>
             <li class="breadcrumb-item"><a href="{% url 'employees_manage' %}"
-                class="breadcrumb-link">Zarządzanie pracownikami</a></li>
-            <li class="breadcrumb-item current-subpage">[[ employee_info.first_name ]] [[ employee_info.last_name ]]</li>
+                class="breadcrumb-link">Pracownicy</a></li>
+            {% comment %} <li class="breadcrumb-item current-subpage">[[ employee_info.first_name ]] [[ employee_info.last_name ]]</li> {% endcomment %}
         </ol>
-        <h2 class="breadcrumb-title">Zarządzanie pracownikiem </h2>
+        {% comment %} <h2 class="breadcrumb-title">Zarządzanie pracownikiem </h2> {% endcomment %}
+        <h2 class="breadcrumb-title">[[ employee_info.first_name ]] [[ employee_info.last_name ]] </h2>
         <hr class="breadcrumb" style="opacity: 1">
     </nav>
 
@@ -49,7 +50,7 @@
         <div>
             <h5>Jednostki</h5>
             <div class="list-group">
-                <div v-for="unit in employee_info.user_unit" :key="unit.id" class="list-group-item list-group-item-action">
+                <div v-for="unit in employee_info.user_unit" :key="unit.id" class="list-group-item list-group-item-action position-static">
                     <div class="emp_option_table_box">
                         <div>[[ unit.name ]]</div>
                         <button v-on:click="remove_unit_for_employee(unit.id, unit.name)" class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
@@ -62,7 +63,7 @@
         <div>
             <h5>Działy</h5>
             <div class="list-group">
-                <div v-for="workplace in employee_info.user_workplace" :key="workplace.id" class="list-group-item list-group-item-action">
+                <div v-for="workplace in employee_info.user_workplace" :key="workplace.id" class="list-group-item list-group-item-action position-static">
                     <div class="emp_option_table_box">
                         <div>[[ workplace.name ]]</div>
                         <div>[[ get_unit_name(workplace) ]]</div>
@@ -76,7 +77,7 @@
         <div>
             <h5>Preferencje zmianowe</h5>
             <div class="list-group">
-                <div v-for="preference in preferences_list" :key="preference.id" class="list-group-item list-group-item-action">
+                <div v-for="preference in preferences_list" :key="preference.id" class="list-group-item list-group-item-action position-static">
                     <div class="emp_option_table_box">
                         <div>[[ preference.shift_type ]] [[ preference.active_days ]]</div>
                         <button v-on:click="remove_preference(preference.id)" class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>

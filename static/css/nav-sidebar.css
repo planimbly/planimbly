@@ -61,7 +61,7 @@ html{
 }
 
 .proper-main{
-    padding-top: 2.5rem;
+    padding-top: 0.5rem;
     margin-left: 16rem;
     transition: all 0.25s;
 
@@ -108,7 +108,7 @@ html{
 
 @media screen and (max-width: 1100px){
     .margin-remove{
-        margin-left: 1rem !important;
+        margin-left: 0 !important;
     }
 }
 
