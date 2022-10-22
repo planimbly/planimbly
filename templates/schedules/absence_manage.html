@@ -15,6 +15,9 @@
 
 {% block content %}
     <div id="vue-app">
+        <div class="col d-flex justify-content-start">
+            <h3 class="content-title">Lista nieobecności</h3>
+        </div>
         <form id="schedule_form" v-on:submit.prevent="create_absence">
             {% csrf_token %}
             <input type="date" class="form-control" v-model="start" required>

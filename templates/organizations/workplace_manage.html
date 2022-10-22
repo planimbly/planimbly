@@ -13,7 +13,7 @@
 {% endblock head %}
 
 {% block content %}
-    <nav style aria-label="breadcrumb">
+    {% comment %} <nav style aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{% url 'units_manage' %}"
                                            class="breadcrumb-link">{{ user.user_org }}</a></li>
@@ -23,7 +23,7 @@
         <h2 class="breadcrumb-title"><a href="{% url 'units_manage' %}">
             <i class="material-icons breadcrumb-go-back-icon">arrow_back_ios</i></a>Zarządzanie działami</h2>
         <hr class="breadcrumb" style="opacity: 1">
-    </nav>
+    </nav> {% endcomment %}
     {% if is_any_unit %}
     <div id="vue-app">
         <div class="row d-flex justify-content-between align-items-center">

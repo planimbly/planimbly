@@ -15,7 +15,7 @@
 {#STOP/added calendar#}
 
 {% block content %}
-    <nav style aria-label="breadcrumb">
+    {% comment %} <nav style aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{% url 'units_manage' %}"
                                            class="breadcrumb-link">{{ user.user_org }}</a></li>
@@ -25,11 +25,14 @@
             <i class="material-icons breadcrumb-go-back-icon">arrow_back_ios</i></a>Zarządzanie grafikami</h2>
         </h2>
         <hr class="breadcrumb" style="opacity: 1">
-    </nav>
+    </nav> {% endcomment %}
     {% if is_any_workplace %}
     {#    START/added calendar#}
     <div id="vue-app">
-        <div class="row m-2">
+        <div class="col d-flex justify-content-start">
+            <h3 class="content-title">Grafiki</h3>
+        </div>
+        <div class="row m-2">  
             <div class="col mb-1">
                 <select class="form-select" v-model="month_cal" v-on:change="fetch_data">
                     <option v-for="label in month_labels" :value="label.id">
@@ -86,7 +89,7 @@
             {#    END/added calendar#}
 
         <div class="modal fade" id="generateScheduleModal" tabindex="-1">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <form id="schedule_form" v-on:submit.prevent="create_schedule">
                         {% csrf_token %}
@@ -130,9 +133,14 @@
                             <button type="submit" class="btn btn-outline-primary">Wygeneruj</button>
                         </div>
 
-                            <div v-if="loading">
-                                <h3 class="text-center">Waiting</h3>
-                                <img src="{% static 'img/Loading_icon.gif' %}" alt="Be patient"/>
+                            <div v-if="loading" class="modal-body">
+                                <h3 class="text-center mb-5">Generowanie grafiku...</h3>
+                                <!--<img src="{% static 'img/Loading_icon.gif' %}" alt="Be patient"/>-->
+                                <div class="text-center">
+                                    <div class="spinner-border spinner-border-lg text-primary" role="status">
+                                        <span class="visually-hidden">Waiting...</span>
+                                    </div>
+                                </div>
                             </div>
                         </form>
                     </div>

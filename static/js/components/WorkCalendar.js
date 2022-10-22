@@ -66,6 +66,8 @@ export default {
       employee_exists_in_worktype(employee_id, worktype){
         return false;
       }
+      
+
 
     },
 
@@ -246,7 +248,8 @@ export default {
                         </ul>
                       </li>
                   </ul> 
-                 <button @click="print('dodanie zmiany')" type="button" class="btn btn-primary">Dodaj zmianę</button>                   
+                 <button @click="print('dodanie zmian')" type="button" data-bs-target="#addNewShiftTypeModal"
+                  data-bs-toggle="modal" data-bs-dismiss="modal" class="btn btn-primary">Dodaj zmianę</button>                   
                 </div>
                 
             </div>

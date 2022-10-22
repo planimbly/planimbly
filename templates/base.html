@@ -48,7 +48,7 @@
 
                 <div class="dropdown">
 
-                    <i class="material-icons navbar-style" id="dropdownMenuButton"
+                    <i class="material-icons navbar-style align-middle" id="dropdownMenuButton"
                        data-bs-toggle="dropdown" aria-expanded="false">account_circle</i>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
                         <li style="text-align: center; font-weight: 600;">{{ user.username }}</li>
@@ -74,14 +74,12 @@
                             </li>
                             <li class="sidebar-item"><a href="{% url 'shiftType_manage' %}" class="del-def-style-a">Zmiany</a>
                             </li>
-                            <li class="sidebar-item"><a href="{% url 'employee_to_unit_workplace' %}"
-                                                        class="del-def-style-a">Pracownicy</a></li>
+                            {% comment %} <li class="sidebar-item"><a href="{% url 'employee_to_unit_workplace' %}"
+                                                        class="del-def-style-a">Pracownicy</a></li> {% endcomment %}
 
-                            <li class="sidebar-item"><a href="{% url 'employees_manage' %}" class="del-def-style-a">Zarządzanie
-                                pracownikami</a></li>
+                            <li class="sidebar-item"><a href="{% url 'employees_manage' %}" class="del-def-style-a">Pracownicy</a></li>
                             <li class="sidebar-item"><a href="{% url 'absence_manage' user.pk %}"
-                                                        class="del-def-style-a">Zarządzanie
-                                nieobecnościami</a></li>
+                                                        class="del-def-style-a">Nieobecności</a></li>
                             <li class="sidebar-item"><a href="{% url 'organization_create' %}" class="del-def-style-a">Nowa
                                 organizacja</a></li>
                         {% else %}
@@ -130,9 +128,9 @@
 
                 moveMainWithSidebar() {
                     if (this.isSidebarHidden) {
-                        return "1rem";
+                        return 0;
                     } else {
-                        return "16rem";
+                        return "15rem";
                     }
                 },
             },
