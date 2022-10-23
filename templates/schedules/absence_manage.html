@@ -15,27 +15,62 @@
 
 {% block content %}
     <div id="vue-app">
-        <div class="col d-flex justify-content-start">
-            <h3 class="content-title">Lista nieobecności</h3>
-        </div>
+
         <form id="schedule_form" v-on:submit.prevent="create_absence">
             {% csrf_token %}
             <input type="date" class="form-control" v-model="start" required>
             <input type="date" class="form-control" v-model="end" required>
             <select class="form-control" v-model="type" required>
-                <option value="volvo">Volvo</option>
-                <option value="saab">Saab</option>
+                {% for absence in absence_type %}
+                    <option value="{{ absence.0 }}">{{ absence.1 }}</option>
+                {% endfor %}
+            </select>
+            <select class="form-control" v-model="employee_id">
+                <option v-for="employee in employee_list" :value="employee.id">
+                    [[employee.first_name]] [[employee.last_name]]
+                </option>
             </select>
             <input type="number" class="form-control" v-model="hours_number" required>
             <input type="submit" value="Zapisz">
         </form>
+        <div class="row d-flex justify-content-between align-items-center">
+            <div class="col d-flex justify-content-start">
+                <h3 class="content-title">Lista nieobecności</h3>
+            </div>
 
-        Lista:
-        <ul>
-            <li v-for="absence in absence_list" :value="absence.id">
-                [[ absence.id ]]
-            </li>
-        </ul>
+            <div class="col d-flex justify-content-end">
+                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal"
+                        data-bs-target="#addEmployeeModal">
+                    Dodaj nieobecność
+                </button>
+            </div>
+        </div>
+        <table class="table styled-table">
+            <thead>
+            <tr>
+                <th scope="col">Start</th>
+                <th scope="col">Koniec</th>
+                <th scope="col">Pracownik</th>
+                <th scope="col">Typ</th>
+                <th scope="col">Liczba godzin</th>
+                <th scope="col">Usuń</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(absence, i) in absence_list" :key="absence.id">
+                <td>[[absence.start]]
+                <td>[[absence.end]]</td>
+                <td>[[absence.employee_obj.username]]</td>
+                <td>[[absence.type]]</td>
+                <td>[[absence.hours_number]]</td>
+                <td>
+                    <button v-on:click="delete_absence(absence.id)" type="button"
+                            class="btn btn-danger table-buttons"><i class="material-icons">delete</i></button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
     </div>
 {% endblock %}
 
@@ -49,8 +84,10 @@
             data() {
                 return {
                     absence_list: null,
-                    employee_id: {{ employee_pk }},
+                    employee_list: null,
                     absence_url: '{% url 'absence-list' %}',
+                    employee_url: '{% url 'employee-list' %}',
+                    employee_id: null,
                     start: '',
                     end: '',
                     type: '',
@@ -79,12 +116,22 @@
                         .get(this.absence_url)
                         .then(response => {
                                 this.absence_list = response.data;
+
+                            }
+                        );
+                    axios
+                        .get(this.employee_url)
+                        .then(response => {
+                                this.employee_list = response.data;
+                                console.log(this.employee_list)
                             }
                         );
                 },
-                delete_absence() {
+                delete_absence(absence_id) {
                     axios
-                        .delete(this.absence_url + this.employee_id + '/')
+                        .delete(this.absence_url + absence_id + '/',
+                            {id: absence_id}
+                        )
                         .then(response => {
                                 this.fetch_data()
                             }
@@ -93,6 +140,7 @@
             },
             computed: {},
             mounted() {
+                this.fetch_data()
             },
         }).mount('#vue-app');
 
