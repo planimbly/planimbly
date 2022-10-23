@@ -13,7 +13,7 @@ router.register(r'absence', AbsenceViewSet, basename='absence')
 urlpatterns = [
     path('shiftType_manage/', ShiftTypeManageView.as_view(), name="shiftType_manage"),
     path('schedule_manage/', ScheduleManageView.as_view(), name="schedule_manage"),
-    path('absence_manage/<int:employee_pk>', AbsenceManageView.as_view(), name="absence_manage"),
+    path('absence_manage/', AbsenceManageView.as_view(), name="absence_manage"),
 
     # API urls
     path('api/schedule_create/', ScheduleCreateApiView.as_view(), name='schedule_create'),
