@@ -427,6 +427,7 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
     penalized_transitions = find_illegal_transitions(shift_types)
 
     # TODO: zamienić 1 na parametr daily cover demand który będzie w klasie shift_type
+    # weekly_cover_demands = [tuple(s.demand for s in shift_types[2:]) for _ in range(7)]
     weekly_cover_demands = [tuple(1 for x in range(len(shift_types)-1)) for _ in range(7)]
 
     num_month_weekdays = []
@@ -435,13 +436,14 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
         num_month_weekdays.append(sum([x[1] == d for x in flatten(list_month)]))
 
     total_hours = int()
+    num_shifts_by_time = {get_shift_work_time(st) // 60 : 0 for st in shift_types[2:]}
 
     for d in range(len(weekly_cover_demands)):
         for s in range(len(weekly_cover_demands[d])):  # s for num_month_weekdays, s+1 for shift_types
             if shift_types[s+1].name == "-":
                 continue
-            else:
-                total_hours += num_month_weekdays[d] * get_shift_work_time(shift_types[s+1]) // 60
+            total_hours += num_month_weekdays[d] * get_shift_work_time(shift_types[s+1]) // 60
+            num_shifts_by_time[get_shift_work_time(shift_types[s+1]) // 60] += num_month_weekdays[d]
 
     total_job_time = sum(e.job_time for e in employees)
     job_time_multiplier = total_hours / total_job_time
@@ -492,26 +494,34 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
             obj_bool_vars.extend(variables)
             obj_bool_coeffs.extend(coeffs)
 
-    # TODO: Calculate constraints on free shifts for every job time
+    # TODO: Calculate constraints on free shifts based on job times
     job_times = sorted(set(e.job_time for e in employees), reverse = True)
-    desired_free_shifts = {}
-    # for jt in job_times:
-    #     desired_free_shifts[jt] = total_hours
+    desired_free_shifts = { jt : 0 for jt in job_times }
     
-    # [WIP] Monthly sum constraints
-    # This is supposed to maintain balance between employees desired work time
+    for jt in desired_free_shifts:
+        desired_free_shifts[jt] = sum(e.job_time == jt for e in employees)
+
+    print(desired_free_shifts)
+    print(num_shifts_by_time)
+    print("total hours: %d" % total_hours)
+    print("total job time: %d" % total_job_time)
+    print("job time multiplier: %f" % job_time_multiplier)
+    
+    # Monthly sum constraints
+    # This is used to maintain balance between employees desired work time
     # for ct in monthly_sum_constraints:
     #     shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = ct
     for e in employees:
-        if e.job_time == 160:
-            print("SIEMA 160")
-            shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = 0, 6, 7, 100, 7, 8, 100
-        elif e.job_time == 80:
-            print("SIEMA 80")
+        if e.job_time >= 160:
+            # pełen etat
+            shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = 0, 6, 7, 20, 7, 8, 100
+        elif e.job_time < 120:
+            # 1/2 etatu
             shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = 0, 7, 15, 20, 16, 18, 4
-        elif e.job_time == 120:
-            print("SIEMA 120")
+        elif e.job_time >= 120 and e.job_time < 160:
+            # 3/4 etatu
             shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = 0, 7, 12, 20, 14, 16, 4
+
 
         works = [work[e.pk, shift, d] for d in range(1, num_days + 1)]
         variables, coeffs = add_monthly_soft_sum_constraint(
@@ -799,8 +809,6 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
 
     for e in emp:
         work_time[e.pk] = 0
-
-    print(shift_types)
 
     data = solve_shift_scheduling(emp_for_workplaces,
                                   schedule_dict,
