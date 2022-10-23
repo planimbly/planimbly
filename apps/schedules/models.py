@@ -15,6 +15,8 @@ class ShiftType(models.Model):
     hour_end = models.TimeField(verbose_name="Czas zakończenia zmiany")
     name = models.CharField(max_length=512, verbose_name="Etykieta zmiany")
     workplace = models.ForeignKey(Workplace, verbose_name="Dział", on_delete=models.CASCADE)
+    demand = models.IntegerField(verbose_name='Liczba pracowników', default=1)
+    color = models.CharField(max_length=7, verbose_name="Kolor zmiany", default="#BEDAFF")
     active_days = models.TextField(verbose_name="Aktywne dni")
     is_used = models.BooleanField(default=False)
     is_archive = models.BooleanField(default=False)
