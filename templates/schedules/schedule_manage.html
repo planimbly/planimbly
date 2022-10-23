@@ -74,7 +74,7 @@
         {#            #}
         {#        </div>#}
 
-        <work-calendar
+        <work-calendar v-on:call-rest-api="callApiManualChange"
                 :year="year_cal"
                 :month="month_cal"
                 :unit_id="selected_unit"
@@ -94,7 +94,7 @@
                     <form id="schedule_form" v-on:submit.prevent="create_schedule">
                         {% csrf_token %}
                         <div class="modal-header" v-if="loading == false">
-                            <h5 class="modal-title" id="generateScheduleLabel">Wygeneruj nowy grafik</h5>
+                            <h5 class="modal-title" id="generateScheduleLabel">Wygeneruj nowy grafik dla [[select_unit.find(unit => unit.id === selected_unit).name]]</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
 
@@ -310,7 +310,74 @@
                     }
 
                     return abbreviations;
-                }
+                },
+                callApiManualChange(method, specific_shift_id, employee_id, shift_type_id, workplace_id, date_python_format){
+                    switch (method) {
+                        case 'put':
+                            console.log('PUT: Shift: '+specific_shift_id+' Employee: '+employee_id);
+                            this.putApiShiftManage(specific_shift_id, employee_id);
+                            break;
+                        
+                        case 'delete':
+                            console.log('DELETE: Shift: '+specific_shift_id);
+                            this.deleteApiShiftManage(specific_shift_id);
+                            break;
+                        
+                        case 'post':
+                            console.log('POST: Shift_type: '+shift_type_id+' Employee: '+employee_id +' Date: '+date_python_format +' Workplace: '+workplace_id);
+                            this.postApiShiftManage(shift_type_id, employee_id, date_python_format, workplace_id);
+                            break;
+
+                        default:
+                            console.log('error message: \n you\'ve tried to call unhandled rest api method');
+                    }                  
+                },
+                /* UPDATE EXISTING SHIFT */
+                putApiShiftManage(specific_shift_id, employee_id){
+                    let put_url = '{% url 'shift_manage' %}';
+                    axios
+                        .put(put_url,
+                            {
+                                Shift: specific_shift_id,
+                                Employee: employee_id
+                            }
+                        )
+                        .then(response => {
+                                this.fetch_data();
+                            }
+                        )
+                },
+                /* DELETE EXISTING SHIFT */
+                deleteApiShiftManage(specific_shift_id){
+                    let delete_url = '{% url 'shift_manage' %}';
+                    axios
+                        .delete(delete_url,
+                            {
+                                Shift: specific_shift_id
+                            }
+                        )
+                        .then(response => {
+                                this.fetch_data();
+                            }
+                        )
+                },
+                /* ADD NEW SHIFT */
+                postApiShiftManage(shift_type_id, employee_id, date_python_format, workplace_id){
+                    let post_url = '{% url 'shift_manage' %}';
+                    axios
+                        .post(post_url,
+                            {
+                                Date: date_python_format,
+                                Employee: employee_id,
+                                Shift_type: shift_type_id,
+                                Workplace: workplace_id,
+                            }
+                        )
+                        .then(response => {
+                                this.fetch_data();
+                            }
+                        )
+                },
                 
             },
             computed: {

@@ -96,6 +96,23 @@
                                 <div class="col-8">
                                     <input type="text" class="form-control" v-model="name" id="shiftName">
                                 </div>
+
+
+                                <div class="col-4">
+                                    <label for="demand" class="form-label modal-style">Zapotrzebowanie</label>
+                                </div>
+                                <div class="col-8">
+                                    <input type="number" class="form-control" v-model="demand" id="demand">
+                                </div>
+
+                                <div class="col-4">
+                                    <label for="color" class="form-label modal-style">Kolor</label>
+                                </div>
+                                <div class="col-8">
+                                    <input type="color" class="form-control" v-model="color" id="color">
+                                </div>
+
+
                                 <div class="col-4">
                                     <label for="shiftActiveDays" class="form-label modal-style">Aktywne dni</label>
                                 </div>
@@ -129,10 +146,11 @@
         <table class="table styled-table">
             <thead>
             <tr>
-                <th scope="col">ID</th>
                 <th scope="col">Start zmiany</th>
                 <th scope="col">Koniec zmiany</th>
                 <th scope="col">Nazwa</th>
+                <th scope="col">Kolor</th>
+                <th scope="col">Zapotrzebowanie</th>
                 <th scope="col">Aktywne dni</th>
                 <th scope="col">Kolor</th>
                 <th scope="col">W użyciu</th>
@@ -143,12 +161,16 @@
 
             <tbody>
             <tr v-for="(shiftType, i) in shiftType_list" :key="shiftType.id">
-                <th scope="row"><span>[[ shiftType.id ]]</span></th>
                 <td><input type="time" class="form-control" v-model="shiftType.hour_start"></td>
                 <td><input type="time" class="form-control" v-model="shiftType.hour_end"></td>
                 <td><input type="text" class="form-control" v-model="shiftType.name"></td>
+
+                <td><input type="color" class="form-control" v-model="shiftType.color"></td>
+                <td><input type="number" class="form-control" v-model="shiftType.demand"></td>
+
                 <td><input type="text" class="form-control" v-model="shiftType.active_days"></td>
-                <td><input type="color" class="form-control form-control-color" id="colorInput" title="Wybierz kolor zmiany wyświetlany w grafiku"></td>
+                <td><input type="color" class="form-control form-control-color" id="colorInput"
+                           title="Wybierz kolor zmiany wyświetlany w grafiku"></td>
                 <td><input type="checkbox" class="form-check-input" value="" v-model="shiftType.is_used"></td>
                 <td>
                     <button v-on:click="change_shiftType(i)" type="button"
@@ -182,6 +204,8 @@
                         hour_end: '',
                         name: '',
                         active_days: '',
+                        demand: '',
+                        color: '',
                         is_used: true,
                         shiftType_list: null,
                         response: null,
@@ -235,6 +259,8 @@
                                                 hour_start: this.hour_start,
                                                 hour_end: this.hour_end,
                                                 name: this.name,
+                                                color: this.color,
+                                                demand: this.demand,
                                                 active_days: this.active_days,
                                                 is_used: this.is_used
                                             }
@@ -297,6 +323,8 @@
                                                 hour_start: this.shiftType_list[i].hour_start,
                                                 hour_end: this.shiftType_list[i].hour_end,
                                                 name: this.shiftType_list[i].name,
+                                                color: this.shiftType_list[i].color,
+                                                demand: this.shiftType_list[i].demand,
                                                 active_days: this.shiftType_list[i].active_days,
                                                 is_used: this.shiftType_list[i].is_used
                                             }
