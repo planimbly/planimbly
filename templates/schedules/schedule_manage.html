@@ -89,7 +89,7 @@
             {#    END/added calendar#}
 
         <div class="modal fade" id="generateScheduleModal" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
                 <div class="modal-content">
                     <form id="schedule_form" v-on:submit.prevent="create_schedule">
                         {% csrf_token %}
@@ -111,26 +111,45 @@
                                     <label for="month" class="form-label modal-style">Miesiąc</label>
                                 </div>
                                 <div class="col-6">
-                                    <input type="number" class="form-control" v-model="month" required>
+                                    {% comment %} <input type="number" class="form-control" v-model="month" required> {% endcomment %}
+                                    <select class="form-select overflow-hidden" v-model="month">
+                                        <option v-for="label in month_labels" :value="label.id">
+                                            [[ label.name ]]
+                                        </option>
+                                    </select>
                                 </div>
 
                                 <label class="form-label">Działy uwzględnione w grafiku:</label>
-                                <div class="row mx-0 my-1 d-flex align-items-center" v-for="(workplace, i) in current_workplace" :key="workplace.id">
-                                    <div class="col-6">
-                                        <label class="form-label modal-style">[[ workplace.name ]] </label>
+                                <div class="list-group">
+                                    <div v-for="workplace_shifts in shift_types_for_each_workplace" class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div class="d-flex align-items-center">
+                                                <input v-bind:id="workplace_shifts.workplace.id" v-bind:value="workplace_shifts.workplace.id"
+                                                            class="form-check-input me-2" style="margin: 0px;" type="checkbox" checked
+                                                            v-model="checked_workplace">
+                                                <div class="fw-bold">[[workplace_shifts.workplace.name]]</div>
+                                            </div>
+                                        </div>
+                                        <div v-for="shiftType in workplace_shifts.shiftTypes">
+                                            <div v-if="shiftType.is_used"  class="list-group-item">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    [[shiftType.name]]
+                                                    <span class="badge rounded-pill bg-primary">[[shiftType.hour_start.toString().slice(0, 5) + " - " + shiftType.hour_end.toString().slice(0, 5)]]</span>
+                                                </div>
+                                                <div v-for="abbr in active_days_to_string_abbr_array(shiftType.active_days)" class="d-inline-flex">
+                                                    <span class="badge bg-light text-dark me-1">[[abbr]]</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
                                     </div>
-                                    <div class="col-6 d-flex align-items-center">
-                                        <input v-bind:id="workplace.id" v-bind:value="workplace.id"
-                                               class="form-check-input" style="margin: 0px;" type="checkbox" checked
-                                               v-model="checked_workplace">
-                                    </div>
-                                </div>
-
                                 </div>
                             </div>
-
+                        </div>
+                        
                         <div class="modal-footer" v-if="loading == false">
-                            <button type="submit" class="btn btn-outline-primary">Wygeneruj</button>
+                            <button type="submit" class="btn btn-primary" v-if="checked_workplace.length > 0">Wygeneruj</button>
+                            <button type="button" class="btn btn-primary disabled" v-else>Wygeneruj</button>
                         </div>
 
                             <div v-if="loading" class="modal-body">
@@ -175,14 +194,14 @@
                     selected_workplace: null,
                     create_schedule_url: '{% url 'schedule_create' %}',
                     year: new Date().getFullYear(),
-                    month: new Date().getMonth(),
+                    month: new Date().getMonth()+1,
                     year_cal: new Date().getFullYear(),
                     month_cal: new Date().getMonth()+1,
                     checked_workplace: [],
                     loading: false,
                     available_workers: null,
                     available_shift_types: null,
-
+                    shift_types_for_each_workplace: [],
                     month_labels: [
                         {id: 1, name: 'Styczeń'},
                         {id: 2, name: 'Luty'},
@@ -221,7 +240,13 @@
                             }
                         )
                         .then(response => {
-                                this.loading = false
+                                this.loading = false;
+                                this.year_cal = this.year;
+                                this.month_cal = this.month;
+                                if (this.checked_workplace.length > 0) {
+                                    this.selected_workplace = this.checked_workplace[0];
+                                }
+                                this.fetch_data();
                             }
                         )
                 },
@@ -244,6 +269,9 @@
                                 this.available_shift_types = response.data;
                             }
                         );
+                    this.fetch_shift_types_for_each_workplace().then(result => {
+                        this.shift_types_for_each_workplace = result;
+                        });
                 },
                 change_workplace() {
                     try {
@@ -253,6 +281,37 @@
                     }
                     this.fetch_data()
                 },
+                async fetch_shift_types_for_each_workplace(){
+                    const shiftTypes_to_workplace = [];
+                    for (let i=0; i<this.current_workplace.length; i++){
+                        
+                        const shiftType_base_url = '{% url 'shiftType-list' 123456789 %}'.replace(/123456789/, this.current_workplace[i].id);
+                           
+                        await axios.get(shiftType_base_url).then(response => {
+                            shiftTypes_to_workplace.push({workplace: this.current_workplace[i], shiftTypes: response.data});
+                        });
+                            
+                    }
+                    return shiftTypes_to_workplace;
+                },
+                active_days_to_string_abbr_array(active_days_numeric){
+                    const abbr_to_day=["Pn", "Wt", "Śr", "Cz", "Pt", "Sb", "Nd"];
+                    let abbreviations = [];
+
+                    if (typeof active_days_numeric == "string" && active_days_numeric.length === 7) {
+                        for(let day=0; day < active_days_numeric.length; day++){
+                            if (active_days_numeric.charAt(day) == '1') {
+                                abbreviations.push(abbr_to_day[day]);
+                            }
+                        }
+                    }
+                    else {
+                        return [];
+                    }
+
+                    return abbreviations;
+                }
+                
             },
             computed: {
                 base_url: {

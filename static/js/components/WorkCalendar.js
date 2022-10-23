@@ -32,7 +32,7 @@ export default {
         },
         //addEmployeeToExistingShift_EmployeeID: null,
         addEmployeeToExistingShift_ShiftTypeID: null,
-        addNewShift_EmployeeID: null,
+        addNewShift_EmployeeID_array: [],
         addNewShift_ShiftTypeID: null,
         //updateEmployeeInExistingShift_EmployeeID: null,
         updateEmployeeInExistingShift_ShiftID: null,
@@ -63,15 +63,58 @@ export default {
         console.log('ADD NEW: '+this.addEmployeeToExistingShift_ShiftTypeID+' employee: '+employee_id);
       },
 
+      add_new_shift_type(){
+        console.log('ADD NEW SHIFT: '+this.addNewShift_ShiftTypeID+' employees: ');
+        console.log(this.addNewShift_EmployeeID_array);
+        this.nullify_NewShift;
+      },
+
       employee_exists_in_worktype(employee_id, worktype){
         return false;
-      }
+      },
+
+      delete_from_array_NewShiftEmployeesID(id){
+        this.addNewShift_EmployeeID_array = this.addNewShift_EmployeeID_array.filter(number => number !== id);
+      },
+
+      append_to_array_NewShiftEmployeesID(id){
+        this.addNewShift_EmployeeID_array.push(id);
+      },
+
+      is_id_in_array_NewShiftEmployeesID(id){
+        if (this.addNewShift_EmployeeID_array.includes(id)) {
+          return true;
+        } else {
+          return false;
+        }
+        
+      },
+
+      nullify_NewShift(){
+        this.addNewShift_ShiftTypeID = null;
+        this.addNewShift_EmployeeID_array = [];
+      },
+
+      is_shift_type_already_in_use(id){
+        for (const shift of Object.keys(this.clickedTileDay.shifts)) {
+          if (this.clickedTileDay.shifts[shift].shift_type_id === id){
+            return true;
+          }
+        }
+        return false;
+      },
       
-
-
     },
 
     computed:{
+      available_workers_filtered(){
+
+      },
+
+      available_shift_types_filtered(){
+
+      },
+
       work_month(){
         const weekdays = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
         var workMonth = [];
@@ -248,7 +291,7 @@ export default {
                         </ul>
                       </li>
                   </ul> 
-                 <button @click="print('dodanie zmian')" type="button" data-bs-target="#addNewShiftTypeModal"
+                 <button @click="nullify_NewShift" type="button" data-bs-target="#addNewShiftTypeModal"
                   data-bs-toggle="modal" data-bs-dismiss="modal" class="btn btn-primary">Dodaj zmianę</button>                   
                 </div>
                 
@@ -301,19 +344,53 @@ export default {
                       <h5 class="modal-title" id="addNewShiftTypeLabel">Wybierz zmianę</h5>
                       <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                
+                <div class="modal-body">
+                      <div class="list-group">
+                            <div v-for="shift_type in available_shift_types">
+                              <div v-if="is_shift_type_already_in_use(shift_type.id)" class="list-group-item list-group-item-action disabled">
+                                  <div class="fw-bold">[[shift_type.name]]: ([[shift_type.id]]) </div>  [[shift_type.hour_start]] - [[shift_type.hour_end]]
+                              </div>  
+                              <div v-else @click="addNewShift_ShiftTypeID = shift_type.id" 
+                              class="list-group-item list-group-item-action" data-bs-target="#pickEmployeesForNewShiftModal" data-bs-toggle="modal" data-bs-dismiss="modal">
+                                  <div class="fw-bold">[[shift_type.name]]: ([[shift_type.id]]) </div>  [[shift_type.hour_start]] - [[shift_type.hour_end]]
+                              </div> 
+                                
+                            </div>                    
+                      </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-target="#changeDayScheduleModal" data-bs-toggle="modal" data-bs-dismiss="modal" aria-label="Close">Anuluj</button>
+                </div>
             </div>
+
         </div>
     </div>
     
-    <div class="modal fade" id="pickShiftTypeModal" tabindex="-1">
-        <div class="modal-dialog">
+    <div class="modal fade" id="pickEmployeesForNewShiftModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                      <h5 class="modal-title" id="pickShiftTypeLabel">Wybierz zmianę</h5>
+                      <h5 class="modal-title" id="pickEmployeesForNewShiftLabel">Wybierz pracowników</h5>
                       <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                
+                <div class="modal-body">
+                    <div class="list-group">
+                      <div v-for="worker in available_workers">
+                          <div v-if="is_id_in_array_NewShiftEmployeesID(worker.id)" @click="delete_from_array_NewShiftEmployeesID(worker.id)" class="list-group-item list-group-item-action active">
+                            <div class="fw-bold">[[worker.first_name]] [[worker.last_name]]</div> [[worker.username]]
+                          </div>
+                          <div v-else @click="append_to_array_NewShiftEmployeesID(worker.id)" class = "list-group-item list-group-item-action">
+                            <div class="fw-bold">[[worker.first_name]] [[worker.last_name]]</div> [[worker.username]]
+                          </div>
+                      </div>                       
+                    </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-target="#changeDayScheduleModal" data-bs-toggle="modal" data-bs-dismiss="modal" aria-label="Close">Anuluj</button>
+                  <button v-if="this.addNewShift_EmployeeID_array.length > 0" @click="add_new_shift_type" type="button" class="btn btn-primary" 
+                  data-bs-target="#changeDayScheduleModal" data-bs-toggle="modal" data-bs-dismiss="modal">Dodaj</button>
+                  <button v-else type="button" class="btn btn-primary" disabled>Dodaj</button>
+                </div>
             </div>
         </div>
     </div>

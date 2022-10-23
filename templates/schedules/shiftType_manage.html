@@ -134,6 +134,7 @@
                 <th scope="col">Koniec zmiany</th>
                 <th scope="col">Nazwa</th>
                 <th scope="col">Aktywne dni</th>
+                <th scope="col">Kolor</th>
                 <th scope="col">W użyciu</th>
                 <th scope="col">Zapisz</th>
                 <th scope="col">Usuń</th>
@@ -147,6 +148,7 @@
                 <td><input type="time" class="form-control" v-model="shiftType.hour_end"></td>
                 <td><input type="text" class="form-control" v-model="shiftType.name"></td>
                 <td><input type="text" class="form-control" v-model="shiftType.active_days"></td>
+                <td><input type="color" class="form-control form-control-color" id="colorInput" title="Wybierz kolor zmiany wyświetlany w grafiku"></td>
                 <td><input type="checkbox" class="form-check-input" value="" v-model="shiftType.is_used"></td>
                 <td>
                     <button v-on:click="change_shiftType(i)" type="button"
