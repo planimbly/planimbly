@@ -1,12 +1,14 @@
 from rest_framework import serializers
 
 from .models import ShiftType, Preference, Absence
+from ..accounts.models import Employee
+from ..accounts.serializers import EmployeeSerializer
 
 
 class ShiftTypeSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = ShiftType
-        fields = ['id', 'hour_start', 'hour_end', 'name', 'active_days', 'is_used']
+        fields = ['id', 'hour_start', 'hour_end', 'name', 'demand', 'color', 'active_days', 'is_used']
         extra_kwargs = {
             'id': {'read_only': True}
         }
@@ -31,3 +33,8 @@ class AbsenceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Absence
         fields = ['id', 'start', 'end', 'employee', 'type', 'hours_number']
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['employee_obj'] = EmployeeSerializer(Employee.objects.get(pk=data['employee'])).data
+        return data

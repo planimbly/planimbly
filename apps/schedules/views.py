@@ -3,22 +3,14 @@ import calendar
 import datetime
 
 from django.views.generic import TemplateView
-from rest_framework import viewsets, permissions, status, mixins
+from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-import scripts.run_algorithm
 from apps.accounts.models import Employee
 from apps.organizations.models import Workplace, Unit
 from apps.schedules.models import ShiftType, Shift, Schedule, Preference, Absence
 from apps.schedules.serializers import ShiftTypeSerializer, PreferenceSerializer, AbsenceSerializer
-
-
-def filter_queryset_by_employee(queryset, req, serializer):
-    if req.query_params.get('employee'):
-        queryset = queryset.filter(employee_id=req.query_params.get('employee'))
-    ser = serializer(queryset, many=True)
-    return ser.data
 
 
 class ShiftTypeManageView(TemplateView):
@@ -50,7 +42,7 @@ class AbsenceManageView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['absence'] = Absence.ABSENCE_TYPE
+        context['absence_type'] = Absence.ABSENCE_TYPE
         return context
 
 
@@ -109,10 +101,10 @@ class ScheduleCreateApiView(APIView):
 
         employee_list = Employee.objects.filter(user_workplace__in=workplace_query).distinct().order_by('id')
 
-        data = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month,
+        '''data = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month,
                                                     emp_for_workplaces)
         for shift in data:
-            shift.save()
+            shift.save()'''
         return Response()
 
 
@@ -201,15 +193,22 @@ class ShiftManageApiView(APIView):
         return Response()
 
 
-class PreferenceViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin,
-                        viewsets.GenericViewSet):
+class PreferenceViewSet(viewsets.ModelViewSet):
     queryset = Preference.objects.all()
     serializer_class = PreferenceSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def list(self, request, *args, **kwargs):
-        data = filter_queryset_by_employee(self.queryset, request, self.serializer_class)
-        return Response(data)
+        if request.query_params.get('employee'):
+            queryset = Preference.objects.filter(employee_id=request.query_params.get('employee'))
+        else:
+            queryset = Preference.objects.all()
+        serializer = PreferenceSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def update(self, request, pk=None):
+        response = {'message': 'Update function is not offered in this path.'}
+        return Response(response, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class ShiftTypeViewSet(viewsets.ModelViewSet):
@@ -228,6 +227,8 @@ class ShiftTypeViewSet(viewsets.ModelViewSet):
                               hour_end=v_data['hour_end'],
                               name=v_data['name'],
                               active_days=v_data['active_days'],
+                              demand=v_data['demand'],
+                              color=v_data['color'],
                               is_used=v_data['is_used'],
                               workplace=workplace)
         shiftType.save()
@@ -236,12 +237,19 @@ class ShiftTypeViewSet(viewsets.ModelViewSet):
         pass'''
 
 
-class AbsenceViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin,
-                     viewsets.GenericViewSet, mixins.RetrieveModelMixin):
+class AbsenceViewSet(viewsets.ModelViewSet):
     queryset = Absence.objects.all()
     serializer_class = AbsenceSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def list(self, request, *args, **kwargs):
-        data = filter_queryset_by_employee(self.queryset, request, self.serializer_class)
-        return Response(data)
+        if request.query_params.get('employee'):
+            queryset = Absence.objects.filter(employee_id=request.query_params.get('employee'))
+        else:
+            queryset = Absence.objects.all()
+        serializer = AbsenceSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def update(self, request, pk=None):
+        response = {'message': 'Update function is not offered in this path.'}
+        return Response(response, status=status.HTTP_405_METHOD_NOT_ALLOWED)
