@@ -349,15 +349,15 @@ export default {
                           </div>
                         </div>
                         <ul class="list-group"> 
-                            <div class="container">                     
-                              <li v-for="worker_shift in shift.workers" class="list-group-item row">
+                                                
+                              <li v-for="worker_shift in shift.workers" class="list-group-item  d-inline-flex justify-content-between">
                                   <div @click="updateEmployeeInExistingShift_ShiftID = worker_shift.shift_id; updateEmployeeInExistingShift_ShiftTypeID = shift.shift_type_id"
-                                   data-bs-target="#pickEmployeeForUpdateModal" data-bs-toggle="modal" data-bs-dismiss="modal" class="col">
-                                      [[worker_shift.shift_id]] [[worker_shift.worker]]
+                                   data-bs-target="#pickEmployeeForUpdateModal" data-bs-toggle="modal" data-bs-dismiss="modal">
+                                      <div class="me-2">[[worker_shift.worker.first_name]] [[worker_shift.worker.last_name]]</div>
                                   </div>
                                   <button @click="delete_employee_from_shift(worker_shift.shift_id)" type="button" class="btn btn-outline-danger btn-sm col col-lg-2">Usuń</button>
                               </li>
-                            </div>  
+                             
                             <li class="list-group-item"> <button @click="addEmployeeToExistingShift_ShiftTypeID = shift.shift_type_id" type="button" 
                             data-bs-target="#pickEmployeeAddToExistingModal" data-bs-toggle="modal" data-bs-dismiss="modal" class="btn btn-outline-primary btn-sm">
                             Dodaj pracownika
@@ -404,7 +404,7 @@ export default {
                       <div class="list-group">
                             <div v-for="worker in available_workers" @click="add_new_employee_for_existing_shift(worker.id)" 
                             class="list-group-item list-group-item-action" data-bs-target="#changeDayScheduleModal" data-bs-toggle="modal" data-bs-dismiss="modal">
-                                <div class="fw-bold">[[worker.first_name]] [[worker.last_name]]</div> [[worker.username]] // ADD HERE UNIT NAME AS WELL - DISABLE IF THE EMPLOYEE IS ON HOLIDAYS
+                                <div class="fw-bold">[[worker.first_name]] [[worker.last_name]]</div> [[worker.username]]
                             </div>                       
                       </div>
                 </div>
