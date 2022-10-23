@@ -11,36 +11,20 @@ export default {
       available_workers: Object,
       available_shift_types: Object
     },
-
+    emits: ['call-rest-api'],
     data () {
       return {
-        clickedTileDay: {
-          day: new Date("1970-01-01"),
-          day_label: null,
-          weekday: null,
-          shifts: [
-            {
-              shift_type_id: null,
-              time_start: null,
-              time_end: null,
-              label: null,
-              workers: [
-                {shift_id: null, worker: {id: null, first_name: null, last_name: null}}
-              ],
-            }
-          ]
-        },
-        //addEmployeeToExistingShift_EmployeeID: null,
+        clickedTileDate: new Date("1970-01-01"),
         addEmployeeToExistingShift_ShiftTypeID: null,
         addNewShift_EmployeeID_array: [],
         addNewShift_ShiftTypeID: null,
-        //updateEmployeeInExistingShift_EmployeeID: null,
         updateEmployeeInExistingShift_ShiftID: null,
+        updateEmployeeInExistingShift_ShiftTypeID: null,
       }
-
     },
-
+    
     methods:{
+      /* DEPRECATED ZONE */
       abbreviate_name(firstName, surname){
         if (typeof firstName == "string" && typeof surname == "string") {
           return firstName.charAt(0) + surname.charAt(0);
@@ -52,24 +36,88 @@ export default {
         console.log(string);
       },
 
+      /* REST API METHOD CALLS */
+      api_post(date_python_format, employee_id, shift_type_id, workplace_id){
+        this.$emit('call-rest-api', 'post', null, employee_id, shift_type_id, workplace_id, date_python_format);
+      },
+      api_put(specific_shift_id, employee_id){
+        this.$emit('call-rest-api', 'put', specific_shift_id, employee_id, null, null, null);
+      },
+      api_delete(specific_shift_id){
+        this.$emit('call-rest-api', 'delete', specific_shift_id, null, null, null, null);
+      },
+      
+
+      /* USER ACTIONS */
+      delete_existing_shift(shift_type_id){
+        const specific_shift_id_array = [];
+        for (const shift of Object.keys(this.clickedTileDay.shifts)) {
+          if (this.clickedTileDay.shifts[shift].shift_type_id === shift_type_id) {
+              for (const spec_shift_worker in this.clickedTileDay.shifts[shift].workers){
+                specific_shift_id_array.push(this.clickedTileDay.shifts[shift].workers[spec_shift_worker].shift_id);
+              }
+          }
+        }
+        while (specific_shift_id_array.length > 0){
+          this.api_delete(specific_shift_id_array.pop());
+        }
+      },
+
+      delete_employee_from_shift(specific_shift_id){
+        this.api_delete(specific_shift_id);
+      },
+
       update_employee_for_existing_shift(employee_id){
-        console.log('PUT: '+this.updateEmployeeInExistingShift_ShiftID+' employee: '+employee_id);
+        if (this.employee_exists_in_worktype(employee_id, this.updateEmployeeInExistingShift_ShiftTypeID)){
+          return;
+        }
+        this.api_put(this.updateEmployeeInExistingShift_ShiftID, employee_id);
       },
 
       add_new_employee_for_existing_shift(employee_id){
         if (this.employee_exists_in_worktype(employee_id, this.addEmployeeToExistingShift_ShiftTypeID)){
           return;
         }
-        console.log('ADD NEW: '+this.addEmployeeToExistingShift_ShiftTypeID+' employee: '+employee_id);
+        this.api_post(
+          this.js_date_to_python_format(this.clickedTileDate), 
+          employee_id, 
+          this.addEmployeeToExistingShift_ShiftTypeID,
+          this.workplace_id);
       },
 
       add_new_shift_type(){
-        console.log('ADD NEW SHIFT: '+this.addNewShift_ShiftTypeID+' employees: ');
-        console.log(this.addNewShift_EmployeeID_array);
+        while (this.addNewShift_EmployeeID_array.length > 0) {
+          let employee = this.addNewShift_EmployeeID_array.pop();
+          if (!this.employee_exists_in_worktype(employee, this.addNewShift_ShiftTypeID)){
+            this.api_post(
+              this.js_date_to_python_format(this.clickedTileDate),
+              employee,
+              this.addNewShift_ShiftTypeID,
+              this.workplace_id
+            );
+          }
+        }
         this.nullify_NewShift;
       },
 
+      /* HELPER METHODS */
+      js_date_to_python_format(jsdate){
+        return new Date(jsdate.getTime() - (jsdate.getTimezoneOffset() * 60000 )).toISOString().split("T")[0];
+      },
+
       employee_exists_in_worktype(employee_id, worktype){
+        for (const shift of Object.keys(this.clickedTileDay.shifts)){
+
+          if (this.clickedTileDay.shifts[shift].shift_type_id === worktype) {
+
+            for (const employee of Object.keys(this.clickedTileDay.shifts[shift].workers)){
+              if (this.clickedTileDay.shifts[shift].workers[employee].worker.id === employee_id) {
+                  console.log('Error message: \nthe employee already exists in current shift type!')
+                  return true;
+              }
+            }
+          }
+        } 
         return false;
       },
 
@@ -103,6 +151,10 @@ export default {
         }
         return false;
       },
+
+      set_new_tile_date(day){
+        this.clickedTileDate = day.day;
+      }
       
     },
 
@@ -118,10 +170,6 @@ export default {
       work_month(){
         const weekdays = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
         var workMonth = [];
-
-        console.log(this.schedule);
-        console.log(this.available_workers);
-        console.log(this.available_shift_types);
 
         if (this.show_for_workplace && this.schedule) {
 
@@ -223,7 +271,32 @@ export default {
         else{
           return weekDay - 1;
         }
+      },
+
+      clickedTileDay(){
+        for (const workday of Object.keys(this.work_month)) {
+          if (this.work_month[workday].day.toLocaleDateString() === this.clickedTileDate.toLocaleDateString()){
+            return this.work_month[workday];
+          }
+        }  
+        return {
+          day: this.clickedTileDate,
+          day_label: null,
+          weekday: null,
+          shifts: [
+            {
+              shift_type_id: null,
+              time_start: null,
+              time_end: null,
+              label: null,
+              workers: [
+                {shift_id: null, worker: {id: null, first_name: null, last_name: null}}
+              ],
+            }
+          ]
+        };
       }
+      
     },
 
     template: `
@@ -240,16 +313,18 @@ export default {
     <div class="calendar-big">
       <div v-for="filler in grid_blank_fillers" class="tile-transparent"></div>
       <div v-for="day in work_month" class="calendar-tile">
-        <div @click="clickedTileDay = day" class="tile-content"  data-bs-toggle="modal" data-bs-target="#changeDayScheduleModal">
+        <div @click="clickedTileDate = day.day" class="tile-content"  data-bs-toggle="modal" data-bs-target="#changeDayScheduleModal">
           <div class="tile-content-title">
              <div class="cal-day-label-holder">[[day.day_label]]</div>
              <div class="weekday-in-tile-lowres">[[day.weekday]]</div>
           </div>
           <div class="shift-tile-container">
             <div v-for="shift in day.shifts" class="shift-tile">
-              [[shift.label]]
-              <div v-for="employee in shift.workers" class="employee-tile">
-                  [[employee.worker.first_name]] [[employee.worker.last_name]]               
+              <div>
+                <span class="badge bg-light text-dark mt-1 ms-1 fw-bold">[[shift.label]]</span>
+              </div>
+              <div v-for="employee in shift.workers" class="employee-tile d-inline-flex">
+                <span class="badge bg-secondary mt-1 ms-1">[[employee.worker.first_name]] [[employee.worker.last_name]]</span>           
               </div>
             </div>
           </div>
@@ -270,17 +345,17 @@ export default {
                         <div class="container mb-1">
                           <div class="row">
                             <div class="fw-bold col">[[shift.label]] </div>
-                            <button @click="print('usuniecie zmiany')" type="button" class="btn btn-outline-danger btn-sm col col-lg-2">Usuń</button>
+                            <button @click="delete_existing_shift(shift.shift_type_id)" type="button" class="btn btn-outline-danger btn-sm col col-lg-2">Usuń</button>
                           </div>
                         </div>
                         <ul class="list-group"> 
                             <div class="container">                     
                               <li v-for="worker_shift in shift.workers" class="list-group-item row">
-                                  <div @click="updateEmployeeInExistingShift_ShiftID = worker_shift.shift_id" data-bs-target="#pickEmployeeForUpdateModal"
-                                   data-bs-toggle="modal" data-bs-dismiss="modal" class="col">
+                                  <div @click="updateEmployeeInExistingShift_ShiftID = worker_shift.shift_id; updateEmployeeInExistingShift_ShiftTypeID = shift.shift_type_id"
+                                   data-bs-target="#pickEmployeeForUpdateModal" data-bs-toggle="modal" data-bs-dismiss="modal" class="col">
                                       [[worker_shift.shift_id]] [[worker_shift.worker]]
                                   </div>
-                                  <button @click="print('usuniecie pracownika')" type="button" class="btn btn-outline-danger btn-sm col col-lg-2">Usuń</button>
+                                  <button @click="delete_employee_from_shift(worker_shift.shift_id)" type="button" class="btn btn-outline-danger btn-sm col col-lg-2">Usuń</button>
                               </li>
                             </div>  
                             <li class="list-group-item"> <button @click="addEmployeeToExistingShift_ShiftTypeID = shift.shift_type_id" type="button" 
