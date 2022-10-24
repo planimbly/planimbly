@@ -17,6 +17,7 @@
 }
 
 h5 {
+    white-space: nowrap;
     width: 260px;
     margin: 5px;
 }
