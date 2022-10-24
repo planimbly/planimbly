@@ -7,6 +7,7 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+import scripts.run_algorithm
 from apps.accounts.models import Employee
 from apps.organizations.models import Workplace, Unit
 from apps.schedules.models import ShiftType, Shift, Schedule, Preference, Absence
@@ -91,7 +92,7 @@ class ScheduleCreateApiView(APIView):
             schedule.save()
             schedule_dict.setdefault(workplace.id, schedule)
 
-        # shiftType_list = list(ShiftType.objects.filter(workplace_id__in=workplace_list))
+        shiftType_list = list(ShiftType.objects.filter(workplace_id__in=workplace_list))
 
         emp_for_workplaces = {}
 
@@ -99,12 +100,12 @@ class ScheduleCreateApiView(APIView):
             emp_for_workplaces[work_id] = Employee.objects.filter(
                 user_workplace__in=Workplace.objects.filter(id__in=[work_id])).distinct().order_by('id')
 
-        # employee_list = Employee.objects.filter(user_workplace__in=workplace_query).distinct().order_by('id')
+        employee_list = Employee.objects.filter(user_workplace__in=workplace_query).distinct().order_by('id')
 
-        '''data = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month,
+        data = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month,
                                                     emp_for_workplaces)
         for shift in data:
-            shift.save()'''
+            shift.save()
         return Response()
 
 
