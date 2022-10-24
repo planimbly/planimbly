@@ -352,9 +352,7 @@
                     let delete_url = '{% url 'shift_manage' %}';
                     axios
                         .delete(delete_url,
-                            {
-                                Shift: specific_shift_id
-                            }
+                            {data:{Shift: specific_shift_id}}
                         )
                         .then(response => {
                                 this.fetch_data();
