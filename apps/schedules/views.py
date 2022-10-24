@@ -160,7 +160,7 @@ class ShiftManageApiView(APIView):
         shift_type = self.request.data.get("Shift_type")
         workplace = self.request.data.get("Workplace")
         if date and employee and shift_type and workplace:
-            schedule = Schedule.objects.filter(year=date.year).filter(month=date.month).first()
+            schedule = Schedule.objects.filter(year=date.year).filter(month=date.month).filter(workplace=workplace).first()
             shift_type = ShiftType.objects.filter(pk=shift_type).first()
             employee = Employee.objects.filter(pk=employee).first()
             if not shift_type or not employee:
