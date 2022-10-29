@@ -21,32 +21,27 @@
                                         class="breadcrumb-link">{{ user.user_org }}</a></li>
             <li class="breadcrumb-item"><a href="{% url 'employees_manage' %}"
                 class="breadcrumb-link">Pracownicy</a></li>
-            {% comment %} <li class="breadcrumb-item current-subpage">[[ employee_info.first_name ]] [[ employee_info.last_name ]]</li> {% endcomment %}
         </ol>
-        {% comment %} <h2 class="breadcrumb-title">Zarządzanie pracownikiem </h2> {% endcomment %}
         <h2 class="breadcrumb-title">[[ employee_info.first_name ]] [[ employee_info.last_name ]] </h2>
         <hr class="breadcrumb" style="opacity: 1">
     </nav>
-
-    <div class="emp_option_big_box">
-        <div>
-            <div class="emp_option_small_box"><h5>Imię</h5><input type="text" class="w-50 form-control" v-model="employee_info.first_name"></div>
-            <div class="emp_option_small_box"><h5>Nazwisko</h5><input type="text" class="w-50 form-control" v-model="employee_info.last_name"></div>
-            <div class="emp_option_small_box"><h5>Nazwa Użytkownika</h5><input type="text" class="w-50 form-control" v-model="employee_info.username" diasabled readonly></div>
+    <form id="schedule_form" v-on:submit.prevent="post_emp_data">
+        <div class="emp_option_big_box">
+            <div>
+                <div class="emp_option_small_box"><h5>Imię</h5><input type="text" class="w-50 form-control" v-model="employee_info.first_name" required></div>
+                <div class="emp_option_small_box"><h5>Nazwisko</h5><input type="text" class="w-50 form-control" v-model="employee_info.last_name" required></div>
+                <div class="emp_option_small_box"><h5>Nazwa Użytkownika</h5><input type="text" class="w-50 form-control" v-model="employee_info.username" diasabled readonly></div>
+            </div>
+            <div>
+                <div class="emp_option_small_box"><h5>ID</h5><input type="text" class="w-50 form-control" v-model="employee_info.id" diasabled readonly></div>
+                <div class="emp_option_small_box"><h5>E-mail</h5><input type="text" class="w-50 form-control" v-model="employee_info.email" required></div>
+                <div class="emp_option_small_box"><h5>Etat</h5><input type="number" class="w-50 form-control" v-model="employee_info.job_time" required></div>
+            </div>
         </div>
-        <div>
-            <div class="emp_option_small_box"><h5>ID</h5><input type="text" class="w-50 form-control" v-model="employee_info.id" diasabled readonly></div>
-            <div class="emp_option_small_box"><h5>E-mail</h5><input type="text" class="w-50 form-control" v-model="employee_info.email"></div>
-            <div class="emp_option_small_box"><h5>Etat</h5><input type="text" class="w-50 form-control" v-model="employee_info.job_time"></div>
-        </div>
-    </div>
-
-    <button v-on:click="post_emp_data()" type="button" class="btn btn-outline-success" style="margin-bottom: 50px; margin-left: 10px">
-        Zapisz zmiany
-    </button>
+        <input type="submit" value="Zapisz zmiany" class="btn btn-outline-success" style="margin-bottom: 50px; margin-left: 10px">
+    </form>
 
     <div class="emp_option_wide_box">
-
         <div>
             <h5>Jednostki</h5>
             <div class="list-group">
@@ -79,7 +74,7 @@
             <div class="list-group">
                 <div v-for="preference in preferences_list" :key="preference.id" class="list-group-item list-group-item-action position-static">
                     <div class="emp_option_table_box">
-                        <div>[[ preference.shift_type ]] [[ preference.active_days ]]</div>
+                        <div>ID: [[ preference.shift_type ]] [[ st_list_to_text(st_numbers_to_list(preference.active_days)) ]]</div>
                         <button v-on:click="remove_preference(preference.id)" class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
                     </div>
                 </div>
@@ -98,7 +93,7 @@
                     </div>
                     
                     <div class="list-group">
-                        <div v-for="unit in unit_list" v-on:click="add_unit_for_employee(unit.id, unit.name)" class="list-group-item list-group-item-action">
+                        <div v-for="unit in unit_list" v-on:click="add_unit_for_employee(unit.id, unit.name)" class="list-group-item list-group-item-action" style="cursor: pointer">
                             <div class="fw-bold"> [[ unit.name ]] </div>
                         </div>
                     </div>
@@ -122,7 +117,7 @@
                     </select>
 
                     <div class="list-group" style="margin-top: 15px">
-                        <div v-for="workplace in workplaces_list" v-on:click="add_workplace_for_employee(workplace.id, workplace.name)" class="list-group-item list-group-item-action">
+                        <div v-for="workplace in workplaces_list" v-on:click="add_workplace_for_employee(workplace.id, workplace.name)" class="list-group-item list-group-item-action" style="cursor: pointer">
                             <div class="fw-bold">[[ workplace.name ]]</div>
                         </div>
                     </div>
@@ -132,7 +127,7 @@
     </div>
 
     <div class="modal fade" id="addPreferenceModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-dialog modal-dialog-scrollable" style="max-width: 800px">
             <div class="modal-content">
                 <div class="modal-header">
                       <h5 class="modal-title">Wybierz jednostkę</h5>
@@ -150,19 +145,34 @@
 
                     <select id="workplaceSelect" class="form-select" v-model="selected_workplace" v-on:change="shiftType_list_fetch">
                         <option v-for="workplace of employee_info.user_workplace" :value="workplace.id">
-                            <div class="fw-bold">[[ workplace.name ]]: [[ employee_info.user_unit ]]</div>
+                            <div class="fw-bold">[[ workplace.name ]]: [[  get_unit_name(workplace) ]]</div>
                         </option>
                     </select>
 
-                    <div class="list-group" style="margin-top: 15px">
-                        <div v-for="shiftType in shiftType_list" v-on:click="add_preference(shiftType.id)" class="list-group-item list-group-item-action">
-                            <div class="fw-bold"> ID: [[ shiftType.id ]] Nazwa: [[ shiftType.name ]] </div>
+                    <div class="list-group list-group-horizontal" style="margin-top: 15px">
+                        <div v-for="day of daylist" class="list-group-item list-group-item-action ">
+                            <div class="emp_option_list_box">
+                                <input type="checkbox" v-model="day.val">                        
+                                <div class="fw-bold"> [[ day.day ]] </div>
+                            </div>
                         </div>
                     </div>
 
-                    <h5 class="modal-title" style="margin-top: 15px">Wpisz active days</h5>
 
-                    <input type="text" class="form-control" style="margin-top: 15px" v-model="preference_active_days">
+                    <div class="list-group" style="margin-top: 15px">
+                        <div v-for="shiftType in shiftType_list" v-on:click="add_preference(shiftType.id)" class="list-group-item list-group-item-action" style="cursor: pointer">
+                            <div class="fw-bold"> [[ shiftType.name ]]: [[ shiftType.hour_start ]] - [[ shiftType.hour_end ]] </div>
+                        </div>
+                    </div>                   
+
+                    {% comment %} <div class="list-group" style="margin-top: 15px">
+                        <div v-for="day of daylist" class="list-group-item list-group-item-action">
+                            <div class="emp_option_list_box">
+                                <input type="checkbox" v-model="day.val">                        
+                                <div class="fw-bold"> [[ day.day ]] </div>
+                            </div>
+                        </div>
+                    </div> {% endcomment %}
 
                 </div>
             </div>
@@ -207,6 +217,7 @@
                     base_url: '',
                     units_url: '',
                     emp_preferences_url: '',
+                    daylist: '',
 
                     // API COUNTER: 7
                 }
@@ -233,6 +244,9 @@
                 },
             },
             methods: {
+                show(){
+                    console.log(this.daylist)
+                },
                 get_unit_name(workplace) {
                     if (this.employee_info != null){
                         return this.employee_info.user_unit.find((Object) => Object.id == workplace.workplace_unit).name
@@ -244,7 +258,6 @@
                     axios
                         .get(this.base_url)
                         .then(response_emp_data => (this.employee_values = response_emp_data.data))
-                        .then(() => console.log(this.employee_values))
                 },
                 post_emp_data(){
                     swal({
@@ -277,6 +290,7 @@
                     axios
                         .get(this.emp_preferences_url)
                         .then(response_pref_data => (this.preferences_list = response_pref_data.data))
+                        this.daylist = this.st_numbers_to_list('0000000')
                 },
                 fetch_unit_data(){
                     this.units_url = '{% url 'unit-list' %}';
@@ -316,13 +330,23 @@
                     
                 },
                 remove_preference(pref_id){
-                    let remove_preference_url = '{% url 'preference-list' %}' + pref_id
-                    axios
-                    .delete(remove_preference_url,
-                        {
-                            id: pref_id,
-                        }
-                    ).then(() => this.fetch_preferences_data());
+                    swal({
+                        title: "Czy na pewno chcesz usunąć preferencję",
+                        icon: "warning",
+                        buttons: true,
+                        dangerMode: true,
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
+                                let remove_preference_url = '{% url 'preference-list' %}' + pref_id;
+                                axios
+                                .delete(remove_preference_url,
+                                    {
+                                        id: pref_id,
+                                    }
+                                ).then(() => this.fetch_preferences_data());
+                            }
+                        });
                 },
                 remove_unit_for_employee(unit_id, unit_name) {
                     swal({
@@ -421,22 +445,55 @@
                                     {
                                         shift_type: shifttype,
                                         employee: this.employee_id,
-                                        active_days: this.preference_active_days.toString(),
+                                        active_days: this.st_list_to_numbers(this.daylist).toString(),
                                     }
                                 ).then(() => this.fetch_preferences_data());
                                 
                             }
                         });
                 },
-                st_numbers_to_list(numbers){
-
+                st_numbers_to_list(numbers_str){
+                    let day_list = []
+                    let day_blueprint = ['pon', 'wt', 'sr', 'czw', 'pt', 'sob', 'nd']
+                    let day_blueprint_long = ['poniedziałek', 'wtorek', 'środa', 'czwartek', 'piątek', 'sobota', 'niedziela']
+                    for (var i = 0; i < 7; i++){
+                        if (numbers_str.charAt(i) == '1') {
+                            day_list.push({
+                                day: day_blueprint[i],
+                                day_long: day_blueprint_long[i],
+                                val: true,
+                            })
+                        } else {
+                            day_list.push({
+                                day: day_blueprint[i],
+                                day_long: day_blueprint_long[i],
+                                val: false,
+                            })
+                        }
+                    }
+                    return(day_list)
                 },
-                st_list_to_text(){
-
+                st_list_to_numbers(day_list){
+                    let day_str = ''
+                    for (let day of day_list){
+                        if (day.val == 1) {
+                            day_str += 1
+                        } else {
+                            day_str += 0
+                        }
+                    }
+                    return day_str
                 },
-                st_list_to_numbers(){
-
-                }
+                st_list_to_text(day_list){
+                    let day_str = ''
+                    for (let day of day_list){
+                        if (day.val == true) {
+                            day_str += day.day
+                            day_str += ' '
+                        }
+                    }
+                    return day_str
+                },
             },
             mounted() {
                 this.fetch_data()

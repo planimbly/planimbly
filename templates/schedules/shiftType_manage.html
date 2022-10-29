@@ -143,13 +143,12 @@
             </div>
         </div>
 
-        <table class="table styled-table">
+        <table class="table styled-table" style="overflow: auto;">
             <thead>
             <tr>
                 <th scope="col">Start zmiany</th>
                 <th scope="col">Koniec zmiany</th>
                 <th scope="col">Nazwa</th>
-                <th scope="col">Kolor</th>
                 <th scope="col">Zapotrzebowanie</th>
                 <th scope="col">Aktywne dni</th>
                 <th scope="col">Kolor</th>
@@ -164,11 +163,26 @@
                 <td><input type="time" class="form-control" v-model="shiftType.hour_start"></td>
                 <td><input type="time" class="form-control" v-model="shiftType.hour_end"></td>
                 <td><input type="text" class="form-control" v-model="shiftType.name"></td>
-
-                <td><input type="color" class="form-control" v-model="shiftType.color"></td>
                 <td><input type="number" class="form-control" v-model="shiftType.demand"></td>
 
-                <td><input type="text" class="form-control" v-model="shiftType.active_days"></td>
+                {% comment %} <td><input type="text" class="form-control" v-model="shiftType.active_days"></td> {% endcomment %}
+
+                <td> 
+                    <div class="dropdown" style="margin-top: 15px">
+                        <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuClickableInside" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" v-on:click="calculate_daylist(shiftType.active_days)">
+                            Wybierz dni
+                        </button>
+                        <ul class="dropdown-menu" style="margin-bottom: 50px">
+                            <li v-for="day of daylist"><div class="dropdown-item">
+                                <div class="active_days_dropdown">
+                                    <input type="checkbox" v-model="day.val">                        
+                                    <div class="fw-bold"> [[ day.day_long ]] </div>
+                                </div>
+                            </div></li>
+                        </ul>
+                    </div>                    
+                </td>
+
                 <td><input type="color" class="form-control form-control-color" id="colorInput"
                            title="Wybierz kolor zmiany wyświetlany w grafiku"></td>
                 <td><input type="checkbox" class="form-check-input" value="" v-model="shiftType.is_used"></td>
@@ -212,7 +226,8 @@
                         selected_unit: {{ default_unit }},
                         select_unit: {{ select_unit | safe}},
                         select_workplace: {{ select_workplace | safe }},
-                        selected_workplace: ''
+                        selected_workplace: '',
+                        daylist: null,
                     }
                 },
                 computed: {
@@ -231,6 +246,9 @@
                     }
                 },
                 methods: {
+                    calculate_daylist(active_days) {
+                        this.daylist = this.st_numbers_to_list(active_days)
+                    },
                     change_workplace() {
                         try {
                             this.selected_workplace = this.select_workplace[this.selected_unit][0]['id']
@@ -325,7 +343,7 @@
                                                 name: this.shiftType_list[i].name,
                                                 color: this.shiftType_list[i].color,
                                                 demand: this.shiftType_list[i].demand,
-                                                active_days: this.shiftType_list[i].active_days,
+                                                active_days: this.st_list_to_numbers(this.daylist),
                                                 is_used: this.shiftType_list[i].is_used
                                             }
                                         )
@@ -340,7 +358,49 @@
                                 }
                             });
 
-                    }
+                    },
+                    st_numbers_to_list(numbers_str){
+                        let day_list = []
+                        let day_blueprint = ['pon', 'wt', 'sr', 'czw', 'pt', 'sob', 'nd']
+                        let day_blueprint_long = ['poniedziałek', 'wtorek', 'środa', 'czwartek', 'piątek', 'sobota', 'niedziela']
+                        for (var i = 0; i < 7; i++){
+                            if (numbers_str.charAt(i) == '1') {
+                                day_list.push({
+                                    day: day_blueprint[i],
+                                    day_long: day_blueprint_long[i],
+                                    val: true,
+                                })
+                            } else {
+                                day_list.push({
+                                    day: day_blueprint[i],
+                                    day_long: day_blueprint_long[i],
+                                    val: false,
+                                })
+                            }
+                        }
+                        return(day_list)
+                    },
+                    st_list_to_numbers(day_list){
+                        let day_str = ''
+                        for (let day of day_list){
+                            if (day.val == 1) {
+                                day_str += 1
+                            } else {
+                                day_str += 0
+                            }
+                        }
+                        return day_str
+                    },
+                    st_list_to_text(day_list){
+                        let day_str = ''
+                        for (let day of day_list){
+                            if (day.val == true) {
+                                day_str += day.day
+                                day_str += ' '
+                            }
+                        }
+                        return day_str
+                    },
                 },
                 mounted() {
                     this.selected_workplace = this.select_workplace[this.selected_unit][0]['id']
