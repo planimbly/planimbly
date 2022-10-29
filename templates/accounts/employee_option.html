@@ -127,7 +127,7 @@
     </div>
 
     <div class="modal fade" id="addPreferenceModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-dialog modal-dialog-scrollable" style="max-width: 800px">
             <div class="modal-content">
                 <div class="modal-header">
                       <h5 class="modal-title">Wybierz jednostkę</h5>
@@ -149,19 +149,15 @@
                         </option>
                     </select>
 
-                    <div class="dropdown" style="margin-top: 15px">
-                        <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuClickableInside" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
-                            Wybierz dni
-                        </button>
-                        <ul class="dropdown-menu" style="margin-bottom: 50px">
-                            <li v-for="day of daylist"><div class="dropdown-item">
-                                <div class="emp_option_list_box">
-                                    <input type="checkbox" v-model="day.val">                        
-                                    <div class="fw-bold"> [[ day.day_long ]] </div>
-                                </div>
-                            </div></li>
-                        </ul>
+                    <div class="list-group list-group-horizontal" style="margin-top: 15px">
+                        <div v-for="day of daylist" class="list-group-item list-group-item-action ">
+                            <div class="emp_option_list_box">
+                                <input type="checkbox" v-model="day.val">                        
+                                <div class="fw-bold"> [[ day.day ]] </div>
+                            </div>
+                        </div>
                     </div>
+
 
                     <div class="list-group" style="margin-top: 15px">
                         <div v-for="shiftType in shiftType_list" v-on:click="add_preference(shiftType.id)" class="list-group-item list-group-item-action" style="cursor: pointer">

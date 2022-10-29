@@ -143,13 +143,12 @@
             </div>
         </div>
 
-        <table class="table styled-table">
+        <table class="table styled-table" style="overflow: auto;">
             <thead>
             <tr>
                 <th scope="col">Start zmiany</th>
                 <th scope="col">Koniec zmiany</th>
                 <th scope="col">Nazwa</th>
-                <th scope="col">Kolor</th>
                 <th scope="col">Zapotrzebowanie</th>
                 <th scope="col">Aktywne dni</th>
                 <th scope="col">Kolor</th>
@@ -164,8 +163,6 @@
                 <td><input type="time" class="form-control" v-model="shiftType.hour_start"></td>
                 <td><input type="time" class="form-control" v-model="shiftType.hour_end"></td>
                 <td><input type="text" class="form-control" v-model="shiftType.name"></td>
-
-                <td><input type="color" class="form-control" v-model="shiftType.color"></td>
                 <td><input type="number" class="form-control" v-model="shiftType.demand"></td>
 
                 {% comment %} <td><input type="text" class="form-control" v-model="shiftType.active_days"></td> {% endcomment %}
