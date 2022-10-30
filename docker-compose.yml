@@ -1,0 +1,27 @@
+version: "3"
+
+services:
+  db:
+    image: postgres:15
+    volumes:
+      - db_data:/postgresql/data
+    env_file:
+      - .env
+  web:
+    build: 
+      context: .
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+
+volumes:
+  db_data:
+  
