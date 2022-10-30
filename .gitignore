@@ -35,3 +35,6 @@ htmlcov/
 .pytest_cache
 
 *.proto
+
+frontend_tests/node_modules
+frontend_tests/node_modules/

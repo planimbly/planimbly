@@ -28,3 +28,6 @@ htmlcov/
 .pytest_cache
 
 *.proto
+
+frontend_tests/
+frontend_tests
