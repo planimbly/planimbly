@@ -17,4 +17,4 @@ RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 RUN pip install -r requirements_dev.txt
 
-COPY . ./code/
+COPY . .
