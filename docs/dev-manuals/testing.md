@@ -31,8 +31,9 @@ To test the django app use command:
 $ python manage.py test
 ```
 
-## Running a linter
-To run a linter use command:
+
+## Running a python linter
+To run a python linter use command:
 ```console
 $ flake8
 ```
@@ -47,3 +48,43 @@ $ coverage html
 ```
 Coverage report is generated in **./htmlcov/index.html**
 
+## Testing Frontend
+To test frontend, firstly install nodejs (stable - currently v18.12.0)
+```console
+$ node --version
+```
+Then install npm
+```console
+$ npm --version
+```
+
+go to the right directory:
+```console
+$ cd frontend_tests
+```
+if you don't want to update packages run
+```console
+$ npm ci
+```
+if you want to update them, then run
+```console
+$ npm install
+```
+### Testing vue apps
+
+To test the vue app use command:
+```console
+$ npm test
+```
+
+### E2E Testing
+To run e2e test run:
+```console
+$ 
+```
+
+### Running a js linter
+To run a js linter use command:
+```console
+$ 
+```
