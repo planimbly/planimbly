@@ -24,7 +24,7 @@ services:
     env_file:
       - .env
     volumes:
-      - .:/app
+      - .:/code
     depends_on:
       db:
         condition: service_healthy
