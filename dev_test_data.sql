@@ -18,7 +18,9 @@ INSERT INTO organizations_workplace
 VALUES (1, 'Magazyn', 1),
        (2, 'Kasa', 1),
        (3, 'Ochrona', 1),
-       (4, 'Kasa', 2);
+       (4, 'Magazyn', 2),
+       (5, 'Kasa', 2),
+       (6, 'Ochrona', 2);
 
 DELETE
 FROM schedules_shifttype
