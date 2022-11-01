@@ -43,7 +43,7 @@
             <a href="{% url 'units_manage' %}">
                 <img src="{% static 'img/Logo-Main-Big2.svg' %}" alt="Nav logo" class="medium-logo-nav">
             </a>
-            <img v-if="env_stage==='TEST'" src="{%static 'img/TestLabelFrame.svg' %}" alt="Test environment logo">
+            <img v-if="envStage==='TEST'" src="{%static 'img/TestLabelFrame.svg' %}" alt="Test environment logo">
 
             <nav class="right-nav-menu">
 
@@ -117,6 +117,7 @@
             data() {
                 return {
                     isSidebarHidden: false,
+                    envStage: '{{env_stage}}'
                 }
             },
             computed: {
