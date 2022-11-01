@@ -15,10 +15,14 @@ RUN apt-get update && apt-get install -y \
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
-RUN groupadd -r app && useradd --no-log-init -r -g app app
-RUN chown -R app:app .
+#RUN groupadd -r app && useradd --no-log-init -r -g app app
 
-RUN mkdir staticfiles
-RUN chmod -R 600 staticfiles
+RUN mkdir -p /code/staticfiles
+RUN mkdir -p /code/mediafiles
 
-USER app
+#RUN chown -R app:app /code
+#RUN chmod 700 /code/manage.py
+#RUN chmod -R 755 /code/staticfiles
+#RUN chmod -R 755 /code/mediafiles
+
+#USER app
