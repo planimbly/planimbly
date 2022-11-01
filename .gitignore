@@ -38,3 +38,8 @@ htmlcov/
 
 frontend_tests/node_modules
 frontend_tests/node_modules/
+
+staticfiles
+staticfiles/
+mediafiles
+mediafiles/
