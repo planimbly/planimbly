@@ -26,7 +26,8 @@ SECRET_KEY = env.str("SECRET_KEY", default='7^j)k2u*-6-omh)u2f#n@yldbnd=82@vvg5&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DEBUG", default=False)
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'planimbly.herokuapp.com']
+#ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'planimbly.herokuapp.com']
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 
 # Application definition
 
@@ -169,6 +170,7 @@ CRISPY_TEMPLATE_PACK = 'bootstrap'
 
 VUE2_CDN = 'https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js'
 VUE3_CDN = 'https://unpkg.com/vue@3.2.37/dist/vue.global.prod.js'
+ENV_STAGE = env.str("ENV_STAGE", default='').upper()
 
 if DEBUG:
     import mimetypes
