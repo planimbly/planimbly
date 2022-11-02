@@ -16,9 +16,8 @@
 """Creates a shift scheduling problem and solves it."""
 
 import calendar
-from datetime import datetime, timedelta
-
 import operator
+from datetime import datetime, timedelta
 
 from absl import app, flags
 from google.protobuf import text_format
@@ -781,8 +780,7 @@ def get_letter_for_weekday(day: int):
             return None
 
 
-def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workplaces):
-
+def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workplaces, emp_prefences, emp_absences):
     workplace = Workplace.objects.all().first()
 
     active_days = '1111111'

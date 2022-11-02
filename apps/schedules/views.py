@@ -2,6 +2,7 @@
 import calendar
 import datetime
 
+from django.db.models import Q
 from django.views.generic import TemplateView
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
@@ -102,8 +103,20 @@ class ScheduleCreateApiView(APIView):
 
         employee_list = Employee.objects.filter(user_workplace__in=workplace_query).distinct().order_by('id')
 
+        preferences = Preference.objects.filter(employee__in=employee_list)
+        absences = Absence.objects.filter(employee__in=employee_list).filter(
+            Q(start__month=month) | Q(end__month=month))
+
+        emp_preferences = {}
+        for preference in preferences:
+            emp_preferences.setdefault(preference.employee.id, []).append(preference)
+
+        emp_absences = {}
+        for absence in absences:
+            emp_absences.setdefault(absence.employee.id, []).append(absence)
+
         data = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month,
-                                                    emp_for_workplaces)
+                                                    emp_for_workplaces, emp_preferences, emp_absences)
         for shift in data:
             shift.save()
         return Response()
@@ -118,14 +131,29 @@ class ScheduleGetApiView(APIView):
         month = self.request.GET.get('month')
         date_format = '%Y-%m-%d'
         if year and month:
-            workplace = Workplace.objects.filter(id=workplace_pk).first()
+            workplace = Workplace.objects.get(id=workplace_pk)
+            unit = workplace.workplace_unit
             shifts = Shift.objects.filter(schedule__workplace=workplace).filter(schedule__month=month).filter(
                 schedule__year=year).order_by('date')
+            shifts_statistic = Shift.objects.filter(schedule__workplace__workplace_unit=unit).filter(
+                schedule__month=month).filter(schedule__year=year).order_by('date')
             days_num = calendar.monthrange(int(year), int(month))[1]
             days = {}
+            statistics = {}
+
             for x in range(1, days_num + 1):
                 date = datetime.date(int(year), int(month), x).strftime(date_format)
                 days.update({date: []})
+
+            for shift in shifts_statistic:
+                shift_len = datetime.datetime.combine(datetime.date.min, shift.shift_type.hour_end) - \
+                            datetime.datetime.combine(datetime.date.min, shift.shift_type.hour_start)
+                statistics.setdefault(shift.employee.id, {
+                    'hours': 0,
+                    'name': shift.employee.first_name + ' ' + shift.employee.last_name,
+                    'jobtime': shift.employee.job_time})
+                statistics[shift.employee.id]['hours'] += shift_len.seconds / 3600
+
             for shift in shifts:
                 days[shift.date.strftime(date_format)].append((
                     {
@@ -141,10 +169,12 @@ class ScheduleGetApiView(APIView):
                         }
                     }
                 ))
+
             response = {
                 'unit_id': workplace.workplace_unit.id,
                 'workplace_id': workplace_pk,
-                'days': days
+                'days': days,
+                'statistics': statistics
             }
             return Response(data=response)
         else:
@@ -160,7 +190,8 @@ class ShiftManageApiView(APIView):
         shift_type = self.request.data.get("Shift_type")
         workplace = self.request.data.get("Workplace")
         if date and employee and shift_type and workplace:
-            schedule = Schedule.objects.filter(year=date.year).filter(month=date.month).filter(workplace=workplace).first()
+            schedule = Schedule.objects.filter(year=date.year).filter(month=date.month).filter(
+                workplace=workplace).first()
             shift_type = ShiftType.objects.filter(pk=shift_type).first()
             employee = Employee.objects.filter(pk=employee).first()
             if not shift_type or not employee:
