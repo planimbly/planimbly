@@ -79,12 +79,19 @@
                                         <label for="inputSurname">Nazwisko</label>
                                     </div>
                                 </div>
+                                <div class="col-6">
+                                    <div class="form-floating">
+                                        <input type="checkbox" v-model="is_supervisor" id="inputSupervisor">
+                                        <label for="inputSupervisor">Kierownik</label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <div class="modal-footer">
                             <button type="submit" class="btn btn-outline-primary">Dodaj</button>
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Zamknij</button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Zamknij
+                            </button>
                         </div>
                     </form>
 
@@ -103,6 +110,7 @@
                 <th scope="col">Login</th>
                 <th scope="col">Imię</th>
                 <th scope="col">Nazwisko</th>
+                <th scope="col">Kierownik</th>
                 <th scope="col">Zarządzaj</th>
                 <th scope="col">Zapisz</th>
                 <th scope="col">Usuń</th>
@@ -115,6 +123,7 @@
                 <td><input type="text" class="form-control" v-model="employee.username"></td>
                 <td><input type="text" class="form-control" v-model="employee.first_name"></td>
                 <td><input type="text" class="form-control" v-model="employee.last_name"></td>
+                <td><input type="checkbox" v-model="employee.is_supervisor"></td>
                 <td>
                     <a v-bind:href="return_reference_url(employee.id)">
                         <button type="button" class="btn btn-primary table-buttons">
@@ -149,6 +158,7 @@
                     username: '',
                     first_name: '',
                     last_name: '',
+                    is_supervisor: false,
                     employee_list: null,
                     response: null,
                     base_url: '{% url 'employee-list' %}',
@@ -178,7 +188,8 @@
                                     .post(this.base_url,
                                         {
                                             email: this.email, username: this.username,
-                                            first_name: this.first_name, last_name: this.last_name
+                                            first_name: this.first_name, last_name: this.last_name,
+                                            is_supervisor: this.is_supervisor
                                         }
                                     )
                                     .then(
@@ -238,7 +249,8 @@
                                             email: this.employee_list[i].email,
                                             username: this.employee_list[i].username,
                                             first_name: this.employee_list[i].first_name,
-                                            last_name: this.employee_list[i].last_name
+                                            last_name: this.employee_list[i].last_name,
+                                            is_supervisor: this.employee_list[i].is_supervisor
                                         }
                                     )
                                     .then(
