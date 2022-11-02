@@ -16,41 +16,71 @@
 {% block content %}
     <div id="vue-app">
 
-        <form id="schedule_form" v-on:submit.prevent="create_absence">
-            {% csrf_token %}
-            <input type="date" class="form-control" v-model="start" required>
-            <input type="date" class="form-control" v-model="end" required>
-            <select class="form-control" v-model="type" required>
-                {% for absence in absence_type %}
-                    <option value="{{ absence.0 }}">{{ absence.1 }}</option>
-                {% endfor %}
-            </select>
-            <select class="form-control" v-model="employee_id">
-                <option v-for="employee in employee_list" :value="employee.id">
-                    [[employee.first_name]] [[employee.last_name]]
-                </option>
-            </select>
-            <input type="number" class="form-control" v-model="hours_number" required>
-            <input type="submit" value="Zapisz">
-        </form>
+        <div class="modal fade" id="createAbsenceModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                          <h5 class="modal-title">Wybierz jednostkę</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        
+                        <form id="schedule_form" v-on:submit.prevent="create_absence">
+                            {% csrf_token %}
+                            <div class="form-floating" style="margin-bottom: 10px">
+                                <input type="date" class="form-control" v-model="start" id="inputDateStart" placeholder="Początek nieobecności" required>
+                                <label for="inputDateStart">Początek nieobecności</label>
+                            </div>
+                            <div class="form-floating" style="margin-bottom: 10px">
+                                <input type="date" class="form-control" v-model="end" id="inputDateEnd" placeholder="Koniec nieobecności" required>
+                                <label for="inputDateEnd">Koniec nieobecności</label>
+                            </div>
+
+                            <div class="form-floating" style="margin-bottom: 10px">
+                                <input type="number" class="form-control" v-model="hours_number" id="inputHours" placeholder="Koniec nieobecności" required>
+                                <label for="inputHours">Liczba godzin</label>
+                            </div>
+                            
+                            <select class="form-select" v-model="type" style="margin-bottom: 10px" required>
+                                <option value="" disabled selected hidden>Wybierz typ nieobecności</option>
+                                {% for absence in absence_type %}
+                                    <option value="{{ absence.0 }}">{{ absence.1 }}</option>
+                                {% endfor %}
+                            </select>
+                            <select class="form-select" v-model="employee_id" style="margin-bottom: 10px">
+                                <option :value="null" disabled hidden>Wybierz pracownika</option>
+                                <option v-for="employee in employee_list" :value="employee.id">
+                                    [[employee.first_name]] [[employee.last_name]]
+                                </option>
+                            </select>
+                            
+                            <input type="submit" value="Zapisz" class="btn btn-outline-success" style="">
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+
+
         <div class="row d-flex justify-content-between align-items-center">
             <div class="col d-flex justify-content-start">
                 <h3 class="content-title">Lista nieobecności</h3>
             </div>
 
             <div class="col d-flex justify-content-end">
-                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal"
-                        data-bs-target="#addEmployeeModal">
-                    Dodaj nieobecność
-                </button>
+                <button data-bs-target="#createAbsenceModal" data-bs-toggle="modal" data-bs-dismiss="modal" 
+                        class="btn btn-outline-success" style="margin-top: 15px; margin-bottom: 15px">Dodaj nieobecność</button> 
             </div>
         </div>
         <table class="table styled-table">
             <thead>
             <tr>
-                <th scope="col">Start</th>
+                <th scope="col">Początek</th>
                 <th scope="col">Koniec</th>
-                <th scope="col">Pracownik</th>
+                <th scope="col">Imie i Nazwisko</th>
                 <th scope="col">Typ</th>
                 <th scope="col">Liczba godzin</th>
                 <th scope="col">Usuń</th>
@@ -60,7 +90,7 @@
             <tr v-for="(absence, i) in absence_list" :key="absence.id">
                 <td>[[absence.start]]
                 <td>[[absence.end]]</td>
-                <td>[[absence.employee_obj.username]]</td>
+                <td>[[absence.employee_obj.first_name]] [[absence.employee_obj.last_name]]</td>
                 <td>[[absence.type]]</td>
                 <td>[[absence.hours_number]]</td>
                 <td>

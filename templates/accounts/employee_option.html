@@ -48,11 +48,13 @@
                 <div v-for="unit in employee_info.user_unit" :key="unit.id" class="list-group-item list-group-item-action position-static">
                     <div class="emp_option_table_box">
                         <div>[[ unit.name ]]</div>
-                        <button v-on:click="remove_unit_for_employee(unit.id, unit.name)" class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
+                        <button v-on:click="remove_unit_for_employee(unit.id, unit.name)" 
+                                class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
                     </div>
                 </div>  
             </div> 
-            <button data-bs-target="#pickUnitForEmployee" data-bs-toggle="modal" data-bs-dismiss="modal" class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj</button>                 
+            <button data-bs-target="#pickUnitForEmployee" data-bs-toggle="modal" data-bs-dismiss="modal" 
+                    class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj</button>                 
         </div>
 
         <div>
@@ -62,11 +64,13 @@
                     <div class="emp_option_table_box">
                         <div>[[ workplace.name ]]</div>
                         <div>[[ get_unit_name(workplace) ]]</div>
-                        <button v-on:click="remove_workplace_for_employee(workplace.id, workplace.name)" class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
+                        <button v-on:click="remove_workplace_for_employee(workplace.id, workplace.name)" 
+                                class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
                     </div>
                 </div>
             </div>
-            <button data-bs-target="#pickWorkplaceForEmployee" data-bs-toggle="modal" data-bs-dismiss="modal" class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj</button> 
+            <button data-bs-target="#pickWorkplaceForEmployee" data-bs-toggle="modal" data-bs-dismiss="modal" 
+                    class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj</button> 
         </div>
         
         <div>
@@ -75,11 +79,13 @@
                 <div v-for="preference in preferences_list" :key="preference.id" class="list-group-item list-group-item-action position-static">
                     <div class="emp_option_table_box">
                         <div>ID: [[ preference.shift_type ]] [[ st_list_to_text(st_numbers_to_list(preference.active_days)) ]]</div>
-                        <button v-on:click="remove_preference(preference.id)" class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
+                        <button v-on:click="remove_preference(preference.id)" class="material-icons" 
+                                style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
                     </div>
                 </div>
             </div>
-            <button data-bs-target="#addPreferenceModal" data-bs-toggle="modal" data-bs-dismiss="modal" class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj</button> 
+            <button data-bs-target="#addPreferenceModal" data-bs-toggle="modal" data-bs-dismiss="modal" 
+                    class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj</button> 
         </div>
     </div>
 
@@ -93,7 +99,8 @@
                     </div>
                     
                     <div class="list-group">
-                        <div v-for="unit in unit_list" v-on:click="add_unit_for_employee(unit.id, unit.name)" class="list-group-item list-group-item-action" style="cursor: pointer">
+                        <div v-for="unit in unit_list" v-on:click="add_unit_for_employee(unit.id, unit.name)" 
+                             class="list-group-item list-group-item-action" style="cursor: pointer">
                             <div class="fw-bold"> [[ unit.name ]] </div>
                         </div>
                     </div>
@@ -111,13 +118,15 @@
                 </div>
                 <div class="modal-body">
                     <select id="unitSelect" class="form-select" v-model="selected_unit" v-on:change="workplace_list_fetch">
+                        <option :value="null" disabled hidden>Wybierz z listy</option>
                         <option v-for="unit in employee_info.user_unit" :value="unit.id">
                             [[ unit.name ]]
                         </option>
                     </select>
 
                     <div class="list-group" style="margin-top: 15px">
-                        <div v-for="workplace in workplaces_list" v-on:click="add_workplace_for_employee(workplace.id, workplace.name)" class="list-group-item list-group-item-action" style="cursor: pointer">
+                        <div v-for="workplace in workplaces_list" v-on:click="add_workplace_for_employee(workplace.id, workplace.name)" 
+                             class="list-group-item list-group-item-action" style="cursor: pointer">
                             <div class="fw-bold">[[ workplace.name ]]</div>
                         </div>
                     </div>
@@ -130,7 +139,7 @@
         <div class="modal-dialog modal-dialog-scrollable" style="max-width: 800px">
             <div class="modal-content">
                 <div class="modal-header">
-                      <h5 class="modal-title">Wybierz jednostkę</h5>
+                      <h5 class="modal-title">Tworzenie preferencji</h5>
                       <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -144,6 +153,7 @@
                     <h5 class="modal-title" style="margin-bottom: 15px">Wybierz dział</h5>
 
                     <select id="workplaceSelect" class="form-select" v-model="selected_workplace" v-on:change="shiftType_list_fetch">
+                        <option :value="null" disabled hidden>Wybierz z listy</option>
                         <option v-for="workplace of employee_info.user_workplace" :value="workplace.id">
                             <div class="fw-bold">[[ workplace.name ]]: [[  get_unit_name(workplace) ]]</div>
                         </option>
@@ -160,7 +170,8 @@
 
 
                     <div class="list-group" style="margin-top: 15px">
-                        <div v-for="shiftType in shiftType_list" v-on:click="add_preference(shiftType.id)" class="list-group-item list-group-item-action" style="cursor: pointer">
+                        <div v-for="shiftType in shiftType_list" v-on:click="add_preference(shiftType.id)" 
+                             class="list-group-item list-group-item-action" style="cursor: pointer">
                             <div class="fw-bold"> [[ shiftType.name ]]: [[ shiftType.hour_start ]] - [[ shiftType.hour_end ]] </div>
                         </div>
                     </div>                   
