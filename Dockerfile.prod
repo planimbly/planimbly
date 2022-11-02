@@ -5,8 +5,7 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /code
 
-COPY requirements.txt /code/
-COPY requirements_dev.txt /code/
+COPY . .
 
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -15,6 +14,15 @@ RUN apt-get update && apt-get install -y \
 
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
-RUN pip install -r requirements_dev.txt
 
-COPY . .
+#RUN groupadd -r app && useradd --no-log-init -r -g app app
+
+RUN mkdir -p /code/staticfiles
+RUN mkdir -p /code/mediafiles
+
+#RUN chown -R app:app /code
+#RUN chmod 700 /code/manage.py
+#RUN chmod -R 755 /code/staticfiles
+#RUN chmod -R 755 /code/mediafiles
+
+#USER app
