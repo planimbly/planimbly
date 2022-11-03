@@ -90,8 +90,12 @@
         <div>
             Statystyki dla jednostki
             <ul>
-                <li v-for="stat in statistics">[[ stat.name ]] [[ stat.hours ]]/[[ stat.jobtime ]]</li>
+                <li v-for="stat in statistics">[[ stat.name ]] [[ stat.hours ]]/[[ stat.jobtime ]]
+                    <span v-for="(type, index) in stat.shift_type">[[ index ]]:[[ type ]] &nbsp;</span>
+                </li>
+
             </ul>
+
         </div>
         <div class="modal fade" id="generateScheduleModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered modal-lg">
