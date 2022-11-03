@@ -1,1 +1,1 @@
-web: gunicorn planimbly.wsgi
+web: python manage.py migrate --no-input && gunicorn planimbly.wsgi
