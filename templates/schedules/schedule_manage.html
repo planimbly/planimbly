@@ -87,7 +87,12 @@
         </work-calendar>
 
             {#    END/added calendar#}
-
+        <div>
+            Statystyki dla jednostki
+            <ul>
+                <li v-for="stat in statistics">[[ stat.name ]] [[ stat.hours ]]/[[ stat.jobtime ]]</li>
+            </ul>
+        </div>
         <div class="modal fade" id="generateScheduleModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered modal-lg">
                 <div class="modal-content">
@@ -194,13 +199,14 @@
                     selected_workplace: null,
                     create_schedule_url: '{% url 'schedule_create' %}',
                     year: new Date().getFullYear(),
-                    month: new Date().getMonth()+1,
+                    month: new Date().getMonth() + 1,
                     year_cal: new Date().getFullYear(),
-                    month_cal: new Date().getMonth()+1,
+                    month_cal: new Date().getMonth() + 1,
                     checked_workplace: [],
                     loading: false,
                     available_workers: null,
                     available_shift_types: null,
+                    statistics: null,
                     shift_types_for_each_workplace: [],
                     month_labels: [
                         {id: 1, name: 'Styczeń'},
@@ -255,6 +261,8 @@
                         .get(this.base_url, {params: {'year': this.year_cal, 'month': this.month_cal}})
                         .then(response => {
                                 this.fetched_schedule = response.data;
+                                this.statistics = response.data['statistics']
+                                console.log(this.statistics)
                             }
                         );
                     axios

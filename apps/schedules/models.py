@@ -30,6 +30,9 @@ class Preference(models.Model):
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, verbose_name="Pracownik")
     active_days = models.TextField(verbose_name="Aktywne dni")
 
+    def __str__(self):
+        return self.shift_type.name + ' ' + self.employee.username
+
 
 class Shift(models.Model):
     date = models.DateField(verbose_name='Data zmiany')

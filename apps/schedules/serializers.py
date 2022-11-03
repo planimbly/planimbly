@@ -15,18 +15,23 @@ class ShiftTypeSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class PreferenceSerializer(serializers.ModelSerializer):
-    def validate(self, data):
-        """Check if user in shift_type workplace"""
-        if data['shift_type'].workplace not in data['employee'].user_workplace.all():
-            raise serializers.ValidationError("User is not assigned to workplace")
-        return data
-
     class Meta:
         model = Preference
         fields = ['id', 'shift_type', 'employee', 'active_days']
         extra_kwargs = {
             'id': {'read_only': True}
         }
+
+    def validate(self, data):
+        """Check if user in shift_type workplace"""
+        if data['shift_type'].workplace not in data['employee'].user_workplace.all():
+            raise serializers.ValidationError("User is not assigned to workplace")
+        return data
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['shift_type_obj'] = ShiftTypeSerializer(ShiftType.objects.get(pk=data['shift_type'])).data
+        return data
 
 
 class AbsenceSerializer(serializers.ModelSerializer):

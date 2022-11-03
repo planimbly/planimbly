@@ -16,9 +16,8 @@
 """Creates a shift scheduling problem and solves it."""
 
 import calendar
-from datetime import datetime, timedelta
-
 import operator
+from datetime import datetime, timedelta
 
 from absl import app, flags
 from google.protobuf import text_format
@@ -36,7 +35,7 @@ flags.DEFINE_string('params', 'max_time_in_seconds:30.0',
 
 
 def negated_bounded_span(works, start, length):
-    """Filters an isolated sub-sequence of variables assined to True.
+    """Filters an isolated sub-sequence of variables assigned to True.
 
   Extract the span of Boolean variables [start, start + length), negate them,
   and if there is variables to the left/right of this span, surround the span by
@@ -335,7 +334,7 @@ def get_shift_work_time(shift_type: ShiftType):
     return work_time.seconds // 60
 
 
-def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Employee], shift_types: list[ShiftType], year: int,
+def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, schedule_dict, employees: list[Employee], shift_types: list[ShiftType], year: int,
                            month: int, params, output_proto):
     """Solves the shift scheduling problem."""
 
@@ -343,26 +342,25 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
 
     # TODO: zrobić z employees listę 2D, która oprócz ID będzie zawierała manualnie przypisane zmiany i preferencje pracownika
     # Fixed assignment: (employee, shift, day).
-    # This fixes the first 2 days of the schedule.
     fixed_assignments = []
-    """ [
-        (0, 0, 0),
-        (1, 0, 0),
-        (2, 1, 0),
-        (3, 1, 0),
-        (4, 2, 0),
-        (5, 2, 0),
-        (6, 2, 3),
-        (7, 3, 0),
-        (0, 1, 1),
-        (1, 1, 1),
-        (2, 2, 1),
-        (3, 2, 1),
-        (4, 2, 1),
-        (5, 0, 1),
-        (6, 0, 1),
-        (7, 3, 1),
-    ]"""
+
+    # below prepared data extraction from backend
+    # for key in emp_preferences:
+    #     for preference in emp_preferences[key]:
+    #         print("Employee id:", key)
+    #         print("Unit:", preference.shift_type.workplace.workplace_unit, "ID:", preference.shift_type.workplace.workplace_unit.pk)
+    #         print("Workplace:", preference.shift_type.workplace, "ID:", preference.shift_type.workplace.pk)
+    #         print("Active_days:", preference.active_days)
+
+    # adding absences to fixed_assignments (just including them)
+
+    for key in emp_absences:
+        for absence in emp_absences[key]:
+            for i in range((absence.end - absence.start).days + 1):
+                inter_date = absence.start + timedelta(days=i)
+                if month == inter_date.month:
+                    fixed_assignments.append((absence.employee, 0, inter_date.day))
+                    employees_absences[absence.employee.pk] += 1
 
     # TODO: zrobić z employees listę 2D, która oprócz ID będzie zawierała manualnie przypisane zmiany i preferencje pracownika
     # Request: (employee, shift, day, weight)
@@ -494,21 +492,67 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
 
     # TODO: Calculate constraints on free shifts based on job times
     job_times = sorted(set(e.job_time for e in employees), reverse=True)
-    desired_free_shifts = {jt: 0 for jt in job_times}
+    job_times_emp_num = {jt: 0 for jt in job_times}
 
-    for jt in desired_free_shifts:
-        desired_free_shifts[jt] = sum(e.job_time == jt for e in employees)
+    for jt in job_times_emp_num:
+        job_times_emp_num[jt] = sum(e.job_time == jt for e in employees)
 
-    print(desired_free_shifts)
+    print(job_times_emp_num)
     print(num_shifts_by_time)
     print("total hours: %d" % total_hours)
     print("total job time: %d" % total_job_time)
     print("job time multiplier: %f" % job_time_multiplier)
 
+    desired_emp_num_shifts = dict()
+
+    for e in employees:
+        desired_emp_num_shifts[e] = 0
+        # TODO: use num_shifts_by_time with 12-hours shifts
+
+        # MUSIMY OGARNĄĆ, CO SIĘ STANIE, GDY KOGOŚ NIE MA ZA DUŻO CZASU
+
+        if job_time_multiplier >= 1:
+            if e.job_time >= 160:
+                num_shifts_by_time[8] -= e.job_time // 8
+                continue
+
+        desired_work_time = e.job_time * job_time_multiplier
+        if desired_work_time > 160:
+            desired_work_time = 160
+        desired_emp_num_shifts[e] = (desired_work_time // 8)
+        num_shifts_by_time[8] -= desired_emp_num_shifts[e]
+
+    temp = dict()
+    for key in desired_emp_num_shifts:
+        if desired_emp_num_shifts[key] < 20:
+            temp[key] = desired_emp_num_shifts[key]
+
+    if not temp:
+        temp = desired_emp_num_shifts
+
+
+
+
+
+        # candidates = [[e, s, d] for e in employees if solver.BooleanValue(work[e.pk, s, d])]
+        #
+        # candidates = sorted(sorted(candidates, key=lambda x: x[0].job_time, reverse=True),
+        #                     key=lambda x: work_time[x[0].pk] // 60 - x[0].job_time)
+
+    while num_shifts_by_time[8] > 0:
+        # sortujesz dicta, żeby najmniejsi byli na początku
+        # dajesz najmniejszemy zmianę
+        # odejmujesz z dicta
+        pass
+
+
     # Monthly sum constraints
     # This is used to maintain balance between employees desired work time
     # for ct in monthly_sum_constraints:
     #     shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = ct
+
+    # TODO: sprawdzanie num_shifts_by_time,czy nie ma jakiejś dziwnej wartości
+
     for e in employees:
         if e.job_time >= 160:
             # pełen etat
@@ -516,9 +560,15 @@ def solve_shift_scheduling(emp_for_workplaces, schedule_dict, employees: list[Em
         elif e.job_time < 120:
             # 1/2 etatu
             shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = 0, 7, 15, 20, 16, 18, 4
-        elif e.job_time >= 120 and e.job_time < 160:
+        elif 120 <= e.job_time < 160:
             # 3/4 etatu
             shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = 0, 7, 12, 20, 14, 16, 4
+
+        # if e.job_time >= 160:
+        #     shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = 0, num_optimal_free_shifts - 1, num_optimal_free_shifts - 1, 20, num_optimal_free_shifts + 1, num_optimal_free_shifts + 1, 20
+        # else:
+        #     shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = 0, 5, num_optimal_free_shifts - 1, 20, num_optimal_free_shifts + 1, num_optimal_free_shifts + 1, 20
+        # print("hard_min", hard_min, "soft_min", soft_min, "soft_max", soft_max, "hard_max", hard_max, "max_cost", max_cost)
 
         works = [work[e.pk, shift, d] for d in range(1, num_days + 1)]
         variables, coeffs = add_monthly_soft_sum_constraint(
@@ -781,8 +831,7 @@ def get_letter_for_weekday(day: int):
             return None
 
 
-def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workplaces):
-
+def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workplaces, emp_preferences, emp_absences):
     workplace = Workplace.objects.all().first()
 
     active_days = '1111111'
@@ -801,77 +850,27 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
     global work_time
     work_time = dict()
 
+    global employees_absences
+    employees_absences = dict()
+
     # Only consider employees with set job time
     emp = [e for e in emp if e.job_time != 0]
 
     # Sort employees by their job time
     emp = sorted(emp, key=lambda e: e.job_time, reverse=True)
 
+    # TODO: Only consider absences for considered month (filter data from backend)
+
     for e in emp:
         work_time[e.pk] = 0
+        employees_absences[e.pk] = 0
 
     data = solve_shift_scheduling(emp_for_workplaces,
+                                  emp_preferences,
+                                  emp_absences,
                                   schedule_dict,
                                   emp,  # employee list
                                   shift_types,  # shift type list
                                   year, month,  # date
                                   params='max_time_in_seconds:23.0', output_proto=None)
     return data
-
-
-def main_test_algorithm():
-    year = 2022
-    month = 6
-    emp = Employee.objects.all()
-    workplace = Workplace.objects.all().first()
-    workplace2 = Workplace.objects.all().last()
-    # schedule = Schedule.objects.all().first()
-    active_days = '1111111'
-    schedule_dict = {}
-    schedule_dict.update({workplace.id: Schedule(year=year, month=month, workplace=workplace)})
-    schedule_dict.update({workplace2.id: Schedule(year=year, month=month, workplace=workplace2)})
-    shift_free = ShiftType(hour_start='00:00', hour_end='00:00', name='-', workplace=workplace, active_days=active_days,
-                           is_used=True, is_archive=False)
-    shift_m1 = ShiftType(hour_start='06:00', hour_end='14:00', name='M', workplace=workplace, active_days=active_days,
-                         is_used=True, is_archive=False)
-    shift_a1 = ShiftType(hour_start='14:00', hour_end='22:00', name='A', workplace=workplace, active_days=active_days,
-                         is_used=True, is_archive=False)
-    shift_m2 = ShiftType(hour_start='06:00', hour_end='14:00', name='m', workplace=workplace2, active_days=active_days,
-                         is_used=True, is_archive=False)
-    shift_a2 = ShiftType(hour_start='14:00', hour_end='22:00', name='a', workplace=workplace2, active_days=active_days,
-                         is_used=True, is_archive=False)
-    shift_n = ShiftType(hour_start='22:00', hour_end='06:00', name='N', workplace=workplace, active_days=active_days,
-                        is_used=True, is_archive=False)
-    shift_types = [shift_free, shift_m1, shift_m2, shift_a1, shift_a2, shift_n]
-
-    global work_time    # dict z aktualnie przypisanymi godzinami (kluczem jest pk pracownika)
-    work_time = {}
-
-    for e in emp:
-        work_time[e.pk] = 0
-
-    global emp_workplaces
-    emp_workplaces = {}
-
-    for e in emp:
-        emp_workplaces[e.pk] = [workplace]
-
-    emp_workplaces[18].append(workplace2)
-    emp_workplaces[40].append(workplace2)
-    emp_workplaces[37].append(workplace2)
-    emp_workplaces[19].append(workplace2)
-    emp_workplaces[20].append(workplace2)
-
-    data = solve_shift_scheduling(schedule_dict,
-                                  emp,  # employee list
-                                  shift_types,  # shift type list
-                                  2022, 6,  # date
-                                  params='max_time_in_seconds:30.0', output_proto=None)
-    return data
-
-
-def run(*args):
-    if 'test' in args:
-        app.run(main_test_algorithm())
-    else:
-        app.run(main_algorithm())
