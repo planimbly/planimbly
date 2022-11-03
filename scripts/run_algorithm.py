@@ -367,6 +367,11 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
         ab = [fa[2] for fa in fixed_assignments if fa[0] == e and fa[1] == 0]
         return sum(x in ab for x in list_days)
 
+    def get_employees_absent_days(e : Employee):
+        """ Returns days on which given employee is absent """
+        ab = [fa[2] for fa in fixed_assignments if fa[0] == e and fa[1] == 0]
+        return ab
+
     # Sanitize employee list by absences
     employees = [e for e in employees if num_days > num_emp_absences[e]]
 
@@ -527,6 +532,12 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
         shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = ct
         for e in employees:
             works = [work[e.pk, shift, d] for d in range(1, num_days + 1)]
+            
+            if shift == 0:
+                absences = get_employees_absent_days(e)
+                for ab in absences:
+                    del works[ab]
+
             variables, coeffs = add_soft_sequence_constraint(
                 model, works, hard_min, soft_min, min_cost, soft_max, hard_max,
                 max_cost,
