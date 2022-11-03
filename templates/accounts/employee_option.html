@@ -78,7 +78,7 @@
             <div class="list-group">
                 <div v-for="preference in preferences_list" :key="preference.id" class="list-group-item list-group-item-action position-static">
                     <div class="emp_option_table_box">
-                        <div>ID: [[ preference.shift_type ]] [[ st_list_to_text(st_numbers_to_list(preference.active_days)) ]]</div>
+                        <div>[[ preference.shift_type_obj.name ]] - [[ preference.shift_type_obj.hour_start ]] : [[ preference.shift_type_obj.hour_end]] - [[ st_list_to_text(st_numbers_to_list(preference.active_days)) ]]</div>
                         <button v-on:click="remove_preference(preference.id)" class="material-icons" 
                                 style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
                     </div>
@@ -256,7 +256,7 @@
             },
             methods: {
                 show(){
-                    console.log(this.daylist)
+                    console.log(this.preferences_list)
                 },
                 get_unit_name(workplace) {
                     if (this.employee_info != null){
