@@ -173,17 +173,19 @@
                             Wybierz dni
                         </button>
                         <ul class="dropdown-menu" style="margin-bottom: 50px">
-                            <li v-for="day of daylist"><div class="dropdown-item">
-                                <div class="active_days_dropdown">
-                                    <input type="checkbox" v-model="day.val">                        
-                                    <div class="fw-bold"> [[ day.day_long ]] </div>
+                            <li v-for="day of daylist">
+                                <div class="dropdown-item">
+                                    <div class="active_days_dropdown">
+                                        <input type="checkbox" v-model="day.val">
+                                        <div class="fw-bold"> [[ day.day_long ]]</div>
+                                    </div>
                                 </div>
-                            </div></li>
+                            </li>
                         </ul>
-                    </div>                    
+                    </div>
                 </td>
 
-                <td><input type="color" class="form-control form-control-color" id="colorInput"
+                <td><input type="color" class="form-control form-control-color" v-model="color" id="colorInput"
                            title="Wybierz kolor zmiany wyświetlany w grafiku"></td>
                 <td><input type="checkbox" class="form-check-input" value="" v-model="shiftType.is_used"></td>
                 <td>

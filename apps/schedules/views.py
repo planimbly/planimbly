@@ -136,7 +136,7 @@ class ScheduleGetApiView(APIView):
             shifts = Shift.objects.filter(schedule__workplace=workplace).filter(schedule__month=month).filter(
                 schedule__year=year).order_by('date')
             shifts_statistic = Shift.objects.filter(schedule__workplace__workplace_unit=unit).filter(
-                schedule__month=month).filter(schedule__year=year).order_by('date')
+                schedule__month=month).filter(schedule__year=year).order_by('shift_type__name')
             days_num = calendar.monthrange(int(year), int(month))[1]
             days = {}
             statistics = {}
@@ -151,8 +151,18 @@ class ScheduleGetApiView(APIView):
                 statistics.setdefault(shift.employee.id, {
                     'hours': 0,
                     'name': shift.employee.first_name + ' ' + shift.employee.last_name,
-                    'jobtime': shift.employee.job_time})
+                    'jobtime': shift.employee.job_time,
+                    'shift_type': {},
+                    'absence': {}
+                })
+                statistics[shift.employee.id]['shift_type'].setdefault(shift.shift_type.name, 0)
+                statistics[shift.employee.id]['shift_type'][shift.shift_type.name] += 1
                 statistics[shift.employee.id]['hours'] += shift_len.seconds / 3600
+
+                '''if not statistics[shift.employee.id]['absence']:
+                    absences = Absence.objects.filter(employee=shift.employee).filter(
+                        Q(start__month=month) | Q(end__month=month))
+                    statistics[shift.employee.id]['absence'] = absences'''
 
             for shift in shifts:
                 days[shift.date.strftime(date_format)].append((
