@@ -353,7 +353,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
             for week in list_month:
                 for d in week:
                     if preference.active_days[d[1]] == '1':
-                        requests.append((key, shift_types.index(preference.shift_type), d[0], -2))
+                        requests.append((key, shift_types.index(preference.shift_type), d[0], -1))
 
     # Adding absences to fixed assignments
     for key in emp_absences:
