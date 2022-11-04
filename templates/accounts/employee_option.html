@@ -443,7 +443,7 @@
                 },
                 add_preference(shifttype){
                     swal({
-                        title: "Potwierdź dodanaie preferencji",
+                        title: "Potwierdź dodanie preferencji",
                         icon: "info",
                         buttons: true,
                         dangerMode: false,
@@ -465,7 +465,7 @@
                 },
                 st_numbers_to_list(numbers_str){
                     let day_list = []
-                    let day_blueprint = ['pon', 'wt', 'sr', 'czw', 'pt', 'sob', 'nd']
+                    let day_blueprint = ['pn', 'wt', 'śr', 'cz', 'pt', 'sb', 'nd']
                     let day_blueprint_long = ['poniedziałek', 'wtorek', 'środa', 'czwartek', 'piątek', 'sobota', 'niedziela']
                     for (var i = 0; i < 7; i++){
                         if (numbers_str.charAt(i) == '1') {
