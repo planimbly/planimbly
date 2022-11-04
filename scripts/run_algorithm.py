@@ -19,13 +19,13 @@ import calendar
 import operator
 from datetime import datetime, timedelta
 
-from absl import app, flags
+from absl import flags
 from google.protobuf import text_format
 from ortools.sat.python import cp_model
 
 from apps.accounts.models import Employee
 from apps.organizations.models import Workplace
-from apps.schedules.models import Shift, ShiftType, Schedule
+from apps.schedules.models import Shift, ShiftType
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('output_proto', 'cp_model.proto',
@@ -343,13 +343,17 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
     # Fixed assignment: (employee, shift, day).
     fixed_assignments = []
 
-    # below prepared data extraction from backend
-    # for key in emp_preferences:
-    #     for preference in emp_preferences[key]:
-    #         print("Employee id:", key)
-    #         print("Unit:", preference.shift_type.workplace.workplace_unit, "ID:", preference.shift_type.workplace.workplace_unit.pk)
-    #         print("Workplace:", preference.shift_type.workplace, "ID:", preference.shift_type.workplace.pk)
-    #         print("Active_days:", preference.active_days)
+    # Request: (employee, shift, day, weight)
+    # A negative weight indicates that the employee desire this assignment.
+    requests = []
+
+    # Add shift requests
+    for key in emp_preferences:
+        for preference in emp_preferences[key]:
+            for week in list_month:
+                for d in week:
+                    if preference.active_days[d[1]] == '1':
+                        requests.append((key, shift_types.index(preference.shift_type), d[0], -2))
 
     # Adding absences to fixed assignments
     for key in emp_absences:
@@ -360,33 +364,20 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
                     fixed_assignments.append((absence.employee, 0, inter_date.day))
                     num_emp_absences[absence.employee] += 1
                     print("added absence for emp %i on day %i" % (absence.employee.pk, inter_date.day))
-    
-    def get_num_absences_in_week(week : int, e : Employee):
+
+    def get_num_absences_in_week(week: int, e: Employee):
         """ Returns number of absences for given employee in given week """
         list_days = [x[0] for x in list_month[week]]
         ab = [fa[2] for fa in fixed_assignments if fa[0] == e and fa[1] == 0]
         return sum(x in ab for x in list_days)
 
-    def get_employees_absent_days(e : Employee):
+    def get_employees_absent_days(e: Employee):
         """ Returns days on which given employee is absent """
         ab = [fa[2] for fa in fixed_assignments if fa[0] == e and fa[1] == 0]
         return ab
 
     # Sanitize employee list by absences
     employees = [e for e in employees if num_days > num_emp_absences[e]]
-
-    # Request: (employee, shift, day, weight)
-    # A negative weight indicates that the employee desire this assignment.
-    requests = [
-        # Employee 3 does not want to work on the first Saturday (negative weight
-        # for the Off shift).
-        # (3, 0, 5, -2),
-        # Employee 4 wants a night shift on the second Thursday (negative weight).
-        # (4, 3, 10, -2),
-        # Employee 2 does not want a night shift on the first Friday (positive
-        # weight).
-        # (2, 3, 4, 4)
-    ]
 
     # Shift constraints on continuous sequence :
     #     (shift, hard_min, soft_min, min_penalty,
@@ -472,13 +463,13 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
             desired_work_time = 160
         desired_emp_num_shifts[e] = (desired_work_time // 8)
         num_shifts_by_time[8] -= desired_emp_num_shifts[e]
-        print ("deducted %i shifts" % desired_emp_num_shifts[e])
+        print("deducted %i shifts" % desired_emp_num_shifts[e])
 
     if num_shifts_by_time[8] < 0:
         raise ValueError('Error: num_shifts_by_time < 0')
 
     # TODO: Assign shifts by job_time - work_time diff
-    def assign_leftover_shifts(emp_shift_num : dict):
+    def assign_leftover_shifts(emp_shift_num: dict):
         for esn in emp_shift_num:
             if num_shifts_by_time[8] <= 0:
                 return emp_shift_num
@@ -494,9 +485,9 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
             if desired_emp_num_shifts[e] < (e.job_time - (num_emp_absences[e] * 8)) // 8:
                 temp[e] = desired_emp_num_shifts[e]
         if not temp:
-            desired_emp_num_shifts = assign_leftover_shifts(desired_emp_num_shifts)
+            desired_emp_num_shifts.update(assign_leftover_shifts(desired_emp_num_shifts))
         else:
-            desired_emp_num_shifts = assign_leftover_shifts(temp)
+            desired_emp_num_shifts.update(assign_leftover_shifts(temp))
 
     work = {}
     for e in employees:
@@ -524,7 +515,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
 
     # Employee requests
     for e, s, d, w in requests:
-        obj_bool_vars.append(work[e.pk, s, d])
+        obj_bool_vars.append(work[e, s, d])
         obj_bool_coeffs.append(w)
 
     # Shift constraints
@@ -532,7 +523,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
         shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = ct
         for e in employees:
             works = [work[e.pk, shift, d] for d in range(1, num_days + 1)]
-            
+
             if shift == 0:
                 absences = get_employees_absent_days(e)
                 for ab in absences:
@@ -545,6 +536,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
             obj_bool_vars.extend(variables)
             obj_bool_coeffs.extend(coeffs)
 
+    print(desired_emp_num_shifts)
     # Monthly sum constraints
     # This is used to maintain balance between employees desired work time
     # for ct in monthly_sum_constraints:
@@ -588,15 +580,15 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
                 shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = ct
 
                 # Account for absences
-                num_absences = get_num_absences_in_week(w, e)
-                if num_absences:
-                    print("[weekly constraints] week %i emp %i num_absences %i" % (w, e.pk, num_absences))
-
-                if num_absences == 7:
-                    continue
-                elif num_absences > soft_max:
-                    hard_max = num_absences + 1
-                    soft_max = num_absences
+                if shift == 0:
+                    num_absences = get_num_absences_in_week(w, e)
+                    if num_absences:
+                        print("[weekly constraints] week %i emp %i num_absences %i" % (w, e.pk, num_absences))
+                        if num_absences == 7:
+                            continue
+                        elif num_absences > soft_max:
+                            hard_max = min(num_absences + 1, 7)
+                            soft_max = min(num_absences, 7)
 
                 works = [work[e.pk, shift, d[0]] for d in week]
                 variables, coeffs = add_weekly_soft_sum_constraint(
