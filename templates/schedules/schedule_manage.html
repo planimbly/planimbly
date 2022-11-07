@@ -88,12 +88,23 @@
 
             {#    END/added calendar#}
         <div>
-            Statystyki dla jednostki
+            <h5 style="margin-top: 25px; margin-top: 20px;">Statystyki dla jednostki</h5>
+            <div class="stat_table" style="margin-left: 20px">
+                <div class="stat_box_name"><p style="font-weight: bold; margin-bottom: 5px;">Pracownik</p></div>
+                <div class="stat_box_name" style="width: 160px"><p style="font-weight: bold; margin-bottom: 5px;">Godziny/Etat</p></div>
+                <div class="stat_box_name"><p style="font-weight: bold; margin-bottom: 5px;">Ilość zmian</p></div>
+            </div>
             <ul>
-                <li v-for="stat in statistics">[[ stat.name ]] [[ stat.hours ]]/[[ stat.jobtime ]]
-                    <span v-for="(type, index) in stat.shift_type">[[ index ]]:[[ type ]] &nbsp;</span>
+                <li v-for="stat in statistics">
+                    <div class="stat_table">
+                        <div class="stat_box_name">[[ stat.name ]]</div>
+                        <div class="stat_box">[[ stat.hours ]]/[[ stat.jobtime ]]h</div>
+                        <div class="stat_box">
+                            <span v-for="(type, index) in stat.shift_type">
+                                [[ index ]]:[[ type ]] &nbsp;</span>
+                        </div>
+                    </div>
                 </li>
-
             </ul>
 
         </div>

@@ -7,6 +7,23 @@ html{
     font-family: 'Nunito Sans', sans-serif;
 }
 
+.stat_table{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    border: gray;
+    border-width: 2px;
+}
+
+.stat_box_name{
+    width: 250px;
+}
+
+.stat_box{
+    width: 140px;
+}
+
 .calendar-big{
     margin: 0 auto;
     background-color: #F7F8FA;
