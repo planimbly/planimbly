@@ -91,7 +91,26 @@
 
         <div>
             <h5 style="margin-top: 25px; margin-top: 20px;">Statystyki dla jednostki</h5>
-            <div class="stat_table" style="margin-left: 20px">
+
+            <table class="w-50 table">
+                <thead>
+                  <tr>
+                    <th scope="col">Pracownik</th>
+                    <th scope="col">Godziny/Etat</th>
+                    <th scope="col">Ilość zmian</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="stat in statistics">
+                    <td>[[ stat.name ]]</td>
+                    <td>[[ stat.hours ]]/[[ stat.jobtime ]]h</td>
+                    <td>[[ return_stat_shifts(stat.shift_type) ]]</td>
+                  </tr>
+                </tbody>
+              </table>
+
+
+            {% comment %} <div class="stat_table" style="margin-left: 20px">
                 <div class="stat_box_name"><p style="font-weight: bold; margin-bottom: 5px;">Pracownik</p></div>
                 <div class="stat_box_name" style="width: 160px"><p style="font-weight: bold; margin-bottom: 5px;">Godziny/Etat</p></div>
                 <div class="stat_box_name"><p style="font-weight: bold; margin-bottom: 5px;">Ilość zmian</p></div>
@@ -107,7 +126,8 @@
                         </div>
                     </div>
                 </li>
-            </ul>
+            </ul> {% endcomment %}        
+        
         </div>
 
         <div class="modal fade" id="generateReportModal" tabindex="-1" aria-labelledby="generateReportLabel" aria-hidden="true">
@@ -293,6 +313,16 @@
                 }
             },
             methods: {
+                return_stat_shifts(shift_list) {
+                    let shift_string = ''
+                    for (let shift in shift_list){
+                        shift_string += shift;
+                        shift_string += ':';
+                        shift_string += shift_list[shift];
+                        shift_string += ' '
+                    }
+                    return shift_string;
+                },
                 create_schedule() {
                     this.loading = true
                     axios
