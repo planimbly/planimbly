@@ -2,17 +2,16 @@
 {% load widget_tweaks %}
 {% load static %}
 
-{#START/added calendar#}
 {% block head %}
     <link rel="stylesheet" href="{% static 'css/schedules/schedule.css' %}">
     <script type="application/javascript" src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script type="application/javascript" src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.js"></script>
     <script>
         axios.defaults.xsrfCookieName = 'csrftoken';
         axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
     </script>
 {% endblock head %}
-{#STOP/added calendar#}
 
 {% block content %}
     {% comment %} <nav style aria-label="breadcrumb">
@@ -27,8 +26,9 @@
         <hr class="breadcrumb" style="opacity: 1">
     </nav> {% endcomment %}
     {% if is_any_workplace %}
-    {#    START/added calendar#}
+ 
     <div id="vue-app">
+
         <div class="col d-flex justify-content-start">
             <h3 class="content-title">Grafiki</h3>
         </div>
@@ -61,19 +61,22 @@
                     </option>
                 </select>
             </div>
+
             <div class="col d-flex justify-content-center">
-                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal"
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal"
+                        data-bs-target="#generateReportModal">
+                    Wygeneruj raport
+                </button>
+            </div>
+
+            <div class="col d-flex justify-content-center">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
                         data-bs-target="#generateScheduleModal">
                     Wygeneruj grafik
                 </button>
             </div>
+
         </div>
-        <!-- <hr class="breadcrumb" style="height: 1px;"> -->
-
-        {#        <div id="calendar-filters" class="filter-calendar-container">#}
-        {#            #}
-        {#        </div>#}
-
         <work-calendar v-on:call-rest-api="callApiManualChange"
                 :year="year_cal"
                 :month="month_cal"
@@ -86,7 +89,6 @@
                 :available_shift_types="available_shift_types">
         </work-calendar>
 
-            {#    END/added calendar#}
         <div>
             <h5 style="margin-top: 25px; margin-top: 20px;">Statystyki dla jednostki</h5>
             <div class="stat_table" style="margin-left: 20px">
@@ -106,8 +108,44 @@
                     </div>
                 </li>
             </ul>
-
         </div>
+
+        <div class="modal fade" id="generateReportModal" tabindex="-1" aria-labelledby="generateReportLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel">Wygeneruj raport</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  Ustawienia
+                  [[select_unit.find(unit => unit.id === selected_unit).name]]
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reportModal">Generuj</button>
+                </div>
+              </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportLabel" aria-hidden="true">
+            <div class="modal-dialog modal-fullscreen">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel">Raport</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <schedule-report></schedule-report>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                  <button type="button" class="btn btn-primary">Zapisz do PDF</button>
+                </div>
+              </div>
+            </div>
+        </div>
+
         <div class="modal fade" id="generateScheduleModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered modal-lg">
                 <div class="modal-content">
@@ -186,6 +224,9 @@
                 </div>
             </div>
         </div>
+
+       
+    </div>
     {% else %}
         <span>Brak działów</span>
     {% endif %}
@@ -195,13 +236,15 @@
 {% block vue-content %}
     {% if is_any_workplace %}
         <script type="module">
-            import WorkCalendar from "{% static 'js/components/WorkCalendar.js' %}";
+        import WorkCalendar from "{% static 'js/components/WorkCalendar.js' %}";
+        import ScheduleReport from "{% static 'js/components/ScheduleReport.js' %}";
 
         const {createApp} = Vue
         createApp({
             delimiters: ["[[", "]]"],
             components: {
                 WorkCalendar,
+                ScheduleReport
             },
             data() {
                 return {
