@@ -62,14 +62,12 @@
                 </select>
             </div>
 
-            <div class="col d-flex justify-content-center">
-                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal"
+            <div class="col d-flex justify-content-end">
+                <button type="button" class="btn btn-outline-primary me-2" data-bs-toggle="modal"
                         data-bs-target="#generateReportModal">
                     Wygeneruj raport
                 </button>
-            </div>
 
-            <div class="col d-flex justify-content-center">
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal"
                         data-bs-target="#generateScheduleModal">
                     Wygeneruj grafik
@@ -156,11 +154,13 @@
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                  <schedule-report></schedule-report>
+                  <div ref="reportRef" id="report">
+                    <schedule-report></schedule-report>
+                  </div>
                 </div>
                 <div class="modal-footer">
                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
-                  <button type="button" class="btn btn-primary">Zapisz do PDF</button>
+                  <button type="button" class="btn btn-primary" v-on:click="printToPdf">Zapisz do PDF</button>
                 </div>
               </div>
             </div>
@@ -259,12 +259,19 @@
         import WorkCalendar from "{% static 'js/components/WorkCalendar.js' %}";
         import ScheduleReport from "{% static 'js/components/ScheduleReport.js' %}";
 
-        const {createApp} = Vue
+        const {ref, createApp} = Vue
         createApp({
             delimiters: ["[[", "]]"],
             components: {
                 WorkCalendar,
                 ScheduleReport
+            },
+            setup() {
+                const reportRef = ref(null);
+                
+                return {
+                    reportRef
+                }
             },
             data() {
                 return {
@@ -313,6 +320,9 @@
                 }
             },
             methods: {
+                printToPdf(){
+                    html2pdf().from(document.getElementById('report')).save();
+                },
                 return_stat_shifts(shift_list) {
                     let shift_string = ''
                     for (let shift in shift_list){

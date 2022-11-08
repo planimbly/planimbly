@@ -12,21 +12,7 @@ export default {
     },
     
     methods:{
-      printToPdf(){
-        alert(this.$refs.report.innerText);
-        var mywindow = window.open("", "PRINT", 
-                "height=400,width=600");
-  
-        mywindow.document.write(this.$refs.report.innerHTML);
-  
-        mywindow.document.close();
-        mywindow.focus();
-  
-        mywindow.print();
-        mywindow.close();
-  
-        return true;
-      }
+
     },
 
     computed:{
@@ -34,9 +20,36 @@ export default {
     },
 
     template: `
-    <button type="button" class="btn btn-primary" @click="printToPdf">DO PDF</button>
-    <div ref='report'>
-        <h1>Hello world</h1>
-    </div>
-    `
+    <div style="margin: 1rem;">
+        <table class="table table-success table-striped">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">First</th>
+              <th scope="col">Last</th>
+              <th scope="col">Handle</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">1</th>
+              <td>Mark</td>
+              <td>Otto</td>
+              <td>@mdo</td>
+            </tr>
+            <tr>
+              <th scope="row">2</th>
+              <td>Jacob</td>
+              <td>Thornton</td>
+              <td>@fat</td>
+            </tr>
+            <tr>
+              <th scope="row">3</th>
+              <td colspan="2">Larry the Bird</td>
+              <td>@twitter</td>
+            </tr>
+          </tbody>
+        </table>
+  </div>
+  `
 }
