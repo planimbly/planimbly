@@ -1,5 +1,3 @@
-# To run main_test_algorithm use: python manage.py runscript run_algorithm --script-args test
-
 # !/usr/bin/env python3
 # Copyright 2010-2021 Google LLC
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +13,6 @@
 # limitations under the License.
 """Creates a shift scheduling problem and solves it."""
 
-import calendar
 import operator
 from datetime import datetime, timedelta
 
@@ -26,6 +23,9 @@ from ortools.sat.python import cp_model
 from apps.accounts.models import Employee
 from apps.organizations.models import Workplace
 from apps.schedules.models import Shift, ShiftType
+
+from scripts.helpers import flatten, get_month_by_weeks, get_letter_for_weekday
+from scripts.context import Context, EmployeeInfo
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('output_proto', 'cp_model.proto',
@@ -255,105 +255,21 @@ def add_monthly_soft_sum_constraint(model, works, hard_min, soft_min, min_cost,
 
     return cost_variables, cost_coefficients
 
-
-def get_month_by_weeks(year: int, month: int):
-    """Returns list of lists containing days of given month
-
-    Sublists contain days of given week (the last element of every sublist is either a sunday or the last day of the month)
-
-    Days are stored in a tuple:
-    day - (day, weekday)
-    """
-    cal = calendar.Calendar()
-    x = cal.monthdays2calendar(year, month)
-    x = [list(filter(lambda item: item[0] != 0, week)) for week in x]
-    return x
-
-
-def flatten(t: list):
-    return [item for sublist in t for item in sublist]
-
-
-# NOTE: * kiedyś może trzeba będzie poeksperymentować z karami za nocki, lub damy ustawić to użytkownikowi
-#       * na razie to działa poprawnie tylko w przypadku gdy jest tylko jedna nocna zmiana
-# TODO: przerobić funkcję do weekly constraintów żeby mogła przyjmować sumę shiftów
-def find_overnight_shifts(shifts: list[ShiftType]):
-    """Determines which shifts are happening overnight
-    Returns a tuple of given structure for each overnight shift constraint:
-    (shift, hard_min, soft_min, min_penalty,
-            soft_max, hard_max, max_penalty)
-    """
-    sc = []
-    wsc = []
-    for i in range(1, len(shifts)):
-        start = shifts[i].hour_start.hour
-        end = shifts[i].hour_end.hour
-        if end < start:
-            print(f"Found overnight shift: {shifts[i].name}")
-            # between 2 and 3 consecutive days of night shifts, 1 and 4 are possible but penalized.
-            sc.append((i, 1, 2, 20, 3, 4, 5))
-            # At least 1 night shift per week (penalized). At most 4 (hard).
-            wsc.append((i, 0, 1, 3, 4, 4, 0))
-    return sc, wsc
-
-
-# TODO: opracować ustawianie kar za nieoptymalne (???) przejścia
-def find_illegal_transitions(shifts: list[ShiftType]):
-    """Finds illegal transitions between shift types
-    Returns a list of tuples of given structure:
-    (i, j, p)
-    i - index of shift that is transitioning to 'j'
-    j - index of shift that 'i' transitions to
-    p - penalty of transition between shift 'i' to shift 'j'
-    """
-    it = []
-    for i in range(1, len(shifts)):
-        i_start = datetime.strptime("1970-01-01" + shifts[i].hour_start.strftime('%H:%M'), "%Y-%m-%d%H:%M")
-        i_delta = datetime.strptime(shifts[i].hour_end.strftime('%H:%M'), "%H:%M") - datetime.strptime(
-            shifts[i].hour_start.strftime('%H:%M'), "%H:%M")
-        min = i_delta.seconds // 60
-        # print(f"{shifts[i].name} working time: {h}")
-        i_end = i_start + timedelta(minutes=min)  # do all of above in case of overnight shifts
-        for j in range(1, len(shifts)):
-            if i == j:
-                continue
-            j_start = datetime.strptime("1970-01-02" + shifts[j].hour_start.strftime('%H:%M'), "%Y-%m-%d%H:%M")
-            dt = j_start - i_end
-            dt = int(dt.total_seconds() // 60)
-            # print(f"dt between {shifts[i].name} and {shifts[j].name} is {dt}")
-            # print(f"{i_end} to {j_start}")
-            if dt < (11 * 60):  # break between i and j is below 11 hours
-                print(f"Found illegal transition: {shifts[i].name} to {shifts[j].name}")
-                it.append((i, j, 0))
-    return it
-
-
-# TODO: zmienić wszystkie jednostki czasu pracy z godzin na minuty (np. w przypadku połówek godzin)
-def get_shift_work_time(shift_type: ShiftType):
-    work_time = datetime.strptime(shift_type.hour_end.strftime('%H:%M'), "%H:%M") - datetime.strptime(shift_type.hour_start.strftime('%H:%M'), "%H:%M")
-    return work_time.seconds // 60
-
-
 def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, schedule_dict, employees: list[Employee], shift_types: list[ShiftType], year: int,
                            month: int, params, output_proto):
     """Solves the shift scheduling problem."""
 
-    num_shifts = len(shift_types)
+    emp_info = [EmployeeInfo(e,
+                             [wp for wp in emp_for_workplaces if e in emp_for_workplaces[wp]],
+                             emp_preferences[e.pk],
+                             emp_absences[e.pk])
+                             for e in employees]
 
-    # Fixed assignment: (employee, shift, day).
-    fixed_assignments = []
+    for e in emp_info:
+        print(e)
 
-    # Request: (employee, shift, day, weight)
-    # A negative weight indicates that the employee desire this assignment.
-    requests = []
-
-    # Add shift requests
-    for key in emp_preferences:
-        for preference in emp_preferences[key]:
-            for week in list_month:
-                for d in week:
-                    if preference.active_days[d[1]] == '1':
-                        requests.append((key, shift_types.index(preference.shift_type), d[0], -1))
+    ctx = Context(emp_info, shift_types, year, month)
+    print(ctx.requests)
 
     # Adding absences to fixed assignments
     for key in emp_absences:
@@ -490,10 +406,10 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
             desired_emp_num_shifts.update(assign_leftover_shifts(temp))
 
     work = {}
-    for e in employees:
-        for s in range(num_shifts):
+    for ei in ctx.employees:
+        for s in ctx.shift_types:
             for d in range(1, num_days + 1):
-                work[e.pk, s, d] = model.NewBoolVar('work%i_%i_%i' % (e.pk, s, d))
+                work[ei.employee.pk, s.id, d] = model.NewBoolVar('work%i_%i_%i' % (ei.employee.pk, s.id, d))
 
     # Linear terms of the objective in a minimization context.
     obj_int_vars = []
@@ -502,19 +418,19 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
     obj_bool_coeffs = []
 
     # Exactly one shift per day.
-    for e in employees:
+    for ei in ctx.employees:
         for d in range(1, num_days + 1):
-            model.AddExactlyOne(work[e.pk, s, d] for s in range(num_shifts))
-            for s in range(num_shifts):
-                if s != 0 and e not in emp_for_workplaces[shift_types[s].workplace.id]:  # filter shifts by workplaces
-                    model.Add(work[e.pk, s, d] == 0)
+            model.AddExactlyOne(work[ei.employee.pk, s.id, d] for s in ctx.shift_types)
+            for s in ctx.shift_types:
+                if s.id != 0 and s.shift_type.workplace not in ei.workplaces:  # filter shifts by workplaces
+                    model.Add(work[ei.employee.pk, s.id, d] == 0)
 
     # Fixed assignments.
-    for e, s, d in fixed_assignments:
+    for e, s, d in ctx.fixed_assignments:
         model.Add(work[e.pk, s, d] == 1)
 
     # Employee requests
-    for e, s, d, w in requests:
+    for e, s, d, w in ctx.requests:
         obj_bool_vars.append(work[e, s, d])
         obj_bool_coeffs.append(w)
 
@@ -818,22 +734,6 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
     return output_inflate(shift_types, schedule_dict)
 
 
-def get_letter_for_weekday(day: int):
-    match day:
-        case 0:
-            return 'M'
-        case 1 | 3:
-            return 'T'
-        case 2:
-            return 'W'
-        case 4:
-            return 'F'
-        case 5 | 6:
-            return 'S'
-        case _:
-            return None
-
-
 def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workplaces, emp_preferences, emp_absences):
     workplace = Workplace.objects.all().first()
 
@@ -845,7 +745,7 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
     num_days = list_month[-1][-1][0]
     # num_sundays = sum([x[1] == 6 for x in flatten(list_month)])
 
-    shift_free = ShiftType(hour_start='00:00', hour_end='00:00', name='-', workplace=workplace, active_days=active_days,
+    shift_free = ShiftType(hour_start=datetime.time(datetime.strptime('00:00', '%H:%M')), hour_end=datetime.time(datetime.strptime('00:00', '%H:%M')), name='-', workplace=workplace, active_days=active_days,
                            is_used=True, is_archive=False)
     shift_types.insert(0, shift_free)
 
@@ -865,6 +765,10 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
     # TODO: Only consider absences for considered month (filter data from backend)
 
     for e in emp:
+        if e.pk not in emp_preferences:
+            emp_preferences[e.pk] = []
+        if e.pk not in  emp_absences:
+            emp_absences[e.pk] = []
         work_time[e.pk] = 0
         num_emp_absences[e] = 0
 
