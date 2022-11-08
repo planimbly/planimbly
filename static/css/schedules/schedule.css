@@ -54,7 +54,8 @@ html{
     border-width:  thin;
     border-style: solid;
     border-radius: 2px;
-    overflow: hidden;
+    overflow: scroll;
+    scroll-behavior: smooth;
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
 }

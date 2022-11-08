@@ -36,6 +36,16 @@ export default {
         console.log(string);
       },
 
+      /* MOUSE HOVER AWAY BEHAVIOUR*/
+      scroll_tile_content_up(){
+        var tileContents = this.$refs.tileContent;
+        
+        for (var i = 0; i < tileContents.length; i++) {
+          tileContents[i].scrollTo({top: 0, behaviour: 'smooth'});
+        }
+        
+      },
+
       /* REST API METHOD CALLS */
       api_post(date_python_format, employee_id, shift_type_id, workplace_id){
         this.$emit('call-rest-api', 'post', null, employee_id, shift_type_id, workplace_id, date_python_format);
@@ -313,7 +323,7 @@ export default {
     <div class="calendar-big">
       <div v-for="filler in grid_blank_fillers" class="tile-transparent"></div>
       <div v-for="day in work_month" class="calendar-tile">
-        <div @click="clickedTileDate = day.day" class="tile-content"  data-bs-toggle="modal" data-bs-target="#changeDayScheduleModal">
+        <div @click="clickedTileDate = day.day" @mouseleave="scroll_tile_content_up" class="tile-content"  data-bs-toggle="modal" data-bs-target="#changeDayScheduleModal" ref="tileContent">
           <div class="tile-content-title">
              <div class="cal-day-label-holder">[[day.day_label]]</div>
              <div class="weekday-in-tile-lowres">[[day.weekday]]</div>
