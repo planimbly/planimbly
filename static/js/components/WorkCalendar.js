@@ -60,21 +60,41 @@ export default {
 
       /* USER ACTIONS */
       delete_existing_shift(shift_type_id){
-        const specific_shift_id_array = [];
-        for (const shift of Object.keys(this.clickedTileDay.shifts)) {
-          if (this.clickedTileDay.shifts[shift].shift_type_id === shift_type_id) {
-              for (const spec_shift_worker in this.clickedTileDay.shifts[shift].workers){
-                specific_shift_id_array.push(this.clickedTileDay.shifts[shift].workers[spec_shift_worker].shift_id);
+        swal({
+          title: "Potwierdź usunięcie zmiany",
+          icon: "warning",
+          buttons: true,
+          dangerMode: true,
+        })
+          .then((willAdd) => {
+              if (willAdd) {
+                const specific_shift_id_array = [];
+                for (const shift of Object.keys(this.clickedTileDay.shifts)) {
+                  if (this.clickedTileDay.shifts[shift].shift_type_id === shift_type_id) {
+                      for (const spec_shift_worker in this.clickedTileDay.shifts[shift].workers){
+                        specific_shift_id_array.push(this.clickedTileDay.shifts[shift].workers[spec_shift_worker].shift_id);
+                      }
+                  }
+                }
+                while (specific_shift_id_array.length > 0){
+                  this.api_delete(specific_shift_id_array.pop());
+                }
               }
-          }
-        }
-        while (specific_shift_id_array.length > 0){
-          this.api_delete(specific_shift_id_array.pop());
-        }
+      });
       },
 
       delete_employee_from_shift(specific_shift_id){
-        this.api_delete(specific_shift_id);
+        swal({
+          title: "Potwierdź usunięcie pracownika ze zmiany",
+          icon: "warning",
+          buttons: true,
+          dangerMode: true,
+        })
+          .then((willAdd) => {
+              if (willAdd) {
+                this.api_delete(specific_shift_id);
+              }
+        });
       },
 
       update_employee_for_existing_shift(employee_id){
@@ -323,7 +343,7 @@ export default {
     <div class="calendar-big">
       <div v-for="filler in grid_blank_fillers" class="tile-transparent"></div>
       <div v-for="day in work_month" class="calendar-tile">
-        <div @click="clickedTileDate = day.day" @mouseleave="scroll_tile_content_up" class="tile-content"  data-bs-toggle="modal" data-bs-target="#changeDayScheduleModal" ref="tileContent">
+        <div @click="clickedTileDate = day.day" @mouseleave="scroll_tile_content_up" class="tile-content"  data-bs-toggle="modal" data-bs-target="#changeDayScheduleModal" ref="tileContent" style="cursor: pointer">
           <div class="tile-content-title">
              <div class="cal-day-label-holder">[[day.day_label]]</div>
              <div class="weekday-in-tile-lowres">[[day.weekday]]</div>
@@ -356,18 +376,18 @@ export default {
                           <div class="row">
                             <div class="fw-bold col">[[shift.label]] </div>
                             <button @click="addEmployeeToExistingShift_ShiftTypeID = shift.shift_type_id" type="button" 
-                            data-bs-target="#pickEmployeeAddToExistingModal" data-bs-toggle="modal" data-bs-dismiss="modal" class="material-icons col-auto" style="border: none; background-color: rgba(0, 0, 255, 0); color: blue;">person_add</button>
-                            <button @click="delete_existing_shift(shift.shift_type_id)" type="button" class="material-icons col-auto" style="border: none; background-color: rgba(0, 0, 255, 0); color: red;">delete_outline</button>
+                            data-bs-target="#pickEmployeeAddToExistingModal" data-bs-toggle="modal" data-bs-dismiss="modal" class="material-icons col-auto" style="border: none; background-color: rgba(0, 0, 255, 0); color: cornflowerblue;">person_add</button>
+                            <button @click="delete_existing_shift(shift.shift_type_id)" type="button" class="material-icons col-auto" style="margin-right: 10px; border: none; background-color: rgba(0, 0, 255, 0); color: rgb(255, 90, 90);">delete_outline</button>
                           </div>
                         </div>
                         <ul class="list-group"> 
                                                 
-                        <li v-for="worker_shift in shift.workers" class="list-group-item  d-inline-flex justify-content-between">
+                        <li v-for="worker_shift in shift.workers" class="list-group-item list-group-item-action d-inline-flex justify-content-between" style="cursor: pointer">
                             <div @click="updateEmployeeInExistingShift_ShiftID = worker_shift.shift_id; updateEmployeeInExistingShift_ShiftTypeID = shift.shift_type_id"
                               data-bs-target="#pickEmployeeForUpdateModal" data-bs-toggle="modal" data-bs-dismiss="modal">
                                 <div class="me-2">[[worker_shift.worker.first_name]] [[worker_shift.worker.last_name]]</div>
                             </div>
-                            <button @click="delete_employee_from_shift(worker_shift.shift_id)" type="button" class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0); color: red;">delete_outline</button>
+                            <button @click="delete_employee_from_shift(worker_shift.shift_id)" type="button" class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0); color: rgb(255, 90, 90);">delete_outline</button>
                         </li>
                         </ul>
                       </li>
@@ -390,7 +410,7 @@ export default {
                 <div class="modal-body">
                       <div class="list-group">
                             <div v-for="worker in available_workers" @click="update_employee_for_existing_shift(worker.id)" 
-                            class="list-group-item list-group-item-action" data-bs-target="#changeDayScheduleModal" data-bs-toggle="modal" data-bs-dismiss="modal">
+                            class="list-group-item list-group-item-action" data-bs-target="#changeDayScheduleModal" data-bs-toggle="modal" data-bs-dismiss="modal" style="cursor: pointer">
                                 <div class="fw-bold">[[worker.first_name]] [[worker.last_name]]</div> [[worker.username]]
                             </div>                       
                       </div>
@@ -409,7 +429,7 @@ export default {
                 <div class="modal-body">
                       <div class="list-group">
                             <div v-for="worker in available_workers" @click="add_new_employee_for_existing_shift(worker.id)" 
-                            class="list-group-item list-group-item-action" data-bs-target="#changeDayScheduleModal" data-bs-toggle="modal" data-bs-dismiss="modal">
+                            class="list-group-item list-group-item-action" data-bs-target="#changeDayScheduleModal" data-bs-toggle="modal" data-bs-dismiss="modal" style="cursor: pointer">
                                 <div class="fw-bold">[[worker.first_name]] [[worker.last_name]]</div> [[worker.username]]
                             </div>                       
                       </div>
@@ -428,11 +448,11 @@ export default {
                 <div class="modal-body">
                       <div class="list-group">
                             <div v-for="shift_type in available_shift_types">
-                              <div v-if="is_shift_type_already_in_use(shift_type.id)" class="list-group-item list-group-item-action disabled">
+                              <div v-if="is_shift_type_already_in_use(shift_type.id)" class="list-group-item list-group-item-action disabled" style="cursor: pointer">
                                   <div class="fw-bold">[[shift_type.name]]: ([[shift_type.id]]) </div>  [[shift_type.hour_start]] - [[shift_type.hour_end]]
                               </div>  
                               <div v-else @click="addNewShift_ShiftTypeID = shift_type.id" 
-                              class="list-group-item list-group-item-action" data-bs-target="#pickEmployeesForNewShiftModal" data-bs-toggle="modal" data-bs-dismiss="modal">
+                              class="list-group-item list-group-item-action" data-bs-target="#pickEmployeesForNewShiftModal" data-bs-toggle="modal" data-bs-dismiss="modal" style="cursor: pointer">
                                   <div class="fw-bold">[[shift_type.name]]: ([[shift_type.id]]) </div>  [[shift_type.hour_start]] - [[shift_type.hour_end]]
                               </div> 
                                 
@@ -457,10 +477,10 @@ export default {
                 <div class="modal-body">
                     <div class="list-group">
                       <div v-for="worker in available_workers">
-                          <div v-if="is_id_in_array_NewShiftEmployeesID(worker.id)" @click="delete_from_array_NewShiftEmployeesID(worker.id)" class="list-group-item list-group-item-action active">
+                          <div v-if="is_id_in_array_NewShiftEmployeesID(worker.id)" @click="delete_from_array_NewShiftEmployeesID(worker.id)" class="list-group-item list-group-item-action active" style="cursor: pointer">
                             <div class="fw-bold">[[worker.first_name]] [[worker.last_name]]</div> [[worker.username]]
                           </div>
-                          <div v-else @click="append_to_array_NewShiftEmployeesID(worker.id)" class = "list-group-item list-group-item-action">
+                          <div v-else @click="append_to_array_NewShiftEmployeesID(worker.id)" class = "list-group-item list-group-item-action" style="cursor: pointer">
                             <div class="fw-bold">[[worker.first_name]] [[worker.last_name]]</div> [[worker.username]]
                           </div>
                       </div>                       
