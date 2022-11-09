@@ -355,24 +355,20 @@ export default {
                         <div class="container mb-1">
                           <div class="row">
                             <div class="fw-bold col">[[shift.label]] </div>
-                            <button @click="delete_existing_shift(shift.shift_type_id)" type="button" class="btn btn-outline-danger btn-sm col col-lg-2">Usuń</button>
+                            <button @click="addEmployeeToExistingShift_ShiftTypeID = shift.shift_type_id" type="button" 
+                            data-bs-target="#pickEmployeeAddToExistingModal" data-bs-toggle="modal" data-bs-dismiss="modal" class="material-icons col-auto" style="border: none; background-color: rgba(0, 0, 255, 0); color: blue;">person_add</button>
+                            <button @click="delete_existing_shift(shift.shift_type_id)" type="button" class="material-icons col-auto" style="border: none; background-color: rgba(0, 0, 255, 0); color: red;">delete_outline</button>
                           </div>
                         </div>
                         <ul class="list-group"> 
                                                 
-                              <li v-for="worker_shift in shift.workers" class="list-group-item  d-inline-flex justify-content-between">
-                                  <div @click="updateEmployeeInExistingShift_ShiftID = worker_shift.shift_id; updateEmployeeInExistingShift_ShiftTypeID = shift.shift_type_id"
-                                   data-bs-target="#pickEmployeeForUpdateModal" data-bs-toggle="modal" data-bs-dismiss="modal">
-                                      <div class="me-2">[[worker_shift.worker.first_name]] [[worker_shift.worker.last_name]]</div>
-                                  </div>
-                                  <button @click="delete_employee_from_shift(worker_shift.shift_id)" type="button" class="btn btn-outline-danger btn-sm col col-lg-2">Usuń</button>
-                              </li>
-                             
-                            <li class="list-group-item"> <button @click="addEmployeeToExistingShift_ShiftTypeID = shift.shift_type_id" type="button" 
-                            data-bs-target="#pickEmployeeAddToExistingModal" data-bs-toggle="modal" data-bs-dismiss="modal" class="btn btn-outline-primary btn-sm">
-                            Dodaj pracownika
-                                </button> 
-                            </li>
+                        <li v-for="worker_shift in shift.workers" class="list-group-item  d-inline-flex justify-content-between">
+                            <div @click="updateEmployeeInExistingShift_ShiftID = worker_shift.shift_id; updateEmployeeInExistingShift_ShiftTypeID = shift.shift_type_id"
+                              data-bs-target="#pickEmployeeForUpdateModal" data-bs-toggle="modal" data-bs-dismiss="modal">
+                                <div class="me-2">[[worker_shift.worker.first_name]] [[worker_shift.worker.last_name]]</div>
+                            </div>
+                            <button @click="delete_employee_from_shift(worker_shift.shift_id)" type="button" class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0); color: red;">delete_outline</button>
+                        </li>
                         </ul>
                       </li>
                   </ul> 

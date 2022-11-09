@@ -215,11 +215,13 @@
                                         </div>
                                         <div v-for="shiftType in workplace_shifts.shiftTypes">
                                             <div v-if="shiftType.is_used"  class="list-group-item">
-                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
                                                     [[shiftType.name]]
                                                     <span class="badge rounded-pill bg-primary">[[shiftType.hour_start.toString().slice(0, 5) + " - " + shiftType.hour_end.toString().slice(0, 5)]]</span>
-                                                    <div v-for="abbr in active_days_to_string_abbr_array(shiftType.active_days)" class="d-inline-flex">
-                                                        <span class="badge bg-light text-dark me-1">[[abbr]]</span>
+                                                    <div>
+                                                        <div v-for="abbr in active_days_to_string_abbr_array(shiftType.active_days)" class="d-inline-flex">
+                                                            <span class="badge bg-light text-dark me-1">[[abbr]]</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
