@@ -92,20 +92,25 @@
 
             <table class="w-50 table">
                 <thead>
-                  <tr>
-                    <th scope="col">Pracownik</th>
-                    <th scope="col">Godziny/Etat</th>
-                    <th scope="col">Ilość zmian</th>
-                  </tr>
+                    <tr>
+                        <th scope="col">Pracownik</th>
+                        <th scope="col">Godziny/Etat</th>
+                        <th scope="col">Bilans</th>
+                        <th scope="col">Ilość zmian</th>
+                    </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="stat in statistics">
-                    <td>[[ stat.name ]]</td>
-                    <td>[[ stat.hours ]]/[[ stat.jobtime ]]h</td>
-                    <td>[[ return_stat_shifts(stat.shift_type) ]]</td>
-                  </tr>
+                    <tr v-for="stat in statistics">
+                        <td>[[ stat.name ]]</td>
+                        <td>[[ stat.hours ]]/[[ stat.jobtime ]]h</td>
+                        <td v-if="calculate_diff(stat.hours, stat.jobtime) < 0" style="color: red;">[[ calculate_diff(stat.hours, stat.jobtime) ]]</td>
+                        <td v-if="calculate_diff(stat.hours, stat.jobtime) == 0">[[ calculate_diff(stat.hours, stat.jobtime) ]]</td>
+                        <td v-if="calculate_diff(stat.hours, stat.jobtime) > 0" style="color: green;">[[ calculate_diff(stat.hours, stat.jobtime) ]]</td>
+                        <td>[[ return_stat_shifts(stat.shift_type) ]]</td>
+                    </tr>
                 </tbody>
-              </table>
+            </table>
+               
 
 
             {% comment %} <div class="stat_table" style="margin-left: 20px">
@@ -213,9 +218,9 @@
                                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                                     [[shiftType.name]]
                                                     <span class="badge rounded-pill bg-primary">[[shiftType.hour_start.toString().slice(0, 5) + " - " + shiftType.hour_end.toString().slice(0, 5)]]</span>
-                                                </div>
-                                                <div v-for="abbr in active_days_to_string_abbr_array(shiftType.active_days)" class="d-inline-flex">
-                                                    <span class="badge bg-light text-dark me-1">[[abbr]]</span>
+                                                    <div v-for="abbr in active_days_to_string_abbr_array(shiftType.active_days)" class="d-inline-flex">
+                                                        <span class="badge bg-light text-dark me-1">[[abbr]]</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -320,6 +325,9 @@
                 }
             },
             methods: {
+                calculate_diff(hours, job_time) {
+                    return hours - job_time
+                },
                 printToPdf(){
                     html2pdf().from(document.getElementById('report')).save();
                 },
