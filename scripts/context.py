@@ -52,7 +52,7 @@ class EmployeeInfo:
             for i in range((ab.end - ab.start).days + 1):
                 inter_date = ab.start + timedelta(days=i)
                 ad.append(inter_date)
-                # print("added absence for emp %i on day %i" % (ab.employee.pk, inter_date.day))
+                print("added absence for emp %i on day %i" % (ab.employee.pk, inter_date.day))
         return ad
     
     def get_absent_days_in_month(self, month: int):
@@ -72,7 +72,9 @@ class EmployeeInfo:
 class Context:
     year = 0
     month = 0
-    total_work_time = 0
+    total_work_time = int
+    total_job_time = int
+    job_time_multiplier = float
     month_by_weeks = []
     # Fixed assignment: (employee, shift, day).
     fixed_assignments = []
@@ -98,6 +100,8 @@ class Context:
         self.illegal_transitions = self.find_illegal_transitions()
         self.overnight_shifts = self.find_overnight_shifts()
         self.total_work_time = self.calc_total_work_time()
+        self.total_job_time = sum(ei.get().job_time for ei in self.employees)
+        self.job_time_multiplier = self.total_work_time / self.total_job_time
 
     def find_illegal_transitions(self):
         """Finds illegal transitions between shift types
@@ -121,7 +125,7 @@ class Context:
                 if s_delta < (11 * 60):  # break between i and j is below 11 hours
                     print(f"Found illegal transition: {i.get().name} to {j.get().name}")
                     # TODO: think about returning a list instead of tuples (np zeby przechowywac transitions dla wiecej niz 2 zmian)
-                    it.append((i, j, 0))
+                    it.append((i.id, j.id, 0))
         return it
 
     def find_overnight_shifts(self):
@@ -141,9 +145,9 @@ class Context:
             if end < start:
                 print(f"Found overnight shift: {i.get().name}")
                 # between 2 and 3 consecutive days of night shifts, 1 and 4 are possible but penalized.
-                sc.append((i, 1, 2, 20, 3, 4, 5))
+                sc.append((i.id, 1, 2, 20, 3, 4, 5))
                 # At least 1 night shift per week (penalized). At most 4 (hard).
-                wsc.append((i, 0, 1, 3, 4, 4, 0))
+                wsc.append((i.id, 0, 1, 3, 4, 4, 0))
         return sc, wsc
 
     def get_shift_info_by_id(self, id: int):
