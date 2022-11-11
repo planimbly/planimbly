@@ -8,7 +8,7 @@ class ShiftTypeInfo:
     shift_type = ShiftType
     duration = 0
     id = 0
-    
+
     def __init__(self, st: ShiftType, id: int):
         self.shift_type = st
         self.id = id
@@ -23,7 +23,7 @@ class ShiftTypeInfo:
 
     def get(self):
         return self.shift_type
-    
+
     def __str__(self):
         return "[SHIFT] ID: %i | Duration: %.1f | %s | %s" % (self.id,
                                                               self.get_duration_in_hours(),
@@ -45,7 +45,7 @@ class EmployeeInfo:
         self.absences = ab
         self.absent_days = self.prepare_absent_days()
         print(self.workplaces, self.preferences, self.absences, self.absent_days)
-    
+
     def prepare_absent_days(self):
         ad = []
         for ab in self.absences:
@@ -54,7 +54,7 @@ class EmployeeInfo:
                 ad.append(inter_date)
                 print("added absence for emp %i on day %i" % (ab.employee.pk, inter_date.day))
         return ad
-    
+
     def get_absent_days_in_month(self, month: int):
         """ Returns days on which given employee is absent """
         return [d.day for d in self.absent_days if d.month == month]

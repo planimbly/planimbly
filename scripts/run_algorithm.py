@@ -14,7 +14,7 @@
 """Creates a shift scheduling problem and solves it."""
 
 import operator
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from absl import flags
 from google.protobuf import text_format
@@ -264,13 +264,13 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
                              [wp for wp in emp_for_workplaces if e in emp_for_workplaces[wp]],
                              emp_preferences[e.pk],
                              emp_absences[e.pk])
-                             for e in employees]
+                for e in employees]
 
     for e in emp_info:
         print(e)
 
     ctx = Context(emp_info, shift_types, year, month)
-    
+
     for ei in ctx.employees:
         num_emp_absences[ei.get()] = sum(1 for x in ei.get_absent_days_in_month(month))
 
@@ -622,7 +622,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
             if v < 0:
                 raise ValueError(f'All of {s} shifts for day:{d} have been deleted. This should not ever happen.')
             elif v > 0:
-                raise ValueError(f'There are still {v} excess shifts for shift{ctx.get_shift_info_by_id(s).name} on day{d}.\nList of excess shifts:{candidates}')
+                raise ValueError(f'There is still {v} excess demand for shift{ctx.get_shift_info_by_id(s).name} on day{d}.\nList of excess shifts:{candidates}')
 
     # Print solution.
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
@@ -688,7 +688,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
 
     print('  - employees work time:')
     for ei in ctx.employees:
-        print(f"    * employee {ei.get().pk} (job time {ei.get().job_time}): {work_time[ei.get().pk]} hrs, {(work_time[ei.get().pk]) / ei.get().job_time} ratio")
+        print(f"    * employee {ei.get().pk} (job time {ei.get().job_time}): {work_time[ei.get().pk]} hr, {(work_time[ei.get().pk]) / ei.get().job_time} ratio")
 
     print("total hours: %d" % ctx.total_work_time)
     print("total job time: %d" % ctx.total_job_time)
@@ -710,7 +710,9 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
     num_days = list_month[-1][-1][0]
     # num_sundays = sum([x[1] == 6 for x in flatten(list_month)])
 
-    shift_free = ShiftType(hour_start=datetime.time(datetime.strptime('00:00', '%H:%M')), hour_end=datetime.time(datetime.strptime('00:00', '%H:%M')), name='-', workplace=workplace, active_days=active_days,
+    shift_free = ShiftType(hour_start=datetime.time(datetime.strptime('00:00', '%H:%M')),
+                           hour_end=datetime.time(datetime.strptime('00:00', '%H:%M')),
+                           name='-', workplace=workplace, active_days=active_days,
                            is_used=True, is_archive=False)
     shift_types.insert(0, shift_free)
 
@@ -732,7 +734,7 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
     for e in emp:
         if e.pk not in emp_preferences:
             emp_preferences[e.pk] = []
-        if e.pk not in  emp_absences:
+        if e.pk not in emp_absences:
             emp_absences[e.pk] = []
         work_time[e.pk] = 0
         num_emp_absences[e] = 0

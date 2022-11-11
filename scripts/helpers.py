@@ -1,5 +1,6 @@
 import calendar
 
+
 def get_month_by_weeks(year: int, month: int):
     """Returns list of lists containing days of given month
 
@@ -16,6 +17,7 @@ def get_month_by_weeks(year: int, month: int):
 
 def flatten(t: list):
     return [item for sublist in t for item in sublist]
+
 
 def get_letter_for_weekday(day: int):
     match day:
