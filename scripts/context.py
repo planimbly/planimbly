@@ -3,6 +3,7 @@ from apps.accounts.models import Employee
 from apps.schedules.models import ShiftType
 from scripts.helpers import get_month_by_weeks, flatten
 
+
 class ShiftTypeInfo:
     shift_type = ShiftType
     duration = 0
@@ -29,6 +30,7 @@ class ShiftTypeInfo:
                                                               self.shift_type.workplace,
                                                               self.shift_type.name)
 
+
 class EmployeeInfo:
     employee = Employee
     workplaces = []
@@ -43,10 +45,6 @@ class EmployeeInfo:
         self.absences = ab
         self.absent_days = self.prepare_absent_days()
         print(self.workplaces, self.preferences, self.absences, self.absent_days)
-
-    def get_num_absences(self):
-        """Returns total number of absences for employee"""
-        return sum(x for x in self.absent_days)
     
     def prepare_absent_days(self):
         ad = []
@@ -57,14 +55,19 @@ class EmployeeInfo:
                 # print("added absence for emp %i on day %i" % (ab.employee.pk, inter_date.day))
         return ad
     
-    def get_absent_days(self):
-        return [d.day for d in self.absent_days]
+    def get_absent_days_in_month(self, month: int):
+        """ Returns days on which given employee is absent """
+        return [d.day for d in self.absent_days if d.month == month]
+
+    def get(self):
+        return self.employee
 
     def __str__(self):
         return "[EMPLOYEE] ID: %i | JT: %i | %s %s" % (self.employee.pk,
                                                        self.employee.job_time,
                                                        self.employee.first_name,
                                                        self.employee.last_name)
+
 
 class Context:
     year = 0
@@ -143,6 +146,9 @@ class Context:
                 wsc.append((i, 0, 1, 3, 4, 4, 0))
         return sc, wsc
 
+    def get_shift_info_by_id(self, id: int):
+        return next(x for x in self.shift_types if x.id == id)
+
     def calc_total_work_time(self):
         total_minutes = 0
         num_month_weekdays = []
@@ -169,5 +175,6 @@ class Context:
     def prepare_fixed_assignments(self):
         fa = []
         for ei in self.employees:
-            for d in ei.get_absent_days():
+            for d in ei.get_absent_days_in_month(self.month):
                 fa.append((ei.employee.pk, 0, d))
+        return fa
