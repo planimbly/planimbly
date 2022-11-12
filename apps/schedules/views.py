@@ -102,7 +102,7 @@ class ScheduleCreateApiView(APIView):
                 user_workplace__in=Workplace.objects.filter(id__in=[work_id])).distinct().order_by('id')
 
         employee_list = Employee.objects.filter(user_workplace__in=workplace_query).distinct().order_by('id')
-
+        # TODO (StartA <= EndB) and (EndA >= StartB)
         preferences = Preference.objects.filter(employee__in=employee_list)
         absences = Absence.objects.filter(employee__in=employee_list).filter(
             Q(start__month=month) | Q(end__month=month))
@@ -120,6 +120,51 @@ class ScheduleCreateApiView(APIView):
         for shift in data:
             shift.save()
         return Response()
+
+
+class ScheduleReportGetApiView(APIView):
+    def get(self, request, unit_pk):
+        # 127.0.0.1:8000/schedules/api/1/schedule_report_get?year=2022&month=10
+        year = self.request.GET.get('year')
+        month = self.request.GET.get('month')
+        date_format = '%Y-%m-%d'
+        if year and month:
+            employee_list = Employee.objects.filter(user_unit__pk=unit_pk).distinct()
+            data = {}
+            for employee in employee_list:
+                days = {}
+                days_num = calendar.monthrange(int(year), int(month))[1]
+                for x in range(1, days_num + 1):
+                    date = datetime.date(int(year), int(month), x).strftime(date_format)
+                    days.update({date: []})
+                shifts = Shift.objects.filter(employee__pk=employee.pk).filter(
+                    schedule__workplace__workplace_unit__pk=unit_pk).filter(
+                    schedule__month=month).filter(schedule__year=year).order_by('date')
+                for shift in shifts:
+                    days[shift.date.strftime(date_format)].append((
+                        {
+                            'id': shift.id,
+                            'shift_type_id': shift.shift_type.id,
+                            'shift_type_color': shift.shift_type.color,
+                            'shift_type_name': shift.shift_type.name,
+                            'workplace_id': shift.shift_type.workplace.id,
+                            'workplace_name': shift.shift_type.workplace.name
+                        }
+                    ))
+                first_day = datetime.date(int(year), int(month), 1)
+                last_day = datetime.date(int(year), int(month), days_num)
+                absences = Absence.objects.filter(employee__pk=employee.pk).filter(start__lte=last_day).filter(
+                    end__gte=first_day).values('id', 'start', 'end', 'type')
+                data[employee.pk] = {
+                    'employee_id': employee.pk,
+                    'employee_loing': employee.username,
+                    'employee_first_name': employee.first_name,
+                    'employee_last_name': employee.last_name,
+                    'employee_work_hours': employee.job_time,
+                    'days': days,
+                    'absences': absences,
+                }
+            return Response(data=data)
 
 
 class ScheduleGetApiView(APIView):
@@ -169,6 +214,7 @@ class ScheduleGetApiView(APIView):
                     {
                         'id': shift.id,
                         'shift_type_id': shift.shift_type.id,
+                        'shift_type_color': shift.shift_type.color,
                         'time_start': shift.shift_type.hour_start,
                         'time_end': shift.shift_type.hour_end,
                         'name': shift.shift_type.name,
@@ -182,7 +228,9 @@ class ScheduleGetApiView(APIView):
 
             response = {
                 'unit_id': workplace.workplace_unit.id,
-                'workplace_id': workplace_pk,
+                'workplace_id': workplace.id,
+                'unit_name': workplace.workplace_unit.name,
+                'workplace_name': workplace.name,
                 'days': days,
                 'statistics': statistics
             }

@@ -34,6 +34,14 @@ class Preference(models.Model):
         return self.shift_type.name + ' ' + self.employee.username
 
 
+class Assignment(models.Model):
+    shift_type = models.ForeignKey(ShiftType, on_delete=models.CASCADE, verbose_name="Typ zmiany")
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, verbose_name="Pracownik")
+    start = models.DateField(verbose_name="Początek przypisania", null=True, blank=True)
+    end = models.DateField(verbose_name="Koniec przypisania", null=True, blank=True)
+    negative_flag = models.BooleanField()
+
+
 class Shift(models.Model):
     date = models.DateField(verbose_name='Data zmiany')
     schedule = models.ForeignKey(Schedule, on_delete=models.CASCADE, verbose_name="Grafik")

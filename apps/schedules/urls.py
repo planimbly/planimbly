@@ -2,7 +2,8 @@ from django.urls import path, include
 from rest_framework import routers
 
 from apps.schedules.views import ShiftTypeManageView, ShiftTypeViewSet, ScheduleManageView, ScheduleGetApiView, \
-    ScheduleCreateApiView, ShiftManageApiView, PreferenceViewSet, AbsenceViewSet, AbsenceManageView
+    ScheduleCreateApiView, ShiftManageApiView, PreferenceViewSet, AbsenceViewSet, AbsenceManageView, \
+    ScheduleReportGetApiView
 
 shiftType_router = routers.DefaultRouter()
 shiftType_router.register(r'shiftType', ShiftTypeViewSet, basename='shiftType')
@@ -21,5 +22,8 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('api/shift_manage/', ShiftManageApiView.as_view(), name='shift_manage'),
     path('api/<int:workplace_pk>/schedule_get/', ScheduleGetApiView.as_view(),
-         name='schedule_get')
+         name='schedule_get'),
+    path('api/<int:unit_pk>/schedule_report_get/', ScheduleReportGetApiView.as_view(),
+         name='schedule_report_get')
+
 ]
