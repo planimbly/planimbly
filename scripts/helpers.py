@@ -1,4 +1,5 @@
 import calendar
+from math import floor, ceil
 
 
 def get_month_by_weeks(year: int, month: int):
@@ -33,3 +34,11 @@ def get_letter_for_weekday(day: int):
             return 'S'
         case _:
             return None
+
+
+def floor_to_multiple(number, multiple: int):
+    return multiple * floor(number / multiple)
+
+
+def ceil_to_multiple(number, multiple: int):
+    return multiple * ceil(number / multiple)

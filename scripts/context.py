@@ -12,7 +12,8 @@ class ShiftTypeInfo:
     def __init__(self, st: ShiftType, id: int):
         self.shift_type = st
         self.id = id
-        self.duration = (dt.combine(date.min, self.shift_type.hour_end) - dt.combine(date.min, self.shift_type.hour_start)).seconds // 60
+        self.duration = (dt.combine(date.min, self.shift_type.hour_end) - dt.combine(date.min,
+                                                                                     self.shift_type.hour_start)).seconds // 60
         print(self)
 
     def get_duration_in_minutes(self):
@@ -75,6 +76,7 @@ class Context:
     total_work_time = int
     total_job_time = int
     job_time_multiplier = float
+    overtime_multiplier = float
     month_by_weeks = []
     # Fixed assignment: (employee, shift, day).
     fixed_assignments = []
@@ -102,6 +104,8 @@ class Context:
         self.total_work_time = self.calc_total_work_time()
         self.total_job_time = sum(ei.get().job_time for ei in self.employees)
         self.job_time_multiplier = self.total_work_time / self.total_job_time
+        self.overtime_multiplier = (self.total_work_time - sum(ei.get().job_time for ei in self.get_full_time_employees())) \
+            / (self.total_job_time - sum(ei.get().job_time for ei in self.get_full_time_employees()))
 
     def find_illegal_transitions(self):
         """Finds illegal transitions between shift types
@@ -147,7 +151,7 @@ class Context:
                 # between 2 and 3 consecutive days of night shifts, 1 and 4 are possible but penalized.
                 sc.append((i.id, 1, 2, 20, 3, 4, 5))
                 # At least 1 night shift per week (penalized). At most 4 (hard).
-                wsc.append((i.id, 0, 1, 3, 4, 4, 0))
+                wsc.append((i.id, 0, 1, 2, 3, 4, 0))
         return sc, wsc
 
     def get_shift_info_by_id(self, id: int):
@@ -161,9 +165,9 @@ class Context:
 
         for d in range(len(self.weekly_cover_demands)):
             for s in range(len(self.weekly_cover_demands[d])):  # s for num_month_weekdays, s+1 for shift_types
-                if self.shift_types[s+1] == "-":
+                if self.shift_types[s + 1] == "-":
                     continue
-                total_minutes += num_month_weekdays[d] * self.shift_types[s+1].duration
+                total_minutes += num_month_weekdays[d] * self.shift_types[s + 1].duration
         return total_minutes / 60
 
     def prepare_requests(self):
@@ -172,8 +176,10 @@ class Context:
             for pref in ei.preferences:
                 for week in self.month_by_weeks:
                     for d in week:
-                        if pref.active_days[d[1]] == "1":
-                            req.append((ei.employee.pk, next(st.id for st in self.shift_types if pref.shift_type == st.get()), d[0], -1))
+                        if pref.active_days[d[1] - 1] == "1":
+                            req.append((ei.employee.pk,
+                                        next(st.id for st in self.shift_types if pref.shift_type == st.get()), d[0],
+                                        -1))
         return req
 
     def prepare_fixed_assignments(self):
@@ -182,3 +188,6 @@ class Context:
             for d in ei.get_absent_days_in_month(self.month):
                 fa.append((ei.employee.pk, 0, d))
         return fa
+
+    def get_full_time_employees(self):
+        return [ei for ei in self.employees if ei.get().job_time == 160]
