@@ -1,7 +1,7 @@
 from datetime import date, datetime as dt, timedelta
 from apps.accounts.models import Employee
 from apps.schedules.models import ShiftType
-from scripts.helpers import get_month_by_weeks, flatten
+from scripts.helpers import get_month_by_weeks, flatten, get_letter_for_weekday
 
 
 class ShiftTypeInfo:
@@ -182,10 +182,12 @@ class Context:
             for pref in ei.preferences:
                 for week in self.month_by_weeks:
                     for d in week:
-                        if pref.active_days[d[1] - 1] == "1":
-                            req.append((ei.employee.pk,
-                                        next(st.id for st in self.shift_types if pref.shift_type == st.get()), d[0],
-                                        -1))
+                        if pref.active_days[d[1]] == "1":
+                            req.append((ei.employee.pk, next(st.id for st in self.shift_types if pref.shift_type == st.get()), d[0], -1))
+                            print("[PREFERENCE] EMP: %2i | shift: %s | day: %2i (%s) | weight: %d" %
+                                  (ei.employee.pk, next(st.get().name for st in self.shift_types if pref.shift_type == st.get()),
+                                   d[0], get_letter_for_weekday(d[1]), -1))
+
         return req
 
     def prepare_fixed_assignments(self):

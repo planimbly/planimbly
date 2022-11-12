@@ -303,26 +303,11 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
     #     (previous_shift, next_shift, penalty (0 means forbidden))
     penalized_transitions = ctx.illegal_transitions
 
-    num_month_weekdays = []
-
-    for d in range(len(ctx.weekly_cover_demands)):
-        num_month_weekdays.append(sum([x[1] == d for x in flatten(ctx.month_by_weeks)]))
-
-    num_shifts_by_time = {st.get_duration_in_hours(): 0 for st in ctx.shift_types[1:]}
-
-    # Calculate total number of shifts
-    for d in range(len(ctx.weekly_cover_demands)):
-        for s in range(len(ctx.weekly_cover_demands[d])):  # s for num_month_weekdays, s+1 for shift_types
-            if ctx.get_shift_info_by_id(s + 1).get().name == "-":
-                continue
-            num_shifts_by_time[ctx.get_shift_info_by_id(s + 1).get_duration_in_hours()] += num_month_weekdays[d]
-
     # Penalty for exceeding the cover constraint per shift type.
     excess_cover_penalties = tuple(30 for x in range(len(ctx.shift_types) - 1))
 
     model = cp_model.CpModel()
 
-    print("\nShifts (hours, quantity):", num_shifts_by_time)
     print("\nJob time   : %3i\nWork time  : %3i\nJT ratio   : %.3f\nOT ratio   : %.3f\n" %
           (ctx.total_job_time, ctx.total_work_time, ctx.job_time_multiplier, ctx.overtime_multiplier))
 
@@ -550,7 +535,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
                     work_time[em.pk] -= ctx.get_shift_info_by_id(sh).get_duration_in_hours()
 
             # TODO: sprawdzać czy są pracownicy z pełnym etatem o diffie 0
-            # i wtedy priorytezować usuwanie ludzi o mniejszym etacie nawet przy ujemnym diffie!!
+            #  jeśli tak: z większym priorytetem usuwać ludzi o mniejszym etacie nawet przy ujemnym diffie!!
 
             # Step 2
             # Sort employees by their work time and remove shifts evenly
