@@ -9,11 +9,11 @@ class ShiftTypeInfo:
     duration = 0
     id = 0
 
-    def __init__(self, st: ShiftType, id: int):
+    def __init__(self, st: ShiftType, index: int):
         self.shift_type = st
-        self.id = id
-        self.duration = (dt.combine(date.min, self.shift_type.hour_end) - dt.combine(date.min,
-                                                                                     self.shift_type.hour_start)).seconds // 60
+        self.id = index
+        self.duration = (dt.combine(date.min, self.shift_type.hour_end) -
+                         dt.combine(date.min, self.shift_type.hour_start)).seconds // 60
         print(self)
 
     def get_duration_in_minutes(self):
@@ -26,10 +26,8 @@ class ShiftTypeInfo:
         return self.shift_type
 
     def __str__(self):
-        return "[SHIFT] ID: %i | Duration: %.1f | %s | %s" % (self.id,
-                                                              self.get_duration_in_hours(),
-                                                              self.shift_type.workplace,
-                                                              self.shift_type.name)
+        return "[SHIFT] ID: %i | Duration: %.1f | %s | %s" % \
+               (self.id, self.get_duration_in_hours(), self.shift_type.workplace, self.shift_type.name)
 
 
 class EmployeeInfo:
@@ -45,7 +43,7 @@ class EmployeeInfo:
         self.preferences = pref
         self.absences = ab
         self.absent_days = self.prepare_absent_days()
-        print(self.workplaces, self.preferences, self.absences, self.absent_days)
+        # self.num_absent_days = 0
 
     def prepare_absent_days(self):
         ad = []
@@ -53,7 +51,7 @@ class EmployeeInfo:
             for i in range((ab.end - ab.start).days + 1):
                 inter_date = ab.start + timedelta(days=i)
                 ad.append(inter_date)
-                print("added absence for emp %i on day %i" % (ab.employee.pk, inter_date.day))
+                print("[ABSENCE] EMP: %2i | DAY: %2i" % (ab.employee.pk, inter_date.day))
         return ad
 
     def get_absent_days_in_month(self, month: int):
@@ -64,47 +62,55 @@ class EmployeeInfo:
         return self.employee
 
     def __str__(self):
-        return "[EMPLOYEE] ID: %i | JT: %i | %s %s" % (self.employee.pk,
-                                                       self.employee.job_time,
-                                                       self.employee.first_name,
-                                                       self.employee.last_name)
+        return "[EMPLOYEE] ID: %2i | JT: %3i | %s %s" % \
+               (self.employee.pk, self.employee.job_time, self.employee.first_name, self.employee.last_name)
 
 
 class Context:
-    year = 0
-    month = 0
-    total_work_time = int
-    total_job_time = int
-    job_time_multiplier = float
-    overtime_multiplier = float
-    month_by_weeks = []
-    # Fixed assignment: (employee, shift, day).
-    fixed_assignments = []
-    # Request: (employee, shift, day, weight)
-    # A negative weight indicates that the employee desire this assignment.
-    requests = []
-
     employees = []
     shift_types = []
+
+    month = 0
+    year = 0
+    month_by_weeks = []
+
     weekly_cover_demands = []
+
+    # Fixed assignment: (employee, shift, day).
+    fixed_assignments = []
+    # Request: (employee, shift, day, weight // negative weight -> employee desires assignment)
+    requests = []
+
     illegal_transitions = []
     overnight_shifts = []
 
+    total_work_time = int
+    total_job_time = int
+
+    job_time_multiplier = float
+    overtime_multiplier = float
+
     def __init__(self, emp: list[EmployeeInfo], st: list[ShiftType], year: int, month: int):
-        self.year = year
-        self.month = month
-        self.month_by_weeks = get_month_by_weeks(year, month)
         self.employees = emp
         self.shift_types = [ShiftTypeInfo(s, st.index(s)) for s in st]
+
+        self.month = month
+        self.year = year
+        self.month_by_weeks = get_month_by_weeks(year, month)
+
         self.weekly_cover_demands = [tuple(s.get().demand for s in self.shift_types[1:]) for _ in range(7)]
-        self.requests = self.prepare_requests()
+
         self.fixed_assignments = self.prepare_fixed_assignments()
+        self.requests = self.prepare_requests()
+
         self.illegal_transitions = self.find_illegal_transitions()
         self.overnight_shifts = self.find_overnight_shifts()
+
         self.total_work_time = self.calc_total_work_time()
         self.total_job_time = sum(ei.get().job_time for ei in self.employees)
+
         self.job_time_multiplier = self.total_work_time / self.total_job_time
-        self.overtime_multiplier = (self.total_work_time - sum(ei.get().job_time for ei in self.get_full_time_employees())) \
+        self.overtime_multiplier = (self.total_work_time - sum(ei.get().job_time for ei in self.get_full_time_employees()))\
             / (self.total_job_time - sum(ei.get().job_time for ei in self.get_full_time_employees()))
 
     def find_illegal_transitions(self):
@@ -118,7 +124,7 @@ class Context:
         it = []
         for i in self.shift_types[1:]:
             i_start = dt.combine(date.min, i.get().hour_start)
-            i_end = i_start + timedelta(minutes=i.duration)  # do all of above in case of overnight shifts
+            i_end = i_start + timedelta(minutes=i.duration)  # do all above in case of overnight shifts
             for j in self.shift_types[1:]:
                 if i == j:
                     continue
@@ -126,9 +132,9 @@ class Context:
                 s_delta = j_start - i_end
                 s_delta = int(s_delta.total_seconds() // 60)
                 # print(f"Delta between {i.get().name} and {j.get().name}: {s_delta / 60}h")
-                if s_delta < (11 * 60):  # break between i and j is below 11 hours
+                if s_delta < (11 * 60):  # break if difference between: i, j is below 11 hours
                     print(f"Found illegal transition: {i.get().name} to {j.get().name}")
-                    # TODO: think about returning a list instead of tuples (np zeby przechowywac transitions dla wiecej niz 2 zmian)
+                    # TODO: think about returning a list instead of tuples (np żeby przechowywać transitions dla więcej niż 2 zmian)
                     it.append((i.id, j.id, 0))
         return it
 
@@ -140,7 +146,7 @@ class Context:
         """
         # NOTE: * kiedyś może trzeba będzie poeksperymentować z karami za nocki, lub damy ustawić to użytkownikowi
         #       * na razie to działa poprawnie tylko w przypadku gdy jest tylko jedna nocna zmiana
-        # TODO: przerobić funkcję do weekly constraintów żeby mogła przyjmować sumę shiftów
+        # TODO: przerobić funkcję do weekly constraints żeby mogła przyjmować sumę shiftów
         sc = []
         wsc = []
         for i in self.shift_types:
@@ -154,8 +160,8 @@ class Context:
                 wsc.append((i.id, 0, 1, 2, 3, 4, 0))
         return sc, wsc
 
-    def get_shift_info_by_id(self, id: int):
-        return next(x for x in self.shift_types if x.id == id)
+    def get_shift_info_by_id(self, index: int):
+        return next(x for x in self.shift_types if x.id == index)
 
     def calc_total_work_time(self):
         total_minutes = 0
