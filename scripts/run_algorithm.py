@@ -24,7 +24,7 @@ from apps.accounts.models import Employee
 from apps.organizations.models import Workplace
 from apps.schedules.models import Shift, ShiftType
 
-from scripts.helpers import flatten, get_month_by_weeks, get_letter_for_weekday, floor_to_multiple, ceil_to_multiple
+from scripts.helpers import get_month_by_weeks, get_letter_for_weekday, floor_to_multiple, ceil_to_multiple
 from scripts.context import Context, EmployeeInfo
 
 FLAGS = flags.FLAGS
