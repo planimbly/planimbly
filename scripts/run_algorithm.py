@@ -293,7 +293,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
     #     (shift, hard_min, soft_min, min_penalty, soft_max, hard_max, max_penalty)
     weekly_sum_constraints = [
         # Constraints on rests per week.
-        (0, 1, 2, 7, 2, 4, 4)
+        (0, 1, 2, 7, 2, 5, 4)
     ]
 
     # Overnight shift constraints
@@ -329,9 +329,13 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
     for ei in ctx.employees:
         for d in range(1, num_days + 1):
             model.AddExactlyOne(work[ei.employee.pk, s.id, d] for s in ctx.shift_types)
-            for s in ctx.shift_types[1:]:
-                if s.shift_type.workplace.id not in ei.workplaces:  # filter shifts by workplaces
-                    model.Add(work[ei.employee.pk, s.id, d] == 0)
+
+    for ei in ctx.employees:
+        for s in ctx.shift_types[1:]:
+            if s.get().workplace.id not in ei.workplaces:  # filter shifts by workplaces
+                works = [work[ei.employee.pk, s.id, d] for d in range(1, num_days + 1)]
+                model.Add(works == 0)
+                print("Removed shift %s in %s from employee %i" % (s.get().name, s.get().workplace, ei.get().pk))
 
     # Fixed assignments.
     for e, s, d in ctx.fixed_assignments:
@@ -507,7 +511,8 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
 
         sorted_excess_shifts = excess_full_timers | sorted_excess_rest
 
-        print("\nPrepared excess shifts:\n", sorted_excess_shifts)
+        if sorted_excess_shifts:
+            print("\nPrepared excess shifts:\n", sorted_excess_shifts)
 
         for s, d, v in sorted_excess_shifts:
             candidates = [[ei.get(), s, d] for ei in ctx.employees if solver.BooleanValue(work[ei.get().pk, s, d])]
@@ -600,12 +605,12 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
                 for s in ctx.shift_types:
                     if solver.BooleanValue(work[ei.get().pk, s.id, d]):
                         sched += s.get().name[0] + ' '
-            print('employee %i: %s | JT: %3i | WT: %3i | RATIO: %.1f' %
+            print('employee %2i: %s | JT: %3i | WT: %3i | RATIO: %.1f' %
                   (ei.get().pk, sched, ei.get().job_time, work_time[ei.get().pk],
                    work_time[ei.get().pk] / ei.get().job_time))
 
-        print('\n%sTOTALS | JT: %3i | WT: %3i | JT RATIO: %.3f \n%s | OT RATIO: %.3f' %
-              (' ' * 75, ctx.total_work_time, ctx.total_job_time, ctx.job_time_multiplier, ' ' * 101, ctx.overtime_multiplier))
+        print('\n%sTOTALS | JT: %4i | WT: %4i | JT RATIO: %.3f \n%s | OT RATIO: %.3f' %
+              (' ' * 75, ctx.total_work_time, ctx.total_job_time, ctx.job_time_multiplier, ' ' * 103, ctx.overtime_multiplier))
 
     # We only return a list of shift objects
     def output_inflate():
@@ -627,6 +632,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
     print('  - conflicts        : %i' % solver.NumConflicts())
     print('  - branches         : %i' % solver.NumBranches())
     print('  - wall time (sec.) : %f' % solver.WallTime())
+    print('')
 
     return output_inflate()
 
