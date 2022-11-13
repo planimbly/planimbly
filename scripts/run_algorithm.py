@@ -329,7 +329,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
     for ei in ctx.employees:
         for d in range(1, num_days + 1):
             model.AddExactlyOne(work[ei.employee.pk, s.id, d] for s in ctx.shift_types)
-    
+
     for ei in ctx.employees:
         for s in ctx.shift_types[1:]:
             if s.get().workplace.id not in ei.workplaces:  # filter shifts by workplaces
