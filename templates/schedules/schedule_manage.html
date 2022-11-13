@@ -331,7 +331,11 @@
                     return hours - job_time
                 },
                 printToPdf(){
-                    html2pdf().from(document.getElementById('report')).save();
+                    var pdf_options = {
+                        filename: 'raport.pdf',
+                        jsPDF: {format: 'a4', orientation: 'landscape'}
+                    };
+                    html2pdf().set(pdf_options).from(document.getElementById('report')).save();
                 },
                 return_stat_shifts(shift_list) {
                     let shift_string = ''
