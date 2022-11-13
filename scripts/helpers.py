@@ -5,7 +5,7 @@ from math import floor, ceil
 def get_month_by_weeks(year: int, month: int):
     """Returns list of lists containing days of given month
 
-    Sublists contain days of given week (the last element of every sublist is either a sunday or the last day of the month)
+    Sub-lists contain days of given week (the last element of every sublist is either a sunday or the last day of the month)
 
     Days are stored in a tuple:
     day - (day, weekday)

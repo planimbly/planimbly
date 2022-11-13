@@ -27,6 +27,8 @@ from apps.schedules.models import Shift, ShiftType
 from scripts.helpers import get_month_by_weeks, get_letter_for_weekday, floor_to_multiple, ceil_to_multiple
 from scripts.context import Context, EmployeeInfo
 
+global num_days
+
 FLAGS = flags.FLAGS
 flags.DEFINE_string('output_proto', 'cp_model.proto', 'Output file to write the cp_model proto to.')
 flags.DEFINE_string('params', 'max_time_in_seconds:60.0', 'Sat solver parameters.')
@@ -632,15 +634,13 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
 def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workplaces, emp_preferences, emp_absences):
     workplace = Workplace.objects.all().first()
 
-    active_days = '1111111'
-
     # Calendar data
     global num_days
     num_days = get_month_by_weeks(year, month)[-1][-1][0]
 
     shift_free = ShiftType(hour_start=datetime.time(datetime.strptime('00:00', '%H:%M')),
                            hour_end=datetime.time(datetime.strptime('00:00', '%H:%M')),
-                           name='-', workplace=workplace, active_days=active_days,
+                           name='-', workplace=workplace, active_days='1111111',
                            is_used=True, is_archive=False)
     shift_types.insert(0, shift_free)
 
