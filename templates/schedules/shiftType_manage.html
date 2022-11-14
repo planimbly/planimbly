@@ -68,7 +68,7 @@
 
         <div class="modal fade" id="addShiftModal" tabindex="-1" aria-labelledby="shiftModalLabel"
              aria-hidden="true">
-            <div class="modal-dialog">
+            <div class="modal-dialog" style="max-width: 800px">
                 <div class="modal-content">
                     <form v-on:submit.prevent="add_shiftType">
                         <div class="modal-header">
@@ -79,22 +79,22 @@
                         <div class="modal-body">
                             <div class="row g-3 d-flex align-items-center">
                                 <div class="col-4">
-                                    <label for="shiftStartDate" class="form-label modal-style">Start zmiany</label>
+                                    <label for="shiftStartDate" class="form-label modal-style" required>Start zmiany</label>
                                 </div>
                                 <div class="col-8">
-                                    <input type="time" class="form-control" v-model="hour_start" id="shiftStartDate">
+                                    <input type="time" class="form-control" v-model="hour_start" id="shiftStartDate" required>
                                 </div>
                                 <div class="col-4">
-                                    <label for="shiftEndDate" class="form-label modal-style">Koniec zmiany</label>
+                                    <label for="shiftEndDate" class="form-label modal-style" required>Koniec zmiany</label>
                                 </div>
                                 <div class="col-8">
-                                    <input type="time" class="form-control" v-model="hour_end" id="shiftEndDate">
+                                    <input type="time" class="form-control" v-model="hour_end" id="shiftEndDate" required>
                                 </div>
                                 <div class="col-4">
-                                    <label for="shiftName" class="form-label modal-style">Nazwa</label>
+                                    <label for="shiftName" class="form-label modal-style" required>Nazwa</label>
                                 </div>
                                 <div class="col-8">
-                                    <input type="text" class="form-control" v-model="name" id="shiftName">
+                                    <input type="text" class="form-control" v-model="name" id="shiftName" required>
                                 </div>
 
 
@@ -102,23 +102,28 @@
                                     <label for="demand" class="form-label modal-style">Zapotrzebowanie</label>
                                 </div>
                                 <div class="col-8">
-                                    <input type="number" class="form-control" v-model="demand" id="demand">
+                                    <input type="number" class="form-control" v-model="demand" id="demand" required>
                                 </div>
 
                                 <div class="col-4">
                                     <label for="color" class="form-label modal-style">Kolor</label>
                                 </div>
                                 <div class="col-8">
-                                    <input type="color" class="form-control" v-model="color" id="color">
+                                    <input type="color" class="form-control" v-model="color" id="color" required>
                                 </div>
 
 
-                                <div class="col-4">
-                                    <label for="shiftActiveDays" class="form-label modal-style">Aktywne dni</label>
+                                <div class="list-group list-group-horizontal" style="margin-top: 15px">
+                                    <div v-for="day of daylist_add" class="list-group-item list-group-item-action ">
+                                        <div class="active_days_row">
+                                            <input type="checkbox" v-model="day.val">                        
+                                            <div class="fw-bold"> [[ day.day ]] </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-8">
+                                {% comment %} <div class="col-8">
                                     <input type="text" class="form-control" v-model="active_days" id="shiftActiveDays">
-                                </div>
+                                </div> {% endcomment %}
                                 <div class="col-4">
                                     <label for="isShiftUsed" class="form-label modal-style">W użyciu</label>
                                 </div>
@@ -136,9 +141,9 @@
                         </div>
                     </form>
 
-                    <p v-for="(field, index) in response">
+                    {% comment %} <p v-for="(field, index) in response">
                         [[ index ]] : [[ field.join('') ]]
-                    </p>
+                    </p> {% endcomment %}
                 </div>
             </div>
         </div>
@@ -231,6 +236,7 @@
                         select_workplace: {{ select_workplace | safe }},
                         selected_workplace: '',
                         daylist: null,
+                        daylist_add: null,
                     }
                 },
                 computed: {
@@ -264,6 +270,7 @@
                         axios
                             .get(this.base_url)
                             .then(response => (this.shiftType_list = response.data))
+                            this.daylist_add = this.st_numbers_to_list('0000000')
                     },
                     add_shiftType() {
                         swal({
@@ -282,7 +289,7 @@
                                                 name: this.name,
                                                 color: this.color,
                                                 demand: this.demand,
-                                                active_days: this.active_days,
+                                                active_days: this.st_list_to_numbers(this.daylist_add),
                                                 is_used: this.is_used
                                             }
                                         )

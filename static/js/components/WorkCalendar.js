@@ -60,6 +60,32 @@ export default {
 
       /* USER ACTIONS */
       delete_existing_shift(shift_type_id){
+        const specific_shift_id_array = [];
+        for (const shift of Object.keys(this.clickedTileDay.shifts)) {
+          if (this.clickedTileDay.shifts[shift].shift_type_id === shift_type_id) {
+              for (const spec_shift_worker in this.clickedTileDay.shifts[shift].workers){
+                specific_shift_id_array.push(this.clickedTileDay.shifts[shift].workers[spec_shift_worker].shift_id);
+              }
+          }
+        }
+        while (specific_shift_id_array.length > 0){
+          this.api_delete(specific_shift_id_array.pop());
+        }
+      },
+      warning_delete_shift(shift_type_id){
+        swal({
+          title: "Potwierdź usunięcie zmian z całego dnia",
+          icon: "warning",
+          buttons: true,
+          dangerMode: true,
+        })
+          .then((willAdd) => {
+              if (willAdd) {
+                this.delete_existing_shift(shift_type_id)
+              }
+          });
+      },
+      delete_all_shifts_in_day(clickedTileDayShifts){
         swal({
           title: "Potwierdź usunięcie zmiany",
           icon: "warning",
@@ -68,21 +94,12 @@ export default {
         })
           .then((willAdd) => {
               if (willAdd) {
-                const specific_shift_id_array = [];
-                for (const shift of Object.keys(this.clickedTileDay.shifts)) {
-                  if (this.clickedTileDay.shifts[shift].shift_type_id === shift_type_id) {
-                      for (const spec_shift_worker in this.clickedTileDay.shifts[shift].workers){
-                        specific_shift_id_array.push(this.clickedTileDay.shifts[shift].workers[spec_shift_worker].shift_id);
-                      }
-                  }
-                }
-                while (specific_shift_id_array.length > 0){
-                  this.api_delete(specific_shift_id_array.pop());
+                for (let shift of clickedTileDayShifts){
+                  this.delete_existing_shift(shift.shift_type_id)
                 }
               }
-      });
+          });
       },
-
       delete_employee_from_shift(specific_shift_id){
         swal({
           title: "Potwierdź usunięcie pracownika ze zmiany",
@@ -377,7 +394,7 @@ export default {
                             <div class="fw-bold col">[[shift.label]] </div>
                             <button @click="addEmployeeToExistingShift_ShiftTypeID = shift.shift_type_id" type="button" 
                             data-bs-target="#pickEmployeeAddToExistingModal" data-bs-toggle="modal" data-bs-dismiss="modal" class="material-icons col-auto" style="border: none; background-color: rgba(0, 0, 255, 0); color: cornflowerblue;">person_add</button>
-                            <button @click="delete_existing_shift(shift.shift_type_id)" type="button" class="material-icons col-auto" style="margin-right: 10px; border: none; background-color: rgba(0, 0, 255, 0); color: rgb(255, 90, 90);">delete_outline</button>
+                            <button @click="warning_delete_shift(shift.shift_type_id)" type="button" class="material-icons col-auto" style="margin-right: 10px; border: none; background-color: rgba(0, 0, 255, 0); color: rgb(255, 90, 90);">delete_outline</button>
                           </div>
                         </div>
                         <ul class="list-group"> 
@@ -393,7 +410,9 @@ export default {
                       </li>
                   </ul> 
                  <button @click="nullify_NewShift" type="button" data-bs-target="#addNewShiftTypeModal"
-                  data-bs-toggle="modal" data-bs-dismiss="modal" class="btn btn-primary">Dodaj zmianę</button>                   
+                  data-bs-toggle="modal" data-bs-dismiss="modal" class="btn btn-primary">Dodaj zmianę</button> 
+                  
+                 <button @click="delete_all_shifts_in_day(clickedTileDay.shifts)" type="button" data-bs-dismiss="modal" class="btn btn-outline-danger" style="margin-left: 10px">Usuń cały dzień</button>   
                 </div>
                 
             </div>
