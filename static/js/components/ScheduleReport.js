@@ -5,6 +5,7 @@ export default {
       year: Number,
       month: Number, //1-12
       unit_id: Number,
+      workplaces: Object,
       attach_days_employees_report: Boolean,
     },
 
