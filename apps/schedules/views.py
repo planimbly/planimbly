@@ -158,7 +158,7 @@ class ScheduleReportGetApiView(APIView):
                     end__gte=first_day).values('id', 'start', 'end', 'type')
                 data[employee.pk] = {
                     'employee_id': employee.pk,
-                    'employee_loing': employee.username,
+                    'employee_login': employee.username,
                     'employee_first_name': employee.first_name,
                     'employee_last_name': employee.last_name,
                     'employee_work_hours': employee.job_time,

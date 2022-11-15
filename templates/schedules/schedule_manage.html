@@ -4,6 +4,7 @@
 
 {% block head %}
     <link rel="stylesheet" href="{% static 'css/schedules/schedule.css' %}">
+    <link rel="stylesheet" href="{% static 'css/schedules/report.css' %}">
     <script type="application/javascript" src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script type="application/javascript" src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.js"></script>
@@ -134,16 +135,42 @@
         </div>
 
         <div class="modal fade" id="generateReportModal" tabindex="-1" aria-labelledby="generateReportLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
               <div class="modal-content">
                 <div class="modal-header">
-                  <h5 class="modal-title" id="exampleModalLabel">Wygeneruj raport</h5>
+                  <h5 class="modal-title" id="exampleModalLabel">Wygeneruj raport dla [[select_unit.find(unit => unit.id === selected_unit).name]]</h5>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                  Ustawienia
-                  [[select_unit.find(unit => unit.id === selected_unit).name]]
-                </div>
+                    <div class="row g-3 d-flex align-items-center">
+                        <div class="col-6">
+                            <label for="year" class="form-label modal-style">Rok</label>
+                        </div>
+                        <div class="col-6">
+                            <input type="number" class="form-control" v-model="year_report" required>
+                        </div>
+
+                        <div class="col-6">
+                            <label for="month" class="form-label modal-style">Miesiąc</label>
+                        </div>
+                        <div class="col-6">
+                            {% comment %} <input type="number" class="form-control" v-model="month" required> {% endcomment %}
+                            <select class="form-select overflow-hidden" v-model="month_report">
+                                <option v-for="label in month_labels" :value="label.id">
+                                    [[ label.name ]]
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <div class="col6">
+                            <input class="form-check-input" type="checkbox" value="attach_days_employees_report" id="attachDaysEmployeesReport" checked>
+                            <label class="form-check-label ms-2" for="attachDaysEmployeesReport">
+                                Dołącz zestawienie dni pracy per pracownik
+                            </label>
+                        </div>
+                        </div>
+                        
+                    </div>
                 <div class="modal-footer">
                   <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reportModal">Generuj</button>
                 </div>
@@ -160,7 +187,13 @@
                 </div>
                 <div class="modal-body">
                   <div ref="reportRef" id="report">
-                    <schedule-report></schedule-report>
+                    <schedule-report
+                        :year="year_report"
+                        :month="month_report"
+                        :attach_days_employees_report="attach_days_employees_report"
+                        :workplaces="current_workplace"
+                        :unit_id="selected_unit">
+                    </schedule-report>
                   </div>
                 </div>
                 <div class="modal-footer">
@@ -294,12 +327,15 @@
                     month: new Date().getMonth() + 1,
                     year_cal: new Date().getFullYear(),
                     month_cal: new Date().getMonth() + 1,
+                    year_report: new Date().getFullYear(),
+                    month_report: new Date().getMonth() + 1,
                     checked_workplace: [],
                     loading: false,
                     available_workers: null,
                     available_shift_types: null,
                     statistics: null,
                     shift_types_for_each_workplace: [],
+                    attach_days_employees_report: true,
                     month_labels: [
                         {id: 1, name: 'Styczeń'},
                         {id: 2, name: 'Luty'},
@@ -331,7 +367,11 @@
                     return hours - job_time
                 },
                 printToPdf(){
-                    html2pdf().from(document.getElementById('report')).save();
+                    var pdf_options = {
+                        filename: 'raport.pdf',
+                        jsPDF: {format: 'a4', orientation: 'landscape'}
+                    };
+                    html2pdf().set(pdf_options).from(document.getElementById('report')).save();
                 },
                 return_stat_shifts(shift_list) {
                     let shift_string = ''
