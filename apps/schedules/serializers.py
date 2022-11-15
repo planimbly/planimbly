@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import ShiftType, Preference, Absence
+from .models import ShiftType, Preference, Absence, Assignment
 from ..accounts.models import Employee
 from ..accounts.serializers import EmployeeSerializer
 
@@ -27,6 +27,20 @@ class PreferenceSerializer(serializers.ModelSerializer):
         if data['shift_type'].workplace not in data['employee'].user_workplace.all():
             raise serializers.ValidationError("User is not assigned to workplace")
         return data
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['shift_type_obj'] = ShiftTypeSerializer(ShiftType.objects.get(pk=data['shift_type'])).data
+        return data
+
+
+class AssignmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Assignment
+        fields = ['id', 'shift_type', 'employee', 'start', 'end', 'negative_flag']
+        extra_kwargs = {
+            'id': {'read_only': True}
+        }
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

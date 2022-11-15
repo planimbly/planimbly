@@ -19,10 +19,11 @@ from rest_framework import routers
 
 from .views import OrganizationCreateView, EmployeesManageView, UnitsManageView, UnitViewSet, \
     WorkplaceManageView, WorkplaceViewSet, EmployeeToUnitApiView, \
-    EmployeeToWorkplaceApiView, EmployeeToUnitWorkplaceView, EmployeesImportApiView
+    EmployeeToWorkplaceApiView, EmployeeToUnitWorkplaceView, EmployeesImportApiView, WorkplaceClosingViewSet
 
-unit_router = routers.DefaultRouter()
-unit_router.register(r'unit', UnitViewSet, basename='unit')
+default_router = routers.DefaultRouter()
+default_router.register(r'unit', UnitViewSet, basename='unit')
+default_router.register(r'workplace_closing', WorkplaceClosingViewSet, basename='workplace_closing')
 workplace_router = routers.DefaultRouter()
 workplace_router.register(r'workplace', WorkplaceViewSet, basename='workplace')
 
@@ -37,7 +38,7 @@ urlpatterns = [
     path('employees_to_unit_workplace/', EmployeeToUnitWorkplaceView.as_view(), name='employee_to_unit_workplace'),
 
     # API urls
-    path('api/', include(unit_router.urls)),
+    path('api/', include(default_router.urls)),
     path('api/<int:unit_pk>/', include(workplace_router.urls)),
     path('api/<int:unit_workplace_pk>/employees_to_unit/', EmployeeToUnitApiView.as_view(),
          name='employee_to_unit_api'),

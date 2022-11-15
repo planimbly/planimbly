@@ -25,4 +25,10 @@ class Workplace(models.Model):
     workplace_unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.name
+        return self.workplace_unit.name + ' ' + self.name
+
+
+class WorkplaceClosing(models.Model):
+    workplace = models.ForeignKey(Workplace, on_delete=models.CASCADE, verbose_name="Dział")
+    start = models.DateField(verbose_name="Początek zamknięcia", null=True, blank=True)
+    end = models.DateField(verbose_name="Koniec zamknięcia", null=True, blank=True)

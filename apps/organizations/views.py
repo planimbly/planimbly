@@ -12,8 +12,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .forms import ManagerCreateForm, OrganizationCreateForm
-from .models import Unit, Workplace
-from .serializers import WorkplaceSerializer, UnitSerializer
+from .models import Unit, Workplace, WorkplaceClosing
+from .serializers import WorkplaceSerializer, UnitSerializer, WorkplaceClosingSerializer
 from ..accounts.models import Employee
 from ..accounts.serializers import EmployeeSerializer
 
@@ -231,3 +231,9 @@ class EmployeeToWorkplaceApiView(APIView):
             else:
                 return Response()
         return Response()
+
+
+class WorkplaceClosingViewSet(viewsets.ModelViewSet):
+    queryset = WorkplaceClosing.objects.all()
+    serializer_class = WorkplaceClosingSerializer
+    permission_classes = [permissions.IsAuthenticated]

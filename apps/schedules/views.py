@@ -11,8 +11,9 @@ from rest_framework.views import APIView
 import scripts.run_algorithm
 from apps.accounts.models import Employee
 from apps.organizations.models import Workplace, Unit
-from apps.schedules.models import ShiftType, Shift, Schedule, Preference, Absence
-from apps.schedules.serializers import ShiftTypeSerializer, PreferenceSerializer, AbsenceSerializer
+from apps.schedules.models import ShiftType, Shift, Schedule, Preference, Absence, Assignment
+from apps.schedules.serializers import ShiftTypeSerializer, PreferenceSerializer, AbsenceSerializer, \
+    AssignmentSerializer
 
 
 class ShiftTypeManageView(TemplateView):
@@ -343,3 +344,17 @@ class AbsenceViewSet(viewsets.ModelViewSet):
     def update(self, request, pk=None):
         response = {'message': 'Update function is not offered in this path.'}
         return Response(response, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+class AssignmentViewSet(viewsets.ModelViewSet):
+    queryset = Assignment.objects.all()
+    serializer_class = AssignmentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+        if request.query_params.get('employee'):
+            queryset = Assignment.objects.filter(employee_id=request.query_params.get('employee'))
+        else:
+            queryset = Assignment.objects.all()
+        serializer = AssignmentSerializer(queryset, many=True)
+        return Response(serializer.data)
