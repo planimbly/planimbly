@@ -1,0 +1,81 @@
+/*
+*   This file contains style classes for reports generated in schedule_manage.html
+*
+*/
+
+.PN-pdf-container{
+    /* margin: 1rem; */
+    margin: 10px; /* MARGIN FOR PRINTER: DON'T CHANGE UNLESS YOU KNOW WHAT YOU'RE DOING */
+    width: 1103px; /* WIDTH OF LANDSCAPE PDF - 2 x margin: DON'T CHANGE UNLESS YOU KNOW WHAT YOU'RE DOING */
+    /* background-color: aquamarine; */
+}
+
+/**/
+/* unit's schedule report classes */
+/**/
+.PN-report-schedule-table-container{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: stretch;
+    align-content: stretch;
+    /* background-color: beige; */
+}
+
+.PN-schedule-column{
+    display: flex;
+    flex-direction: column;
+    border-style: solid;
+    border-width: 1px;
+    /* flex-grow: 1; */
+    min-width: 1rem;
+    border-bottom: none;
+    margin-bottom: 2rem;
+}
+
+.PN-schedule-column-label{
+    border-bottom: 3px solid;
+    text-align: center;
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+.PN-schedule-column-content{
+    border-bottom: 1px solid;
+    text-align: center;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    /* padding-left: 0.3rem; */
+    /* padding-right: 0.3rem; */
+    /* border-right: 1px solid; */
+}
+
+/**/
+/* employees schedule report classes */
+/**/
+.PN-report-employee-table-container{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: stretch;
+    align-content: stretch;
+    background-color: aquamarine;
+}
+
+.PN-employee-column{
+    display: flex;
+    flex-direction: column;
+    border-style: solid;
+    border-width: 1px;
+    /* flex-grow: 1; */
+    min-width: 1rem;
+}
+
+.PN-employee-column-label{
+    border-bottom: 3px solid;
+    text-align: center;
+    padding-left: 2px;
+    padding-right: 2px;
+}
