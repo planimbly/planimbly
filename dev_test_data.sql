@@ -127,3 +127,18 @@ WHERE id <> 0;
 DELETE
 FROM schedules_shift
 WHERE id <> 0;
+
+
+SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('"organizations_organization"', 'id')), (SELECT (MAX("id") + 1) FROM "organizations_organization"), FALSE);
+
+SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('"organizations_unit"', 'id')), (SELECT (MAX("id") + 1) FROM "organizations_unit"), FALSE);
+
+SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('"organizations_workplace"', 'id')), (SELECT (MAX("id") + 1) FROM "organizations_workplace"), FALSE);
+
+SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('"schedules_shifttype"', 'id')), (SELECT (MAX("id") + 1) FROM "schedules_shifttype"), FALSE);
+
+SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('"accounts_employee"', 'id')), (SELECT (MAX("id") + 1) FROM "accounts_employee"), FALSE);
+
+SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('"accounts_employee_user_unit"', 'id')), (SELECT (MAX("id") + 1) FROM "accounts_employee_user_unit"), FALSE);
+
+SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('"accounts_employee_user_workplace"', 'id')), (SELECT (MAX("id") + 1) FROM "accounts_employee_user_workplace"), FALSE);
