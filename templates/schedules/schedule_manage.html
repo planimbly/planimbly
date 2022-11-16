@@ -172,7 +172,7 @@
                         
                     </div>
                 <div class="modal-footer">
-                  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reportModal">Generuj</button>
+                  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reportModal" v-on:click="fetch_report_data">Generuj</button>
                 </div>
               </div>
             </div>
@@ -186,13 +186,13 @@
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                  <div ref="reportRef" id="report">
+                  <div id="report">
                     <schedule-report
                         :year="year_report"
                         :month="month_report"
                         :attach_days_employees_report="attach_days_employees_report"
-                        :workplaces="current_workplace"
-                        :unit_id="selected_unit">
+                        :schedule_for_each_workplace="schedule_for_each_workplace"
+                        :workdays_for_each_employee="workdays_for_each_employee">
                     </schedule-report>
                   </div>
                 </div>
@@ -299,19 +299,12 @@
         import WorkCalendar from "{% static 'js/components/WorkCalendar.js' %}";
         import ScheduleReport from "{% static 'js/components/ScheduleReport.js' %}";
 
-        const {ref, createApp} = Vue
+        const {createApp} = Vue
         createApp({
             delimiters: ["[[", "]]"],
             components: {
                 WorkCalendar,
                 ScheduleReport
-            },
-            setup() {
-                const reportRef = ref(null);
-                
-                return {
-                    reportRef
-                }
             },
             data() {
                 return {
@@ -335,6 +328,8 @@
                     available_shift_types: null,
                     statistics: null,
                     shift_types_for_each_workplace: [],
+                    schedule_for_each_workplace: [],
+                    workdays_for_each_employee: null,
                     attach_days_employees_report: true,
                     month_labels: [
                         {id: 1, name: 'Styczeń'},
@@ -429,6 +424,14 @@
                         this.shift_types_for_each_workplace = result;
                         });
                 },
+                fetch_report_data(){
+                    axios
+                        .get('{% url 'schedule_report_get' 123456789 %}'.replace(/123456789/, this.selected_unit), {params: {'year': this.year_report, 'month': this.month_report}})
+                        .then(response => {this.workdays_for_each_employee = response.data;});
+                    this.fetch_schedule_for_each_workplace().then(result => {
+                        this.schedule_for_each_workplace = result;
+                    });
+                },
                 change_workplace() {
                     try {
                         this.selected_workplace = this.select_workplace[this.selected_unit][0]['id']
@@ -449,6 +452,18 @@
                             
                     }
                     return shiftTypes_to_workplace;
+                },
+                async fetch_schedule_for_each_workplace(){
+                    const schedules_to_workplace = [];
+                    for (let i=0; i<this.current_workplace.length; i++){
+
+                        const reportSchedules_base_url = '{% url 'schedule_get' 123456789 %}'.replace(/123456789/, this.current_workplace[i].id);
+
+                        await axios.get(reportSchedules_base_url, {params: {'year': this.year_report, 'month': this.month_report}}).then(response => {
+                            schedules_to_workplace.push({workplace: this.current_workplace[i], schedule: response.data});
+                        });
+                    }
+                    return schedules_to_workplace;
                 },
                 active_days_to_string_abbr_array(active_days_numeric){
                     const abbr_to_day=["Pn", "Wt", "Śr", "Cz", "Pt", "Sb", "Nd"];
