@@ -2,7 +2,7 @@
 import calendar
 import datetime
 
-from django.db.models import Q
+from django.db.models import Sum
 from django.views.generic import TemplateView
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
@@ -94,7 +94,7 @@ class ScheduleCreateApiView(APIView):
             schedule.save()
             schedule_dict.setdefault(workplace.id, schedule)
 
-        shiftType_list = list(ShiftType.objects.filter(workplace_id__in=workplace_list))
+        shiftType_list = list(ShiftType.objects.filter(workplace_id__in=workplace_list).filter(is_used=True))
 
         emp_for_workplaces = {}
 
@@ -103,10 +103,12 @@ class ScheduleCreateApiView(APIView):
                 user_workplace__in=Workplace.objects.filter(id__in=[work_id])).distinct().order_by('id')
 
         employee_list = Employee.objects.filter(user_workplace__in=workplace_query).distinct().order_by('id')
-        # TODO (StartA <= EndB) and (EndA >= StartB)
         preferences = Preference.objects.filter(employee__in=employee_list)
-        absences = Absence.objects.filter(employee__in=employee_list).filter(
-            Q(start__month=month) | Q(end__month=month))
+
+        first_day = datetime.date(int(year), int(month), 1)
+        last_day = datetime.date(int(year), int(month), calendar.monthrange(int(year), int(month))[1])
+        absences = Absence.objects.filter(employee__in=employee_list).filter(start__lte=last_day).filter(
+            end__gte=first_day)
 
         emp_preferences = {}
         for preference in preferences:
@@ -182,7 +184,7 @@ class ScheduleGetApiView(APIView):
             shifts = Shift.objects.filter(schedule__workplace=workplace).filter(schedule__month=month).filter(
                 schedule__year=year).order_by('date')
             shifts_statistic = Shift.objects.filter(schedule__workplace__workplace_unit=unit).filter(
-                schedule__month=month).filter(schedule__year=year).order_by('shift_type__name')
+                schedule__month=month).filter(schedule__year=year).order_by('shift_type__hour_start')
             days_num = calendar.monthrange(int(year), int(month))[1]
             days = {}
             statistics = {}
@@ -205,10 +207,14 @@ class ScheduleGetApiView(APIView):
                 statistics[shift.employee.id]['shift_type'][shift.shift_type.name] += 1
                 statistics[shift.employee.id]['hours'] += shift_len.seconds / 3600
 
-                '''if not statistics[shift.employee.id]['absence']:
-                    absences = Absence.objects.filter(employee=shift.employee).filter(
-                        Q(start__month=month) | Q(end__month=month))
-                    statistics[shift.employee.id]['absence'] = absences'''
+                if not statistics[shift.employee.id].get(Absence.ABSENCE_TYPE[0][0]):
+                    first_day = datetime.date(int(year), int(month), 1)
+                    last_day = datetime.date(int(year), int(month), days_num)
+                    for ab_type in Absence.ABSENCE_TYPE:
+                        h_sum = Absence.objects.filter(employee=shift.employee).filter(start__lte=last_day).filter(
+                            end__gte=first_day).filter(type=ab_type[0]).aggregate(Sum('hours_number'))[
+                            'hours_number__sum']
+                        statistics[shift.employee.id][ab_type[0]] = h_sum
 
             for shift in shifts:
                 days[shift.date.strftime(date_format)].append((
