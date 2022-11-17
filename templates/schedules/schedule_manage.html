@@ -381,10 +381,10 @@
                 },
                 return_stat_shifts(shift_list) {
                     let shift_string = ''
-                    for (let shift in shift_list){
+                    for (let shift in shift_list) {
                         shift_string += shift;
                         shift_string += ':';
-                        shift_string += shift_list[shift];
+                        shift_string += (shift_list[shift] * 8) + ' (' + shift_list[shift] + ')';
                         shift_string += ' '
                     }
                     return shift_string;
