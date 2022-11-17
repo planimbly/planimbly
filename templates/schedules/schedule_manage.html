@@ -316,12 +316,12 @@
                     select_workplace: {{ select_workplace | safe }},
                     selected_workplace: null,
                     create_schedule_url: '{% url 'schedule_create' %}',
-                    year: new Date().getFullYear(),
-                    month: new Date().getMonth() + 1,
+                    year:  null,//new Date().getFullYear(),
+                    month: null,//new Date().getMonth() + 1,
                     year_cal: new Date().getFullYear(),
                     month_cal: new Date().getMonth() + 1,
-                    year_report: new Date().getFullYear(),
-                    month_report: new Date().getMonth() + 1,
+                    year_report: null,//new Date().getFullYear(),
+                    month_report: null,//new Date().getMonth() + 1,
                     checked_workplace: [],
                     loading: false,
                     available_workers: null,
@@ -358,6 +358,11 @@
                 }
             },
             methods: {
+                // month&year comboboxes in modals follow main comboboxes 
+                copy_year_month_to_modals(){
+                    this.year = this.year_report = this.year_cal;
+                    this.month = this.month_report = this.month_cal;
+                },
                 calculate_diff(hours, job_time) {
                     return hours - job_time
                 },
@@ -423,6 +428,7 @@
                     this.fetch_shift_types_for_each_workplace().then(result => {
                         this.shift_types_for_each_workplace = result;
                         });
+                    this.copy_year_month_to_modals();
                 },
                 fetch_report_data(){
                     axios
