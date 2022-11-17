@@ -91,13 +91,15 @@
         <div>
             <h5 style="margin-top: 25px; margin-top: 20px;">Statystyki dla jednostki</h5>
 
-            <table class="w-50 table">
+            <table class="w-75 table">
                 <thead>
                     <tr>
                         <th scope="col">Pracownik</th>
                         <th scope="col">Godziny/Etat</th>
                         <th scope="col">Bilans</th>
                         <th scope="col">Ilość zmian</th>
+                        <th scope="col">Godziny L4</th>
+                        <th scope="col">Godziny zwolnienia</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -108,6 +110,8 @@
                         <td v-if="calculate_diff(stat.hours, stat.jobtime) == 0">[[ calculate_diff(stat.hours, stat.jobtime) ]]</td>
                         <td v-if="calculate_diff(stat.hours, stat.jobtime) > 0" style="color: green;">[[ calculate_diff(stat.hours, stat.jobtime) ]]</td>
                         <td>[[ return_stat_shifts(stat.shift_type) ]]</td>
+                        <td>[[ return_sick_or_vac(stat.SICK) ]]</td>
+                        <td>[[ return_sick_or_vac(stat.VAC) ]]</td>
                     </tr>
                 </tbody>
             </table>
@@ -358,6 +362,13 @@
                 }
             },
             methods: {
+                return_sick_or_vac(data){
+                    if (data == null){
+                        return 'brak'
+                    }else{
+                        return data
+                    }
+                },
                 calculate_diff(hours, job_time) {
                     return hours - job_time
                 },

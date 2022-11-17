@@ -235,8 +235,8 @@
                         select_unit: {{ select_unit | safe}},
                         select_workplace: {{ select_workplace | safe }},
                         selected_workplace: '',
-                        daylist: null,
-                        daylist_add: null,
+                        daylist: this.st_numbers_to_list('0000000'),
+                        daylist_add: this.st_numbers_to_list('0000000'),
                     }
                 },
                 computed: {
