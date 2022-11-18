@@ -114,8 +114,7 @@ export default {
               
               return shiftBstart - shiftAstart;
             });
-            console.log(included_shiftTypes);
-            console.log('<-->2');
+            
           }
           console.log(included_shiftTypes);
           return included_shiftTypes;
@@ -144,11 +143,9 @@ export default {
           this.schedule_for_each_workplace.forEach(workplace_schedule => /*for (workplace_schedule of this.schedule_for_each_workplace)*/ {
             
             if (workplace_schedule.schedule.days != null) {
-              //console.log(workplace_schedule.schedule.days); // TODO: RETURNS ALL EMPTY ARRAYS
               for (const day of Object.keys(workplace_schedule.schedule.days)) {
                 
                 if (workplace_schedule.schedule.days[day].length > 0){
-                  //console.log(workplace_schedule.schedule.days[day]);
                   for (const shift of Object.keys(workplace_schedule.schedule.days[day])){
                     const add_info = workplace_schedule.schedule.days[day][shift].worker.id.toString() in this.workdays_for_each_employee ?
                           this.workdays_for_each_employee[workplace_schedule.schedule.days[day][shift].worker.id.toString()].employee_work_hours.toString()+'/160' :
@@ -182,7 +179,6 @@ export default {
             included_employees.forEach((employee_entry, index) => {
               employee_entry[1].indicator = index + 1;
             });
-            console.log('weszki');
           }
           console.log(included_employees);
           return included_employees;
