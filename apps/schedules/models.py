@@ -9,6 +9,9 @@ class Schedule(models.Model):
     month = models.IntegerField(verbose_name='Miesiąc')
     workplace = models.ForeignKey(Workplace, on_delete=models.CASCADE, verbose_name="Dział")
 
+    def __str__(self):
+        return str(self.year) + ' ' + str(self.month) + ' ' + self.workplace.__str__()
+
 
 class ShiftType(models.Model):
     hour_start = models.TimeField(verbose_name="Czas rozpoczęcia zmiany")
@@ -42,7 +45,7 @@ class Assignment(models.Model):
     negative_flag = models.BooleanField(verbose_name="Zakaz", default=False)
 
     def __str__(self):
-        return self.shift_type.name + ' ' + self.employee.username
+        return self.shift_type.name + ' ' + self.employee.username + ' ' + str(self.negative_flag)
 
 
 class Shift(models.Model):
@@ -50,6 +53,9 @@ class Shift(models.Model):
     schedule = models.ForeignKey(Schedule, on_delete=models.CASCADE, verbose_name="Grafik")
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, verbose_name="Pracownik")
     shift_type = models.ForeignKey(ShiftType, on_delete=models.CASCADE, verbose_name="Typ zmiany")
+
+    def __str__(self):
+        return str(self.date) + ' ' + self.employee.__str__() + ' ' + self.shift_type.__str__()
 
 
 class Absence(models.Model):
@@ -62,3 +68,6 @@ class Absence(models.Model):
     ]
     type = models.CharField(max_length=256, verbose_name="Typ nieobecności", choices=ABSENCE_TYPE)
     hours_number = models.IntegerField(verbose_name="Liczba godzin nieobecności")
+
+    def __str__(self):
+        return self.employee.__str__() + ' ' + str(self.start) + '/' + str(self.end) + ' ' + self.type

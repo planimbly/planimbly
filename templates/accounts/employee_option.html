@@ -87,6 +87,43 @@
             <button data-bs-target="#addPreferenceModal" data-bs-toggle="modal" data-bs-dismiss="modal" 
                     class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj</button> 
         </div>
+
+        {% comment %} [[ preference.shift_type_obj.hour_start.toString().slice(0, 5) ]] {% endcomment %}
+
+        <div>
+            <h5>Przypisania</h5>
+            <div class="list-group">
+                <div v-for="assignment in assignment_list" :key="assignment.id">
+                    <div v-if="assignment.negative_flag == false" class="list-group-item list-group-item-action position-static">
+                        <div class="emp_option_table_box">
+                            <div>[[ assignment.shift_type_obj.name ]]: [[ return_assigment_data(assignment) ]]</div>
+                            <button v-on:click="remove_assignment(assignment.id)" class="material-icons" 
+                                    style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button data-bs-target="#addAssignmentModal" data-bs-toggle="modal" data-bs-dismiss="modal" 
+                    class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj</button> 
+        </div>
+
+        <div>
+            <h5>Zabronienia</h5>
+            <div class="list-group">
+                <div v-for="assignment in assignment_list" :key="assignment.id">
+                    <div v-if="assignment.negative_flag == true" class="list-group-item list-group-item-action position-static">
+                        <div class="emp_option_table_box">
+                            <div>[[ assignment.shift_type_obj.name ]]: [[ return_assigment_data(assignment) ]]</div>
+                            <button v-on:click="remove_assignment(assignment.id)" class="material-icons" 
+                                    style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button data-bs-target="#addBadAssignmentModal" data-bs-toggle="modal" data-bs-dismiss="modal" 
+                    class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj</button> 
+        </div>
+
     </div>
 
     <div class="modal fade" id="pickUnitForEmployee" tabindex="-1">
@@ -172,7 +209,7 @@
                     <div class="list-group" style="margin-top: 15px">
                         <div v-for="shiftType in shiftType_list" v-on:click="add_preference(shiftType.id)" 
                              class="list-group-item list-group-item-action" style="cursor: pointer">
-                            <div class="fw-bold"> [[ shiftType.name ]]: [[ shiftType.hour_start ]] - [[ shiftType.hour_end ]] </div>
+                            <div class="fw-bold"> [[ shiftType.name ]]: [[ shiftType.hour_start.toString().slice(0, 5) ]] - [[ shiftType.hour_end.toString().slice(0, 5) ]] </div>
                         </div>
                     </div>                   
 
@@ -189,6 +226,87 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="addAssignmentModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                      <h5 class="modal-title">Tworzenie przypisań</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <h5 class="modal-title" style="margin-bottom: 15px">Wybierz dział</h5>
+
+                        <select id="workplaceSelect" class="form-select" v-model="selected_workplace" v-on:change="shiftType_list_fetch" style="margin-bottom: 10px">
+                            <option :value="null" disabled hidden>Wybierz z listy</option>
+                            <option v-for="workplace of employee_info.user_workplace" :value="workplace.id">
+                                <div class="fw-bold">[[ workplace.name ]]: [[  get_unit_name(workplace) ]]</div>
+                            </option>
+                        </select>
+
+                        <div class="form-floating" style="margin-bottom: 10px">
+                            <input type="date" class="form-control" v-model="assign_add_start" id="inputDateStart" placeholder="Data rozpoczęcia przypisania">
+                            <label for="inputDateStart">Data rozpoczęcia przypisania</label>
+                        </div>
+
+                        <div class="form-floating" style="margin-bottom: 10px">
+                            <input type="date" class="form-control" v-model="assign_add_end" id="inputDateEnd" placeholder="Data końca przypisania">
+                            <label for="inputDateEnd">Data końca przypisania</label>
+                        </div>
+
+                        <div class="list-group" style="margin-top: 15px">
+                            <div v-for="shiftType in shiftType_list" v-on:click="add_assignment(shiftType.id, false)" 
+                                 class="list-group-item list-group-item-action" style="cursor: pointer">
+                                <div class="fw-bold"> [[ shiftType.name ]]: [[ shiftType.hour_start.toString().slice(0, 5) ]] - [[ shiftType.hour_end.toString().slice(0, 5) ]] </div>
+                            </div>
+                        </div> 
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addBadAssignmentModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                      <h5 class="modal-title">Tworzenie przypisań</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <h5 class="modal-title" style="margin-bottom: 15px">Wybierz dział</h5>
+
+                        <select id="workplaceSelect" class="form-select" v-model="selected_workplace" v-on:change="shiftType_list_fetch" style="margin-bottom: 10px">
+                            <option :value="null" disabled hidden>Wybierz z listy</option>
+                            <option v-for="workplace of employee_info.user_workplace" :value="workplace.id">
+                                <div class="fw-bold">[[ workplace.name ]]: [[  get_unit_name(workplace) ]]</div>
+                            </option>
+                        </select>
+
+                        <div class="form-floating" style="margin-bottom: 10px">
+                            <input type="date" class="form-control" v-model="assign_add_start" id="inputDateStart" placeholder="Data rozpoczęcia przypisania">
+                            <label for="inputDateStart">Data rozpoczęcia przypisania</label>
+                        </div>
+
+                        <div class="form-floating" style="margin-bottom: 10px">
+                            <input type="date" class="form-control" v-model="assign_add_end" id="inputDateEnd" placeholder="Data końca przypisania">
+                            <label for="inputDateEnd">Data końca przypisania</label>
+                        </div>
+
+                        <div class="list-group" style="margin-top: 15px">
+                            <div v-for="shiftType in shiftType_list" v-on:click="add_assignment(shiftType.id, true)" 
+                                 class="list-group-item list-group-item-action" style="cursor: pointer">
+                                <div class="fw-bold"> [[ shiftType.name ]]: [[ shiftType.hour_start.toString().slice(0, 5) ]] - [[ shiftType.hour_end.toString().slice(0, 5) ]] </div>
+                            </div>
+                        </div> 
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
 
 </div>
 
@@ -216,6 +334,7 @@
                     selected_unit: null,
                     selected_workplace: null,
                     preferences_list: null,
+                    assignment_list: null,
                     shift_list: null,
 
                     response: null,
@@ -224,13 +343,20 @@
                     response_workplace_data: null,
                     response_shiftType_data: null,
                     response_pref_data: null,
+                    response_assign_data: null,
 
                     base_url: '',
                     units_url: '',
                     emp_preferences_url: '',
-                    daylist: '',
+                    emp_assignment_url: '',
 
-                    // API COUNTER: 7
+                    daylist: '',
+                    daylist_assign: '',
+
+                    assign_add_start: null,
+                    assign_add_end: null,
+
+                    // API COUNTER: 8
                 }
             },
             computed: {
@@ -255,6 +381,16 @@
                 },
             },
             methods: {
+                return_assigment_data(assignment){
+                    if (assignment.end == null){
+                        return 'bezterminowo'
+                    }else{
+                        return assignment.start + ' - ' + assignment.end
+                    }
+                },
+                return_shifttype_data(shifttype){
+                    return shifttype.name + ': ' + shifttype.hour_start.toString().slice(0, 5) + ' - ' + shifttype.hour_end.toString().slice(0, 5) 
+                },
                 show(){
                     console.log(this.preferences_list)
                 },
@@ -301,7 +437,15 @@
                     axios
                         .get(this.emp_preferences_url)
                         .then(response_pref_data => (this.preferences_list = response_pref_data.data))
-                        this.daylist = this.st_numbers_to_list('0000000')
+                    this.daylist = this.st_numbers_to_list('0000000')
+                },
+                fetch_assignment_data(){
+                    this.emp_assignment_url = '{% url 'assignment-list' %}' + '?employee=' + this.employee_id
+                    axios
+                        .get(this.emp_assignment_url)
+                        .then(response_assign_data => (this.assignment_list = response_assign_data.data))
+                        .then(() => (console.log(this.assignment_list)))
+                    this.daylist_assign = this.st_numbers_to_list('0000000')
                 },
                 fetch_unit_data(){
                     this.units_url = '{% url 'unit-list' %}';
@@ -356,6 +500,25 @@
                                         id: pref_id,
                                     }
                                 ).then(() => this.fetch_preferences_data());
+                            }
+                        });
+                },
+                remove_assignment(assign_id){
+                    swal({
+                        title: "Czy na pewno chcesz usunąć przypisanie",
+                        icon: "warning",
+                        buttons: true,
+                        dangerMode: true,
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
+                                let remove_assignment_url = '{% url 'assignment-list' %}' + assign_id;
+                                axios
+                                .delete(remove_assignment_url,
+                                    {
+                                        id: assign_id,
+                                    }
+                                ).then(() => this.fetch_assignment_data());
                             }
                         });
                 },
@@ -463,6 +626,30 @@
                             }
                         });
                 },
+                add_assignment(shifttype, flag){
+                    swal({
+                        title: "Potwierdź dodanie przypisania",
+                        icon: "info",
+                        buttons: true,
+                        dangerMode: false,
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
+                                let add_assignment_url = '{% url 'assignment-list' %}'
+                                axios
+                                .post(add_assignment_url, 
+                                    {
+                                        shift_type: shifttype,
+                                        employee: this.employee_id,
+                                        start: this.assign_add_start,
+                                        end: this.assign_add_end,
+                                        negative_flag: flag,
+                                    }
+                                ).then(() => this.fetch_assignment_data());
+                                
+                            }
+                        });
+                },
                 st_numbers_to_list(numbers_str){
                     let day_list = []
                     let day_blueprint = ['pn', 'wt', 'śr', 'cz', 'pt', 'sb', 'nd']
@@ -511,6 +698,7 @@
                 this.fetch_unit_data()
                 this.workplace_list_fetch()
                 this.fetch_preferences_data()
+                this.fetch_assignment_data()
             }
         }).mount('#vue-app');
     </script>

@@ -74,7 +74,7 @@ export default {
       },
       warning_delete_shift(shift_type_id){
         swal({
-          title: "Potwierdź usunięcie zmian z całego dnia",
+          title: "Potwierdź usunięcie zmiany",
           icon: "warning",
           buttons: true,
           dangerMode: true,
@@ -87,7 +87,7 @@ export default {
       },
       delete_all_shifts_in_day(clickedTileDayShifts){
         swal({
-          title: "Potwierdź usunięcie zmiany",
+          title: "Potwierdź usunięcie zmian z całego dnia",
           icon: "warning",
           buttons: true,
           dangerMode: true,

@@ -167,7 +167,7 @@
                     })
                         .then((willAdd) => {
                             if (willAdd) {
-                                url = this.base_url + id + '/'
+                                let url = this.base_url + id + '/'
                                 axios
                                     .delete(url,
                                         {
