@@ -43,3 +43,6 @@ staticfiles
 staticfiles/
 mediafiles
 mediafiles/
+
+production_volumes
+production_volumes/
