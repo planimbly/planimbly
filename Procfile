@@ -1,1 +1,1 @@
-web: python manage.py migrate --no-input && gunicorn planimbly.wsgi
+web: python manage.py migrate --no-input && gunicorn --timeout=300 planimbly.wsgi
