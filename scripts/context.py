@@ -36,23 +36,43 @@ class EmployeeInfo:
     preferences = []
     absences = []
     absent_days = []
+    absent_time = 0
+    term_assignments = []
+    indefinite_assignments = []
 
-    def __init__(self, emp: Employee, wp: list, pref: list, ab: list):
+    def __init__(self, emp: Employee, wp: list, pref: list, ab: list, ass: list):
         self.employee = emp
         self.workplaces = wp
         self.preferences = pref
         self.absences = ab
-        self.absent_days = self.prepare_absent_days()
-        # self.num_absent_days = 0
+        self.absent_days, self.absent_time = self.prepare_absent_days()
+        self.term_assignments, self.indefinite_assignments = self.prepare_assignments(ass)
+
+    def prepare_assignments(self, assignments : list):
+        tass = []
+        iass = []
+        for a in assignments:
+            # term assignments
+            if a.end != None and a.start != None:
+                for i in range((a.end - a.start).days + 1):
+                    inter_date = a.start + timedelta(days=i)
+                    tass.append((a.shift_type, a.negative_flag, inter_date))
+                    print("[ASSIGNMENT] EMP: %2i | DAY: %2i | ST: %i | TYPE: %s" % (a.employee.pk, inter_date.day, a.shift_type, "neg" if a.negative_flag else "pos"))
+            else: # indefinite_assignments
+                    iass.append((a.shift_type, a.negative_flag))
+                    print("[ASSIGNMENT] EMP: %2i | ST: %i | TYPE: %s" % (a.employee.pk, a.shift_type, "neg" if a.negative_flag else "pos"))
+        return tass, iass
 
     def prepare_absent_days(self):
         ad = []
+        at = 0
         for ab in self.absences:
+            at += ab.hours_number
             for i in range((ab.end - ab.start).days + 1):
                 inter_date = ab.start + timedelta(days=i)
                 ad.append(inter_date)
                 print("[ABSENCE] EMP: %2i | DAY: %2i" % (ab.employee.pk, inter_date.day))
-        return ad
+        return ad, at
 
     def get_absent_days_in_month(self, month: int):
         """ Returns days on which given employee is absent """
