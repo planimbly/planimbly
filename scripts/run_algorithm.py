@@ -248,8 +248,8 @@ def add_monthly_soft_sum_constraint(model, works, hard_min, soft_min, min_cost,
     return cost_variables, cost_coefficients
 
 
-def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, schedule_dict, employees: list[Employee], shift_types: list[ShiftType], year: int,
-                           month: int, params, output_proto):
+def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, emp_assignments, schedule_dict, employees: list[Employee], shift_types: list[ShiftType],
+                           year: int, month: int, params, output_proto):
 
     # Dictionaries with:
     work_time = dict()          # with work time assigned for each employee (key is emp.pk)
@@ -262,13 +262,16 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
             emp_preferences[e.pk] = []
         if e.pk not in emp_absences:
             emp_absences[e.pk] = []
+        if e.pk not in emp_assignments:
+            emp_assignments[e.pk] = []
         work_time[e.pk] = 0
         num_emp_absences[e] = 0
 
     emp_info = [EmployeeInfo(e,
                              [wp for wp in emp_for_workplaces if e in emp_for_workplaces[wp]],
                              emp_preferences[e.pk],
-                             emp_absences[e.pk])
+                             emp_absences[e.pk],
+                             emp_assignments[e.pk])
                 for e in employees]
 
     for e in emp_info:
@@ -325,17 +328,44 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
     obj_bool_vars = []
     obj_bool_coeffs = []
 
-    # Exactly one shift per day.
+    
     for ei in ctx.employees:
+        assigned_shift_types = []
+        # check for positive indefinite assignments
+        for ia in ei.indefinite_assignments:
+            if ia[1] == False:
+                assigned_shift_types.append(ia[0])
+        # if there are no indefinite assignments, add all shifts
+        if len(assigned_shift_types) == 0:
+            assigned_shift_types = ctx.shift_types
+        # check for positive term assignments
+        for ta in ei.term_assignments:
+            if ta[1] == False:
+                pass # TODO: handle positive term assignments
+        # add exactly one shift per day
         for d in range(1, num_days + 1):
-            model.AddExactlyOne(work[ei.employee.pk, s.id, d] for s in ctx.shift_types)
+            model.AddExactlyOne(work[ei.employee.pk, s.id, d] for s in assigned_shift_types)
 
     for ei in ctx.employees:
+        # filter shifts by workplaces
         for s in ctx.shift_types[1:]:
-            if s.get().workplace.id not in ei.workplaces:  # filter shifts by workplaces
+            if s.get().workplace.id not in ei.workplaces:
                 works = [work[ei.employee.pk, s.id, d] for d in range(1, num_days + 1)]
                 model.Add(works == 0)
-                print("Removed shift %s in %s from employee %i" % (s.get().name, s.get().workplace, ei.get().pk))
+                print("Removed shift %s from employee %i [not in workplace %s]" % (s.get().name, ei.get().pk,  s.get().workplace))
+        # remove shifts with indefinite negative assignments
+        for ia in ei.indefinite_assignments:
+            if ia[1] == True: 
+                works = [work[ei.employee.pk, ia[0].id, d] for d in range(1, num_days + 1)]
+                model.Add(works == 0)
+                print("Removed shift %s from employee %i [negative indefinite assignment]" % (ia[0].name, ei.get().pk))
+        # remove shifts with negative assignments with defined term
+        for ta in ei.term_assignments:
+            if ta[1] == True:
+                works = [work[ei.employee.pk, ta[0].id, ta[2]]]
+                model.Add(works == 0)
+                print("Removed shift %s on day %i from employee %i [negative term assignment]" % (ta[0].name, ta[2], ei.get().pk))
+            
 
     # Fixed assignments.
     for e, s, d in ctx.fixed_assignments:
@@ -637,7 +667,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
     return output_inflate()
 
 
-def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workplaces, emp_preferences, emp_absences):
+def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workplaces, emp_preferences, emp_absences, emp_assignments):
     workplace = Workplace.objects.all().first()
 
     # Calendar data
@@ -661,6 +691,7 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
     data = solve_shift_scheduling(emp_for_workplaces,
                                   emp_preferences,
                                   emp_absences,
+                                  emp_assignments,
                                   schedule_dict,
                                   emp,  # employee list
                                   shift_types,  # shift type list

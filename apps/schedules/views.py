@@ -110,6 +110,18 @@ class ScheduleCreateApiView(APIView):
         absences = Absence.objects.filter(employee__in=employee_list).filter(start__lte=last_day).filter(
             end__gte=first_day)
 
+        term_assignments = Assignment.objects.filter(employee__in=employee_list).filter(start__lte=last_day).filter(
+            end__gte=first_day)
+
+        general_assignments = Assignment.objects.filter(employee__in=employee_list).filter(start=None).filter(end=None)
+        
+        emp_assignments = {}
+        for assignment in term_assignments:
+            emp_assignments.setdefault(assignment.employee.id, []).append(assignment)
+
+        for assignment in general_assignments:
+            emp_assignments.setdefault(assignment.employee.id, []).append(assignment)
+
         emp_preferences = {}
         for preference in preferences:
             emp_preferences.setdefault(preference.employee.id, []).append(preference)
@@ -119,7 +131,7 @@ class ScheduleCreateApiView(APIView):
             emp_absences.setdefault(absence.employee.id, []).append(absence)
 
         data = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month,
-                                                    emp_for_workplaces, emp_preferences, emp_absences)
+                                                    emp_for_workplaces, emp_preferences, emp_absences, emp_assignments)
         for shift in data:
             shift.save()
         return Response()
