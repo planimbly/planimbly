@@ -5,8 +5,8 @@
 
 .PN-pdf-container{
     /* margin: 1rem; */
-    margin: 10px; /* MARGIN FOR PRINTER: DON'T CHANGE UNLESS YOU KNOW WHAT YOU'RE DOING */
-    width: 1103px; /* WIDTH OF LANDSCAPE PDF - 2 x margin: DON'T CHANGE UNLESS YOU KNOW WHAT YOU'RE DOING */
+    margin: 14px; /* MARGIN FOR PRINTER: DON'T CHANGE UNLESS YOU KNOW WHAT YOU'RE DOING */
+    width: 1095px; /* WIDTH OF LANDSCAPE PDF - 2 x margin: DON'T CHANGE UNLESS YOU KNOW WHAT YOU'RE DOING */
     /* background-color: aquamarine; */
 }
 
@@ -41,14 +41,40 @@
     padding-right: 2px;
 }
 
+.PN-schedule-column-label-holiday{
+    background-color: #888888;
+    border-bottom: 3px solid;
+    text-align: center;
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
 .PN-schedule-column-content{
     border-bottom: 1px solid;
     text-align: center;
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
     /* padding-left: 0.3rem; */
     /* padding-right: 0.3rem; */
     /* border-right: 1px solid; */
+}
+
+.PN-flex-row{
+    display: flex;
+    flex-direction: row;
+}
+
+.PN-schedule-column-content-employee{
+    background-color: cadetblue;
+    margin-left: 1px;
+    margin-right: 1px;
+    text-align: center;
+    border-radius: 2px;
+    padding-left: 0.5px;
+    padding-right: 0.5px;
 }
 
 /**/

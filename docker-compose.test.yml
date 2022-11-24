@@ -1,0 +1,23 @@
+version: "3"
+
+services:
+  web_prod:
+    build: 
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: planimbly-web-${ENV_STAGE:?environment stage not specified in .env}
+    command: >
+      sh -c "python manage.py migrate --no-input &&
+             python manage.py collectstatic --no-input &&
+             gunicorn --workers=3 planimbly.wsgi --bind 0.0.0.0:8000"
+    ports:
+      - "${LOCAL_PORT:?local vm port not specified in .env}:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./staticfiles:/code/staticfiles
+      - ./mediafiles:/code/mediafiles
+
+networks:
+  default:
+    name: planimbly-default-${ENV_STAGE:?environment stage not specified in .env}

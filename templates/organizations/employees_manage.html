@@ -110,7 +110,7 @@
                 <th scope="col">Login</th>
                 <th scope="col">Imię</th>
                 <th scope="col">Nazwisko</th>
-                <th scope="col">Kierownik</th>
+                {% comment %} <th scope="col">Kierownik</th> {% endcomment %}
                 <th scope="col">Zarządzaj</th>
                 <th scope="col">Zapisz</th>
                 <th scope="col">Usuń</th>
@@ -123,7 +123,7 @@
                 <td><input type="text" class="form-control" v-model="employee.username"></td>
                 <td><input type="text" class="form-control" v-model="employee.first_name"></td>
                 <td><input type="text" class="form-control" v-model="employee.last_name"></td>
-                <td><input type="checkbox" v-model="employee.is_supervisor"></td>
+                {% comment %} <td><input type="checkbox" v-model="employee.is_supervisor"></td> {% endcomment %}
                 <td>
                     <a v-bind:href="return_reference_url(employee.id)">
                         <button type="button" class="btn btn-primary table-buttons">

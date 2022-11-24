@@ -97,9 +97,9 @@
                         <th scope="col">Pracownik</th>
                         <th scope="col">Godziny/Etat</th>
                         <th scope="col">Bilans</th>
-                        <th scope="col">Ilość zmian</th>
+                        <th v-for="shit in shifttype_name_list" scope="col">[[ shit ]]</th>
                         <th scope="col">Godziny L4</th>
-                        <th scope="col">Godziny zwolnienia</th>
+                        <th scope="col">Godziny urlopu</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -109,7 +109,7 @@
                         <td v-if="calculate_diff(stat.hours, stat.jobtime) < 0" style="color: red;">[[ calculate_diff(stat.hours, stat.jobtime) ]]</td>
                         <td v-if="calculate_diff(stat.hours, stat.jobtime) == 0">[[ calculate_diff(stat.hours, stat.jobtime) ]]</td>
                         <td v-if="calculate_diff(stat.hours, stat.jobtime) > 0" style="color: green;">[[ calculate_diff(stat.hours, stat.jobtime) ]]</td>
-                        <td>[[ return_stat_shifts(stat.shift_type) ]]</td>
+                        <td v-for="shift in shifttype_name_list">[[ return_shift_count(stat.shift_type, shift) ]]</td>
                         <td>[[ return_sick_or_vac(stat.SICK) ]]</td>
                         <td>[[ return_sick_or_vac(stat.VAC) ]]</td>
                     </tr>
@@ -320,12 +320,12 @@
                     select_workplace: {{ select_workplace | safe }},
                     selected_workplace: null,
                     create_schedule_url: '{% url 'schedule_create' %}',
-                    year: new Date().getFullYear(),
-                    month: new Date().getMonth() + 1,
+                    year:  null,//new Date().getFullYear(),
+                    month: null,//new Date().getMonth() + 1,
                     year_cal: new Date().getFullYear(),
                     month_cal: new Date().getMonth() + 1,
-                    year_report: new Date().getFullYear(),
-                    month_report: new Date().getMonth() + 1,
+                    year_report: null,//new Date().getFullYear(),
+                    month_report: null,//new Date().getMonth() + 1,
                     checked_workplace: [],
                     loading: false,
                     available_workers: null,
@@ -335,6 +335,7 @@
                     schedule_for_each_workplace: [],
                     workdays_for_each_employee: null,
                     attach_days_employees_report: true,
+                    shifttype_name_list: [],
                     month_labels: [
                         {id: 1, name: 'Styczeń'},
                         {id: 2, name: 'Luty'},
@@ -362,6 +363,11 @@
                 }
             },
             methods: {
+                // month&year comboboxes in modals follow main comboboxes 
+                copy_year_month_to_modals(){
+                    this.year = this.year_report = this.year_cal;
+                    this.month = this.month_report = this.month_cal;
+                },
                 return_sick_or_vac(data){
                     if (data == null){
                         return 'brak'
@@ -379,15 +385,18 @@
                     };
                     html2pdf().set(pdf_options).from(document.getElementById('report')).save();
                 },
-                return_stat_shifts(shift_list) {
-                    let shift_string = ''
-                    for (let shift in shift_list) {
-                        shift_string += shift;
-                        shift_string += ':';
-                        shift_string += (shift_list[shift] * 8) + ' (' + shift_list[shift] + ')';
-                        shift_string += ' '
+                return_shift_count(shift_list, shift) {
+                    for (let in_shift in shift_list) {
+                        if (in_shift == shift){
+                            return shift_list[in_shift]
+                        }
                     }
-                    return shift_string;
+                    return 0
+                },
+                add_to_shifttype_name_list(shift_list) {
+                    for (let shift in shift_list) {
+                        this.shifttype_name_list.push(shift)
+                    }
                 },
                 create_schedule() {
                     this.loading = true
@@ -417,6 +426,7 @@
                                 this.fetched_schedule = response.data;
                                 this.statistics = response.data['statistics']
                                 console.log(this.statistics)
+                                this.add_to_shifttype_name_list(Object.values(this.statistics)[0].shift_type)
                             }
                         );
                     axios
@@ -434,6 +444,7 @@
                     this.fetch_shift_types_for_each_workplace().then(result => {
                         this.shift_types_for_each_workplace = result;
                         });
+                    this.copy_year_month_to_modals();
                 },
                 fetch_report_data(){
                     axios

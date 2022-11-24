@@ -11,7 +11,7 @@ jobs:
       ALLOWED_HOSTS: localhost
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-20.04, windows-latest]
         python-version: ['3.10.2']
 
     steps:

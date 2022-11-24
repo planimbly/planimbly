@@ -228,7 +228,7 @@ export default {
 
                 if (element.days != null){
                   for (const day of Object.keys(element.days)) {
-                    if (new Date(day).getMonth() === this.month - 1 && new Date(day).getFullYear() === this.year) {
+                    if (new Date(day + 'T01:00').getMonth() === this.month - 1 && new Date(day + 'T01:00').getFullYear() === this.year) {
                       let currShifts = [];
 
                       // With Date() constructor, the date is converted to UMT!
@@ -283,9 +283,9 @@ export default {
                       
 
                       workMonth.push({
-                        day: new Date(day),
-                        day_label: new Date(day).getDate(),
-                        weekday: weekdays[new Date(day).getDay()],
+                        day: new Date(day + 'T01:00'),
+                        day_label: new Date(day + 'T01:00').getDate(),
+                        weekday: weekdays[new Date(day + 'T01:00').getDay()],
                         shifts: currShifts
                       });
 
