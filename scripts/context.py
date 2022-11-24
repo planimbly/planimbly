@@ -38,7 +38,9 @@ class EmployeeInfo:
     absent_days = []
     absent_time = 0
     term_assignments = []
-    indefinite_assignments = []
+    negative_indefinite_assignments = []
+    positive_indefinite_assignments = []
+    allowed_shift_types = []
 
     def __init__(self, emp: Employee, wp: list, pref: list, ab: list, ass: list):
         self.employee = emp
@@ -46,22 +48,30 @@ class EmployeeInfo:
         self.preferences = pref
         self.absences = ab
         self.absent_days, self.absent_time = self.prepare_absent_days()
-        self.term_assignments, self.indefinite_assignments = self.prepare_assignments(ass)
+        self.term_assignments, \
+        self.negative_indefinite_assignments, \
+        self.positive_indefinite_assignments = self.prepare_assignments(ass)
+        if len(self.negative_indefinite_assignments) > 0 and len(self.positive_indefinite_assignments) > 0:
+            print("[WARNING] both negative and positive indefinite assignments were found for employee %i" % self.get().pk)
 
     def prepare_assignments(self, assignments : list):
-        tass = []
-        iass = []
+        ta = []
+        nia = []
+        pia = []
         for a in assignments:
             # term assignments
             if a.end != None and a.start != None:
                 for i in range((a.end - a.start).days + 1):
                     inter_date = a.start + timedelta(days=i)
-                    tass.append((a.shift_type, a.negative_flag, inter_date))
-                    print("[ASSIGNMENT] EMP: %2i | DAY: %2i | ST: %i | TYPE: %s" % (a.employee.pk, inter_date.day, a.shift_type, "neg" if a.negative_flag else "pos"))
+                    ta.append((a.shift_type, a.negative_flag, inter_date))
+                    print("[ASSIGNMENT] EMP: %2i | DAY: %2i | ST: %i | TYPE: %s" % (a.employee.pk, inter_date.day, a.shift_type.id, "negative" if a.negative_flag else "positive"))
             else: # indefinite_assignments
-                    iass.append((a.shift_type, a.negative_flag))
-                    print("[ASSIGNMENT] EMP: %2i | ST: %i | TYPE: %s" % (a.employee.pk, a.shift_type, "neg" if a.negative_flag else "pos"))
-        return tass, iass
+                    if a.negative_flag:
+                        nia.append(a.shift_type)
+                    else:
+                        pia.append(a.shift_type)
+                    print("[ASSIGNMENT] EMP: %2i | ST: %i | TYPE: %s" % (a.employee.pk, a.shift_type.id, "negative" if a.negative_flag else "positive"))
+        return ta, nia, pia
 
     def prepare_absent_days(self):
         ad = []
@@ -111,8 +121,9 @@ class Context:
     overtime_multiplier = float
 
     def __init__(self, emp: list[EmployeeInfo], st: list[ShiftType], year: int, month: int):
+        self.shift_types = [ShiftTypeInfo(s, s.pk) for s in st]
+
         self.employees = emp
-        self.shift_types = [ShiftTypeInfo(s, st.index(s)) for s in st]
 
         self.month = month
         self.year = year
@@ -174,10 +185,11 @@ class Context:
             end = i.get().hour_end.hour
             if end < start:
                 print(f"Found overnight shift: {i.get().name}")
-                # between 2 and 3 consecutive days of night shifts, 1 and 4 are possible but penalized.
-                sc.append((i.id, 1, 2, 20, 3, 4, 5))
+                # Between 2 and 3 consecutive days of night shifts, 1 and 4 are possible but penalized.
+                sc.append((i.get().id, 1, 2, 20, 3, 4, 5))
                 # At least 1 night shift per week (penalized). At most 4 (hard).
-                wsc.append((i.id, 0, 1, 2, 3, 4, 0))
+                # TODO: Maybe consider term assignments here ???
+                wsc.append((i.get().id, 0, 1, 2, 3, 4, 0))
         return sc, wsc
 
     def get_shift_info_by_id(self, index: int):
@@ -203,7 +215,7 @@ class Context:
                 for week in self.month_by_weeks:
                     for d in week:
                         if pref.active_days[d[1]] == "1":
-                            req.append((ei.employee.pk, next(st.id for st in self.shift_types if pref.shift_type == st.get()), d[0], -1))
+                            req.append((ei.employee.pk, next(st.get().id for st in self.shift_types if pref.shift_type == st.get()), d[0], -1))
                             print("[PREFERENCE] EMP: %2i | shift: %s | day: %2i (%s) | weight: %d" %
                                   (ei.employee.pk, next(st.get().name for st in self.shift_types if pref.shift_type == st.get()),
                                    d[0], get_letter_for_weekday(d[1]), -1))
