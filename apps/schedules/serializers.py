@@ -1,8 +1,15 @@
 from rest_framework import serializers
 
-from .models import ShiftType, Preference, Absence, Assignment
+from .models import ShiftType, Preference, Absence, Assignment, JobTime
 from ..accounts.models import Employee
 from ..accounts.serializers import EmployeeSerializer
+
+
+class JobTimeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JobTime
+        fields = ['year', 'january', 'february', 'march', 'april', 'may', 'june',
+                  'july', 'august', 'september', 'october', 'november', 'december']
 
 
 class ShiftTypeSerializer(serializers.HyperlinkedModelSerializer):
