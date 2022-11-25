@@ -11,7 +11,7 @@ router = routers.DefaultRouter()
 router.register(r'preference', PreferenceViewSet, basename='preference')
 router.register(r'absence', AbsenceViewSet, basename='absence')
 router.register(r'assignment', AssignmentViewSet, basename='assignment')
-router.register(r'jobtime', JobTimeViewSet, basename='assignment')
+router.register(r'jobtime', JobTimeViewSet, basename='jobtime')
 
 urlpatterns = [
     path('shiftType_manage/', ShiftTypeManageView.as_view(), name="shiftType_manage"),
