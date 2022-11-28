@@ -23,9 +23,8 @@ from ortools.sat.python import cp_model
 from apps.accounts.models import Employee
 from apps.organizations.models import Workplace
 from apps.schedules.models import Shift, ShiftType
-
-from scripts.helpers import get_month_by_weeks, get_letter_for_weekday, floor_to_multiple, ceil_to_multiple
 from scripts.context import Context, EmployeeInfo
+from scripts.helpers import get_month_by_weeks, get_letter_for_weekday, floor_to_multiple, ceil_to_multiple
 
 global num_days
 
@@ -637,7 +636,8 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, sc
     return output_inflate()
 
 
-def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workplaces, emp_preferences, emp_absences):
+def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workplaces, emp_preferences,
+                   emp_absences, emp_assignments):
     workplace = Workplace.objects.all().first()
 
     # Calendar data

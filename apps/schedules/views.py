@@ -2,6 +2,7 @@
 import calendar
 import datetime
 
+import holidays
 from django.db.models import Sum
 from django.views.generic import TemplateView
 from rest_framework import viewsets, permissions, status
@@ -38,6 +39,10 @@ class ShiftTypeManageView(TemplateView):
         context['select_workplace'] = select_workplace
         context['is_any_workplace'] = True
         return context
+
+
+class JobTimeManageView(TemplateView):
+    template_name = 'schedules/jobtime_manage.html'
 
 
 class AbsenceManageView(TemplateView):
@@ -125,8 +130,9 @@ class ScheduleCreateApiView(APIView):
             emp_assignments.setdefault(assignment.employee.id, []).append(assignment)
         for assignment in time_assignments:
             emp_assignments.setdefault(assignment.employee.id, []).append(all_assignments)
+
         data = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month,
-                                                    emp_for_workplaces, emp_preferences, emp_absences)
+                                                    emp_for_workplaces, emp_preferences, emp_absences, emp_assignments)
         for shift in data:
             shift.save()
         return Response()
@@ -165,6 +171,7 @@ class ScheduleReportGetApiView(APIView):
                 last_day = datetime.date(int(year), int(month), days_num)
                 absences = Absence.objects.filter(employee__pk=employee.pk).filter(start__lte=last_day).filter(
                     end__gte=first_day).values('id', 'start', 'end', 'type')
+
                 data[employee.pk] = {
                     'employee_id': employee.pk,
                     'employee_login': employee.username,
@@ -174,6 +181,10 @@ class ScheduleReportGetApiView(APIView):
                     'days': days,
                     'absences': absences,
                 }
+
+            pl_holidays = holidays.PL(years=int(year)).keys()
+            print(pl_holidays)
+
             return Response(data=data)
 
 
