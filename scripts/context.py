@@ -40,7 +40,7 @@ class EmployeeInfo:
     term_assignments = []
     negative_indefinite_assignments = []
     positive_indefinite_assignments = []
-    allowed_shift_types = []
+    allowed_shift_types = {} # Key: Shift_type object, Value: list of allowed days
 
     def __init__(self, emp: Employee, wp: list, pref: list, ab: list, ass: list):
         self.employee = emp

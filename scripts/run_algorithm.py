@@ -318,11 +318,11 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
 
     # Prepare list of allowed shift types for employees
     for ei in ctx.employees:
-        ei.allowed_shift_types = [ctx.shift_types[0].get()]
+        ei.allowed_shift_types[ctx.shift_types[0].get()] = [d for d in range(1, num_days + 1)]
 
         # Firstly, check for positive indefinite assignments
         for pia in ei.positive_indefinite_assignments:
-            ei.allowed_shift_types.append(pia)
+            ei.allowed_shift_types[pia] = [d for d in range(1, num_days + 1)]
             print('[ASSIGNMENTS] Assigned shift %i to emp %i' % (pia.id, ei.get().pk))
 
         # Assign all shifts to employee if there are no positive indefinite assignments
@@ -330,20 +330,24 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
             # Only allow shifts in workplaces assigned to employee
             for s in ctx.shift_types[1:]:
                 if s.get().workplace.id in ei.workplaces:
-                    ei.allowed_shift_types.append(s.get())
+                    ei.allowed_shift_types[s.get()] = [d for d in range(1, num_days + 1)]
                     # print("[NO ASSIGNMENT] Assigned shift %i to emp %i" % (s.get().id, ei.get().pk))
                 else:
                     print("[WORKPLACE] Removed shift %s from employee %i [not in workplace %s]" % (s.get().name, ei.get().pk, s.get().workplace.name))
 
         # Now we handle negative indefinite assignments
         for nia in ei.negative_indefinite_assignments:
-            ei.allowed_shift_types.remove(nia)
+            ei.allowed_shift_types.pop(nia, None)
             print("[ASSIGNMENTS] Removed shift %i from employee %i [negative indefinite assignment]" % (nia.id, ei.get().pk))
 
+        # Allow shifts from term assignments
+        for ta in ei.term_assignments:
+            if ta[1] == False:
+                if ta[0] not in ei.allowed_shift_types:
+                    ei.allowed_shift_types[ta[0]] = []
+                ei.allowed_shift_types[ta[0]].append(ta[2].day)
+
     # Create model variables
-    # TODO: Homework Piotrusiu... at the moment, if an employee has positive indefinite assignments, we're only adding shift types assigned to them,
-    # if an employee has a term assignment for a different shift, we crash because it's not added to the model!!!
-    # same goes for negative indefinite assignments, but it has to be handled somewhere else ( ˘ ³˘)♥
     work = {}
     for ei in ctx.employees:
         for s in ei.allowed_shift_types:
@@ -380,12 +384,10 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                       % (term_assignments[d].id, ei.get().pk))
 
     # Deny shifts with negative term assignments
-    # TODO: This loop probably causes infeasibility, we might want to iterate differently or remodel term_assignments to store date range, not days
-    # Hint: works = [work[ei.get().pk, ta[0].id, d] for d in ta[2]], where ta[2] is date range
     for ei in ctx.employees: 
         for ta in ei.term_assignments:
             if ta[1] == True:
-                works = [work[ei.get().pk, ta[0].id, ta[2].day]]
+                works = work[ei.get().pk, ta[0].id, ta[2].day]
                 model.Add(works == 0)
                 print("[ASSIGNMENTS] Removed shift %s on day %i from employee %i [negative term assignment]" \
                       % (ta[0].name, ta[2].day, ei.get().pk))
@@ -424,7 +426,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     # Calculate work time constraints
     # TODO: Handle cases when 160 hours per employee is not enough to cover the entire schedule!!
     for ei in ctx.employees:
-        works = [work[ei.get().pk, s.id, d] for s in ei.allowed_shift_types[1:] for d in range(1, num_days + 1)]
+        works = [work[ei.get().pk, s.id, d] for s in ei.allowed_shift_types for d in range(1, num_days + 1) if s.id != 0]
         hard_min = floor_to_multiple(ei.get().job_time * ctx.job_time_multiplier, 8)
         soft_min = ei.get().job_time
         min_cost = 50
@@ -689,7 +691,9 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
             for ei in ctx.employees:
                 for d in range(1, num_days + 1):
-                    for s in ei.allowed_shift_types[1:]:
+                    for s in ei.allowed_shift_types: # tutaj
+                        if s.id == 0:
+                            continue
                         if solver.BooleanValue(work[ei.get().pk, s.id, d]):
                             output_shifts.append(
                                 Shift(date=datetime(year, month, d).date(),
@@ -727,8 +731,6 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
 
     # Sort employees by their job time
     emp = sorted(emp, key=lambda e: e.job_time, reverse=True)
-
-    # TODO: Only consider absences for considered month (filter data from backend)
 
     data = solve_shift_scheduling(emp_for_workplaces,
                                   emp_preferences,
