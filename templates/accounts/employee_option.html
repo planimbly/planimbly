@@ -475,7 +475,6 @@
                     axios
                         .get(this.emp_assignment_url)
                         .then(response_assign_data => (this.assignment_list = response_assign_data.data))
-                        .then(() => console.log(this.assignment_list))
                     this.daylist_assign = this.st_numbers_to_list('0000000')
                 },
                 fetch_unit_data(){
@@ -667,7 +666,6 @@
                         .then((willAdd) => {
                             if (willAdd) {
                                 let add_assignment_url = '{% url 'assignment-list' %}'
-                                console.log(add_assignment_url)
                                 axios
                                 .post(add_assignment_url, 
                                     {
