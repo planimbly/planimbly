@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+
+{% block head %}
+    <link rel="stylesheet" href="{% static 'css/schedules/jobtime.css' %}">
+    <script type="application/javascript" src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script type="application/javascript" src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script>
+        axios.defaults.xsrfCookieName = 'csrftoken';
+        axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
+    </script>
+{% endblock head %}
+
+{% block content %}
+    <div id="vue-app">
+        <div class="col d-flex justify-content-start">
+            <h3 class="content-title">Etaty</h3>
+        </div>
+        <div class="row m-2"> 
+            <div class="col mb-1">
+                <select class="w-25 form-select" v-model="year_cal" v-on:change="fetch_data">
+                    <option v-for="av_year in available_years" :value="av_year">
+                        [[ av_year ]]
+                    </option>
+                </select>
+            </div>
+        </div>
+        <div class="row m-2">
+            <form id="schedule_form" v-on:submit.prevent="">
+                
+                <div class="month_box"><h5>Styczeń</h5><input type="number" class="w-50 form-control" v-model="month_list.january" required></div>
+                <div class="month_box"><h5>Luty</h5><input type="number" class="w-50 form-control" v-model="month_list.february" required></div>
+                <div class="month_box"><h5>Marzec</h5><input type="number" class="w-50 form-control" v-model="month_list.march" required></div>
+                <div class="month_box"><h5>Kwiecień</h5><input type="number" class="w-50 form-control" v-model="month_list.april" required></div>
+                <div class="month_box"><h5>Maj</h5><input type="number" class="w-50 form-control" v-model="month_list.may" required></div>
+                <div class="month_box"><h5>Czerwiec</h5><input type="number" class="w-50 form-control" v-model="month_list.june" required></div>
+                <div class="month_box"><h5>Lipiec</h5><input type="number" class="w-50 form-control" v-model="month_list.july" required></div>
+                <div class="month_box"><h5>Sierpień</h5><input type="number" class="w-50 form-control" v-model="month_list.august" required></div>
+                <div class="month_box"><h5>Wrzesień</h5><input type="number" class="w-50 form-control" v-model="month_list.september" required></div>
+                <div class="month_box"><h5>Październik</h5><input type="number" class="w-50 form-control" v-model="month_list.october" required></div>
+                <div class="month_box"><h5>Listopad</h5><input type="number" class="w-50 form-control" v-model="month_list.november" required></div>
+                <div class="month_box"><h5>Grudzień</h5><input type="number" class="w-50 form-control" v-model="month_list.december" required></div>
+
+                <input type="submit" value="Zapisz zmiany" class="btn btn-outline-success" style="margin-bottom: 50px">
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block vue-content %}
+
+    <script type="module">
+        const {createApp} = Vue
+        createApp({
+            delimiters: ["[[", "]]"],
+            data() {
+                return {
+                    response: null,
+                    jobtime_list: null,
+                    jobtime_manage_url: '{% url 'jobtime-list' %}',
+                    year_cal: new Date().getFullYear(),
+                    available_years: [
+                        new Date().getFullYear() - 5,
+                        new Date().getFullYear() - 4,
+                        new Date().getFullYear() - 3,
+                        new Date().getFullYear() - 2,
+                        new Date().getFullYear() - 1,
+                        new Date().getFullYear(),
+                        new Date().getFullYear() + 1,
+                        new Date().getFullYear() + 2,
+                    ],
+                }
+            },
+            methods: {
+                fetch_data() {
+                    axios
+                        .get(this.jobtime_manage_url)
+                        .then(response => {
+                                this.jobtime_list = response.data;
+                                console.log(this.jobtime_list)
+                            }
+                        );
+                },
+            },
+            computed: {
+                month_list(){
+                    if (this.jobtime_list != null){
+                        for (let year of this.jobtime_list){
+                            if (Object.values(year)[0] == this.year_cal){
+                                return year
+                            }
+                        }
+                        return { year: this.year_cal, january: 0, february: 0, march: 0, april: 0, may: 0, june: 0, july: 0, august: 0, september: 0, october: 0, november: 0, december: 0 }
+                    }
+                    else{
+                        return { year: null, january: null, february: null, march: null, april: null, may: null, june: null, july: null, august: null, september: null, october: null, november: null, december: null }
+                    }
+                }
+            },
+            mounted() {
+                this.fetch_data()
+            },
+        }).mount('#vue-app');
+
+    </script>
+{% endblock vue-content %}

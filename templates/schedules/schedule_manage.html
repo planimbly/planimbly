@@ -100,6 +100,7 @@
                         <th v-for="shit in shifttype_name_list" scope="col">[[ shit ]]</th>
                         <th scope="col">Godziny L4</th>
                         <th scope="col">Godziny urlopu</th>
+                        <th scope="col">Inne nieobecości</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -112,6 +113,7 @@
                         <td v-for="shift in shifttype_name_list">[[ return_shift_count(stat.shift_type, shift) ]]</td>
                         <td>[[ return_sick_or_vac(stat.SICK) ]]</td>
                         <td>[[ return_sick_or_vac(stat.VAC) ]]</td>
+                        <td>[[ return_sick_or_vac(stat.OTHER) ]]</td>
                     </tr>
                 </tbody>
             </table>
