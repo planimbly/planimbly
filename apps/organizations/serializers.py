@@ -6,7 +6,7 @@ from .models import Unit, Workplace, WorkplaceClosing
 class UnitSerializer(serializers.ModelSerializer):
     class Meta:
         model = Unit
-        fields = ['id', 'name', 'allow_preferences']
+        fields = ['id', 'name']
         extra_kwargs = {
             'id': {'read_only': True}
         }

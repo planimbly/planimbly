@@ -39,7 +39,14 @@ class Employee(AbstractUser):
     username = models.CharField(max_length=50, unique=True, verbose_name="Nazwa użytkownika")
     first_name = models.CharField(max_length=50, verbose_name="Imię")
     last_name = models.CharField(max_length=50, verbose_name="Nazwisko")
-    job_time = models.IntegerField(verbose_name="Wymiar etatu", default=0)
+    JOBTIME_TYPE = [
+        ('1', '1'),
+        ('3/4', '3/4'),
+        ('1/2', '1/2'),
+        ('1/4', '1/4'),
+    ]
+    job_time = models.CharField(verbose_name="Wymiar etatu", max_length=3, choices=JOBTIME_TYPE)
+
     is_supervisor = models.BooleanField(verbose_name="Czy jest kierownikiem?", default=False)
     user_org = models.ForeignKey(Organization, on_delete=models.CASCADE, blank=True, null=True,
                                  verbose_name="Organizacja użytkownika")
@@ -52,4 +59,5 @@ class Employee(AbstractUser):
         return self.username
 
     class Meta:
+        verbose_name = "Pracownik"
         ordering = ['username']

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import ShiftType, Preference, Absence, Assignment, JobTime
+from .models import ShiftType, Preference, Absence, Assignment, JobTime, FreeDay
 from ..accounts.models import Employee
 from ..accounts.serializers import EmployeeSerializer
 
@@ -8,8 +8,17 @@ from ..accounts.serializers import EmployeeSerializer
 class JobTimeSerializer(serializers.ModelSerializer):
     class Meta:
         model = JobTime
-        fields = ['year', 'january', 'february', 'march', 'april', 'may', 'june',
+        fields = ['id', 'year', 'january', 'february', 'march', 'april', 'may', 'june',
                   'july', 'august', 'september', 'october', 'november', 'december']
+
+
+class FreeDaySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FreeDay
+        fields = ['id', 'day']
+        extra_kwargs = {
+            'id': {'read_only': True}
+        }
 
 
 class ShiftTypeSerializer(serializers.ModelSerializer):

@@ -12,9 +12,9 @@ from rest_framework.views import APIView
 import scripts.run_algorithm
 from apps.accounts.models import Employee
 from apps.organizations.models import Workplace, Unit
-from apps.schedules.models import ShiftType, Shift, Schedule, Preference, Absence, Assignment, JobTime
+from apps.schedules.models import ShiftType, Shift, Schedule, Preference, Absence, Assignment, JobTime, FreeDay
 from apps.schedules.serializers import ShiftTypeSerializer, PreferenceSerializer, AbsenceSerializer, \
-    AssignmentSerializer, JobTimeSerializer
+    AssignmentSerializer, JobTimeSerializer, FreeDaySerializer
 
 
 class ShiftTypeManageView(TemplateView):
@@ -85,6 +85,10 @@ class ScheduleCreateApiView(APIView):
     def post(self, request):
         year = self.request.data.get('year')
         month = self.request.data.get('month')
+
+        if not year or not month:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
         workplace_list = self.request.data.get('workplace_list')
         workplace_query = Workplace.objects.filter(id__in=workplace_list)
         schedule_dict = dict()
@@ -388,3 +392,17 @@ class JobTimeViewSet(viewsets.ModelViewSet):
     queryset = JobTime.objects.all()
     serializer_class = JobTimeSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+class FreeDayViewSet(viewsets.ModelViewSet):
+    queryset = FreeDay.objects.all()
+    serializer_class = FreeDaySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+        if request.query_params.get('year'):
+            queryset = FreeDay.objects.filter(day__year=int(request.query_params.get('year')))
+        else:
+            queryset = FreeDay.objects.all()
+        serializer = FreeDaySerializer(queryset, many=True)
+        return Response(serializer.data)

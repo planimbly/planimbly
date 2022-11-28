@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.views.generic import TemplateView
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -193,7 +193,7 @@ class EmployeeToUnitApiView(APIView):
             employee = Employee.objects.filter(id=request.data['pk']).first()
             unit = Unit.objects.filter(id=unit_workplace_pk).first()
             if employee is None:
-                return Response()
+                return Response(status=status.HTTP_400_BAD_REQUEST)
             if request.data['action'] == 'add':
                 employee.user_unit.add(unit)
             elif request.data['action'] == 'delete':
@@ -201,8 +201,8 @@ class EmployeeToUnitApiView(APIView):
                 for workplace in Workplace.objects.filter(workplace_unit=unit):
                     employee.user_workplace.remove(workplace)
             else:
-                return Response()
-        return Response()
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class EmployeeToWorkplaceApiView(APIView):
@@ -223,14 +223,14 @@ class EmployeeToWorkplaceApiView(APIView):
             employee = Employee.objects.filter(id=request.data['pk']).first()
             workplace = Workplace.objects.filter(id=unit_workplace_pk).first()
             if employee is None:
-                return Response()
+                return Response(status=status.HTTP_400_BAD_REQUEST)
             if request.data['action'] == 'add':
                 employee.user_workplace.add(workplace)
             elif request.data['action'] == 'delete':
                 employee.user_workplace.remove(workplace)
             else:
-                return Response()
-        return Response()
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class WorkplaceClosingViewSet(viewsets.ModelViewSet):

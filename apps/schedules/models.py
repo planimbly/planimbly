@@ -20,6 +20,10 @@ class JobTime(models.Model):
     december = models.IntegerField(verbose_name='Grudzień')
 
 
+class FreeDay(models.Model):
+    day = models.DateField(verbose_name='Dzień wolny', unique=True)
+
+
 class Schedule(models.Model):
     year = models.IntegerField(verbose_name='Rok')
     month = models.IntegerField(verbose_name='Miesiąc')
@@ -81,6 +85,9 @@ class Shift(models.Model):
 
 
 class Absence(models.Model):
+    class Meta:
+        unique_together = ('employee', 'start', 'end')
+
     start = models.DateField(verbose_name="Początek nieobecności")
     end = models.DateField(verbose_name="Koniec nieobecności")
     employee = models.ForeignKey(Employee, verbose_name="Pracownik", on_delete=models.CASCADE)

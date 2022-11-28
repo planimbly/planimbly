@@ -3,7 +3,7 @@ from rest_framework import routers
 
 from apps.schedules.views import ShiftTypeManageView, ShiftTypeViewSet, ScheduleManageView, ScheduleGetApiView, \
     ScheduleCreateApiView, ShiftManageApiView, PreferenceViewSet, AbsenceViewSet, AbsenceManageView, \
-    ScheduleReportGetApiView, AssignmentViewSet, JobTimeViewSet, JobTimeManageView
+    ScheduleReportGetApiView, AssignmentViewSet, JobTimeViewSet, JobTimeManageView, FreeDayViewSet
 
 shiftType_router = routers.DefaultRouter()
 shiftType_router.register(r'shiftType', ShiftTypeViewSet, basename='shiftType')
@@ -12,6 +12,7 @@ router.register(r'preference', PreferenceViewSet, basename='preference')
 router.register(r'absence', AbsenceViewSet, basename='absence')
 router.register(r'assignment', AssignmentViewSet, basename='assignment')
 router.register(r'jobtime', JobTimeViewSet, basename='jobtime')
+router.register(r'freeday', FreeDayViewSet, basename='freeday')
 
 urlpatterns = [
     path('shiftType_manage/', ShiftTypeManageView.as_view(), name="shiftType_manage"),
