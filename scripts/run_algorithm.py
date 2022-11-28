@@ -248,7 +248,8 @@ def add_monthly_soft_sum_constraint(model, works, hard_min, soft_min, min_cost,
     return cost_variables, cost_coefficients
 
 
-def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, emp_assignments, schedule_dict, employees: list[Employee], shift_types: list[ShiftType],
+def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, emp_assignments, schedule_dict,
+                           employees: list[Employee], shift_types: list[ShiftType],
                            year: int, month: int, params, output_proto):
 
     # Dictionaries with:
@@ -342,7 +343,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
 
         # Allow shifts from term assignments
         for ta in ei.term_assignments:
-            if ta[1] == False:
+            if ta[1] is False:
                 if ta[0] not in ei.allowed_shift_types:
                     ei.allowed_shift_types[ta[0]] = []
                 ei.allowed_shift_types[ta[0]].append(ta[2].day)
@@ -359,16 +360,16 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     obj_int_coeffs = []
     obj_bool_vars = []
     obj_bool_coeffs = []
-        
+
     # Add shifts to model, we're handling positive term assignments here too
     for ei in ctx.employees:
-        term_assignments = {} # Key: day, Value: Shift_type object
+        term_assignments = {}  # Key: day, Value: Shift_type object
         for d in range(1, num_days + 1):
             term_assignments[d] = -1
 
         # Check for positive term assignments
         for ta in ei.term_assignments:
-            if ta[1] == False:
+            if ta[1] is False:
                 term_assignments[ta[2].day] = ta[0]
 
         # Add exactly one shift per day
@@ -378,20 +379,19 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                 model.AddExactlyOne(work[ei.get().pk, s.id, d] for s in ei.allowed_shift_types)
             else:
                 # Allow only assigned shift for this day
-                model.AddExactlyOne(work[ei.get().pk, s.id, d] for s in [term_assignments[d], \
-                                                                         ctx.get_shift_info_by_id(0).get()]) # Don't forget about the free shift!
-                print("[ASSIGNMENTS] added shift %i as term assignment for employee %i" \
-                      % (term_assignments[d].id, ei.get().pk))
+                model.AddExactlyOne(work[ei.get().pk, s.id, d] for s in [term_assignments[d],
+                                                                         ctx.get_shift_info_by_id(0).get()])  # Don't forget about the free shift!
+                print("[ASSIGNMENTS] added shift %i as term assignment for employee %i" %
+                      (term_assignments[d].id, ei.get().pk))
 
     # Deny shifts with negative term assignments
-    for ei in ctx.employees: 
+    for ei in ctx.employees:
         for ta in ei.term_assignments:
-            if ta[1] == True:
+            if ta[1] is True:
                 works = work[ei.get().pk, ta[0].id, ta[2].day]
                 model.Add(works == 0)
-                print("[ASSIGNMENTS] Removed shift %s on day %i from employee %i [negative term assignment]" \
-                      % (ta[0].name, ta[2].day, ei.get().pk))
-            
+                print("[ASSIGNMENTS] Removed shift %s on day %i from employee %i [negative term assignment]" %
+                      (ta[0].name, ta[2].day, ei.get().pk))
 
     # TODO: useless??
     # Fixed assignments.
@@ -508,7 +508,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         for ei in ctx.employees:
             for d in range(1, num_days):
                 if previous_shift not in [s.id for s in ei.allowed_shift_types] \
-                or next_shift not in [s.id for s in ei.allowed_shift_types]:
+                 or next_shift not in [s.id for s in ei.allowed_shift_types]:
                     continue
 
                 transition = [work[ei.get().pk, previous_shift, d].Not(), work[ei.get().pk, next_shift, d + 1].Not()]
@@ -691,7 +691,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
             for ei in ctx.employees:
                 for d in range(1, num_days + 1):
-                    for s in ei.allowed_shift_types: # tutaj
+                    for s in ei.allowed_shift_types:
                         if s.id == 0:
                             continue
                         if solver.BooleanValue(work[ei.get().pk, s.id, d]):

@@ -114,7 +114,7 @@ class ScheduleCreateApiView(APIView):
             end__gte=first_day)
 
         general_assignments = Assignment.objects.filter(employee__in=employee_list).filter(start=None).filter(end=None)
-        
+
         emp_assignments = {}
         for assignment in term_assignments:
             emp_assignments.setdefault(assignment.employee.id, []).append(assignment)

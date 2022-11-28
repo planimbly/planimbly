@@ -40,7 +40,7 @@ class EmployeeInfo:
     term_assignments = []
     negative_indefinite_assignments = []
     positive_indefinite_assignments = []
-    allowed_shift_types = {} # Key: Shift_type object, Value: list of allowed days
+    allowed_shift_types = {}  # Key: Shift_type object, Value: list of allowed days
 
     def __init__(self, emp: Employee, wp: list, pref: list, ab: list, ass: list):
         self.employee = emp
@@ -49,28 +49,30 @@ class EmployeeInfo:
         self.absences = ab
         self.absent_days, self.absent_time = self.prepare_absent_days()
         self.term_assignments, \
-        self.negative_indefinite_assignments, \
-        self.positive_indefinite_assignments = self.prepare_assignments(ass)
+            self.negative_indefinite_assignments, \
+            self.positive_indefinite_assignments = self.prepare_assignments(ass)
         if len(self.negative_indefinite_assignments) > 0 and len(self.positive_indefinite_assignments) > 0:
             print("[WARNING] both negative and positive indefinite assignments were found for employee %i" % self.get().pk)
 
-    def prepare_assignments(self, assignments : list):
+    def prepare_assignments(self, assignments: list):
         ta = []
         nia = []
         pia = []
         for a in assignments:
-            # term assignments
-            if a.end != None and a.start != None:
+            if a.end is not None and a.start is not None:
+                # term assignments
                 for i in range((a.end - a.start).days + 1):
                     inter_date = a.start + timedelta(days=i)
                     ta.append((a.shift_type, a.negative_flag, inter_date))
-                    print("[ASSIGNMENT] EMP: %2i | DAY: %2i | ST: %i | TYPE: %s" % (a.employee.pk, inter_date.day, a.shift_type.id, "negative" if a.negative_flag else "positive"))
-            else: # indefinite_assignments
-                    if a.negative_flag:
-                        nia.append(a.shift_type)
-                    else:
-                        pia.append(a.shift_type)
-                    print("[ASSIGNMENT] EMP: %2i | ST: %i | TYPE: %s" % (a.employee.pk, a.shift_type.id, "negative" if a.negative_flag else "positive"))
+                    print("[ASSIGNMENT] EMP: %2i | DAY: %2i | ST: %i | TYPE: %s" %
+                          (a.employee.pk, inter_date.day, a.shift_type.id, "negative" if a.negative_flag else "positive"))
+            else:
+                # indefinite_assignments
+                if a.negative_flag:
+                    nia.append(a.shift_type)
+                else:
+                    pia.append(a.shift_type)
+                print("[ASSIGNMENT] EMP: %2i | ST: %i | TYPE: %s" % (a.employee.pk, a.shift_type.id, "negative" if a.negative_flag else "positive"))
         return ta, nia, pia
 
     def prepare_absent_days(self):
