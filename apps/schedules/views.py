@@ -2,6 +2,7 @@
 import calendar
 import datetime
 
+import holidays
 from django.db.models import Sum
 from django.views.generic import TemplateView
 from rest_framework import viewsets, permissions, status
@@ -11,9 +12,9 @@ from rest_framework.views import APIView
 import scripts.run_algorithm
 from apps.accounts.models import Employee
 from apps.organizations.models import Workplace, Unit
-from apps.schedules.models import ShiftType, Shift, Schedule, Preference, Absence, Assignment
+from apps.schedules.models import ShiftType, Shift, Schedule, Preference, Absence, Assignment, JobTime
 from apps.schedules.serializers import ShiftTypeSerializer, PreferenceSerializer, AbsenceSerializer, \
-    AssignmentSerializer
+    AssignmentSerializer, JobTimeSerializer
 
 
 class ShiftTypeManageView(TemplateView):
@@ -38,6 +39,10 @@ class ShiftTypeManageView(TemplateView):
         context['select_workplace'] = select_workplace
         context['is_any_workplace'] = True
         return context
+
+
+class JobTimeManageView(TemplateView):
+    template_name = 'schedules/jobtime_manage.html'
 
 
 class AbsenceManageView(TemplateView):
@@ -109,19 +114,6 @@ class ScheduleCreateApiView(APIView):
         last_day = datetime.date(int(year), int(month), calendar.monthrange(int(year), int(month))[1])
         absences = Absence.objects.filter(employee__in=employee_list).filter(start__lte=last_day).filter(
             end__gte=first_day)
-
-        term_assignments = Assignment.objects.filter(employee__in=employee_list).filter(start__lte=last_day).filter(
-            end__gte=first_day)
-
-        general_assignments = Assignment.objects.filter(employee__in=employee_list).filter(start=None).filter(end=None)
-
-        emp_assignments = {}
-        for assignment in term_assignments:
-            emp_assignments.setdefault(assignment.employee.id, []).append(assignment)
-
-        for assignment in general_assignments:
-            emp_assignments.setdefault(assignment.employee.id, []).append(assignment)
-
         emp_preferences = {}
         for preference in preferences:
             emp_preferences.setdefault(preference.employee.id, []).append(preference)
@@ -129,6 +121,15 @@ class ScheduleCreateApiView(APIView):
         emp_absences = {}
         for absence in absences:
             emp_absences.setdefault(absence.employee.id, []).append(absence)
+
+        time_assignments = Assignment.objects.filter(employee__in=employee_list).filter(start__lte=last_day).filter(
+            end__gte=first_day)
+        all_assignments = Assignment.objects.filter(employee__in=employee_list).filter(start=None).filter(end=None)
+        emp_assignments = {}
+        for assignment in time_assignments:
+            emp_assignments.setdefault(assignment.employee.id, []).append(assignment)
+        for assignment in time_assignments:
+            emp_assignments.setdefault(assignment.employee.id, []).append(all_assignments)
 
         data = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month,
                                                     emp_for_workplaces, emp_preferences, emp_absences, emp_assignments)
@@ -170,6 +171,7 @@ class ScheduleReportGetApiView(APIView):
                 last_day = datetime.date(int(year), int(month), days_num)
                 absences = Absence.objects.filter(employee__pk=employee.pk).filter(start__lte=last_day).filter(
                     end__gte=first_day).values('id', 'start', 'end', 'type')
+
                 data[employee.pk] = {
                     'employee_id': employee.pk,
                     'employee_login': employee.username,
@@ -179,6 +181,10 @@ class ScheduleReportGetApiView(APIView):
                     'days': days,
                     'absences': absences,
                 }
+
+            pl_holidays = holidays.PL(years=int(year)).keys()
+            print(pl_holidays)
+
             return Response(data=data)
 
 
@@ -376,3 +382,9 @@ class AssignmentViewSet(viewsets.ModelViewSet):
             queryset = Assignment.objects.all()
         serializer = AssignmentSerializer(queryset, many=True)
         return Response(serializer.data)
+
+
+class JobTimeViewSet(viewsets.ModelViewSet):
+    queryset = JobTime.objects.all()
+    serializer_class = JobTimeSerializer
+    permission_classes = [permissions.IsAuthenticated]

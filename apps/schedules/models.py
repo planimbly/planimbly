@@ -4,6 +4,22 @@ from apps.accounts.models import Employee
 from apps.organizations.models import Workplace
 
 
+class JobTime(models.Model):
+    year = models.IntegerField(verbose_name='Rok', unique=True)
+    january = models.IntegerField(verbose_name='Styczeń')
+    february = models.IntegerField(verbose_name='Luty')
+    march = models.IntegerField(verbose_name='Marzec')
+    april = models.IntegerField(verbose_name='Kwiecień')
+    may = models.IntegerField(verbose_name='Maj')
+    june = models.IntegerField(verbose_name='Czerwiec')
+    july = models.IntegerField(verbose_name='Lipiec')
+    august = models.IntegerField(verbose_name='Sierpień')
+    september = models.IntegerField(verbose_name='Wrzesień')
+    october = models.IntegerField(verbose_name='Październik')
+    november = models.IntegerField(verbose_name='Listopad')
+    december = models.IntegerField(verbose_name='Grudzień')
+
+
 class Schedule(models.Model):
     year = models.IntegerField(verbose_name='Rok')
     month = models.IntegerField(verbose_name='Miesiąc')
@@ -36,6 +52,9 @@ class Preference(models.Model):
     def __str__(self):
         return self.shift_type.name + ' ' + self.employee.username
 
+    class Meta:
+        unique_together = ('shift_type', 'employee', 'active_days')
+
 
 class Assignment(models.Model):
     shift_type = models.ForeignKey(ShiftType, on_delete=models.CASCADE, verbose_name="Typ zmiany")
@@ -46,6 +65,9 @@ class Assignment(models.Model):
 
     def __str__(self):
         return self.shift_type.name + ' ' + self.employee.username + ' ' + str(self.negative_flag)
+
+    class Meta:
+        unique_together = ('shift_type', 'employee', 'start', 'end', 'negative_flag')
 
 
 class Shift(models.Model):
@@ -64,7 +86,8 @@ class Absence(models.Model):
     employee = models.ForeignKey(Employee, verbose_name="Pracownik", on_delete=models.CASCADE)
     ABSENCE_TYPE = [
         ('SICK', 'Zwolnienie L4'),
-        ('VAC', 'Urlop wypoczynkowy')
+        ('VAC', 'Urlop wypoczynkowy'),
+        ('OTHER', 'Inne')
     ]
     type = models.CharField(max_length=256, verbose_name="Typ nieobecności", choices=ABSENCE_TYPE)
     hours_number = models.IntegerField(verbose_name="Liczba godzin nieobecności")
