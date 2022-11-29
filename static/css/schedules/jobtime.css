@@ -1,9 +1,24 @@
 .month_box {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
     justify-content: space-between; 
     column-gap: 10px;
     margin: 5px;
     max-width: 600px;
+}
+
+.content_box{
+    justify-content: flex-start;
+    row-gap: 20px;
+    column-gap: 20px;
+    margin-bottom: 15px;
+}
+
+.freeday_table_box {
+    justify-content: space-between;
+    align-items: center;
+}
+
+.content_box, .month_box, .freeday_table_box{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
 }
