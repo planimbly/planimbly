@@ -664,26 +664,30 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         delete_excess_shifts()
 
         header = '\n' + ' ' * 13
+        header_days = ' ' * 13
         for w, week in enumerate(ctx.month_by_weeks):
             for d in week:
-                header += get_letter_for_weekday(d[1]) + ' '
-            header += '  '
+                header += '%2s ' % get_letter_for_weekday(d[1])
+                header_days += '%2i ' % d[0]
+            header += '   '
+            header_days += '   '
         print(header)
+        print(header_days, '\n')
 
         for ei in ctx.employees:
             sched = ''
             for d in range(1, num_days + 1):
                 if d % 7 == 0:
-                    sched += '  '
+                    sched += '   '
                 for s in ei.allowed_shift_types:
                     if solver.BooleanValue(work[ei.get().pk, s.id, d]):
-                        sched += s.name[0] + ' '
-            print('employee %2i: %s | JT: %3i | WT: %3i | RATIO: %.1f' %
+                        sched += '%2s ' % s.name[0]
+            print('employee %2i: %s | JT: %4i | WT: %4i | RATIO: %.2f' %
                   (ei.get().pk, sched, ei.get().job_time, work_time[ei.get().pk],
                    work_time[ei.get().pk] / ei.get().job_time))
 
         print('\n%sTOTALS | JT: %4i | WT: %4i | JT RATIO: %.3f \n%s | OT RATIO: %.3f' %
-              (' ' * 75, ctx.total_work_time, ctx.total_job_time, ctx.job_time_multiplier, ' ' * 103, ctx.overtime_multiplier))
+              (' ' * 109, ctx.total_work_time, ctx.total_job_time, ctx.job_time_multiplier, ' ' * 137, ctx.overtime_multiplier))
 
     # We only return a list of shift objects
     def output_inflate():
