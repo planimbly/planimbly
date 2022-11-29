@@ -135,14 +135,17 @@ class ScheduleCreateApiView(APIView):
         for absence in absences:
             emp_absences.setdefault(absence.employee.id, []).append(absence)
 
-        time_assignments = Assignment.objects.filter(employee__in=employee_list).filter(start__lte=last_day).filter(
+        term_assignments = Assignment.objects.filter(employee__in=employee_list).filter(start__lte=last_day).filter(
             end__gte=first_day)
-        all_assignments = Assignment.objects.filter(employee__in=employee_list).filter(start=None).filter(end=None)
+
+        general_assignments = Assignment.objects.filter(employee__in=employee_list).filter(start=None).filter(end=None)
+
         emp_assignments = {}
-        for assignment in time_assignments:
+        for assignment in term_assignments:
             emp_assignments.setdefault(assignment.employee.id, []).append(assignment)
-        for assignment in time_assignments:
-            emp_assignments.setdefault(assignment.employee.id, []).append(all_assignments)
+
+        for assignment in general_assignments:
+            emp_assignments.setdefault(assignment.employee.id, []).append(assignment)
 
         jobtime = JobTime.objects.filter(year=int(year)).values_list(calendar.month_name[month].lower(),
                                                                      flat=True).first()

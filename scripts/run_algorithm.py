@@ -250,7 +250,7 @@ def add_monthly_soft_sum_constraint(model, works, hard_min, soft_min, min_cost,
 
 def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, emp_assignments, schedule_dict,
                            employees: list[Employee], shift_types: list[ShiftType],
-                           year: int, month: int, params, output_proto):
+                           year: int, month: int, jobtime, params, output_proto):
 
     # Dictionaries with:
     work_time = dict()          # with work time assigned for each employee (key is emp.pk)
@@ -272,13 +272,16 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                              [wp for wp in emp_for_workplaces if e in emp_for_workplaces[wp]],
                              emp_preferences[e.pk],
                              emp_absences[e.pk],
-                             emp_assignments[e.pk])
+                             emp_assignments[e.pk],
+                             jobtime)
                 for e in employees]
+
+    emp_info = sorted(emp_info, key=lambda e: e.job_time, reverse=True)
 
     for e in emp_info:
         print(e)
 
-    ctx = Context(emp_info, shift_types, year, month)
+    ctx = Context(emp_info, shift_types, year, month, jobtime)
 
     for ei in ctx.employees:
         num_emp_absences[ei.get()] = sum(1 for x in ei.get_absent_days_in_month(month))
@@ -424,48 +427,45 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
             obj_bool_coeffs.extend(coeffs)
 
     # Calculate work time constraints
-    # TODO: Handle cases when 160 hours per employee is not enough to cover the entire schedule!!
+    # TODO: Handle cases when full time per employee is not enough to cover the entire schedule!!
     for ei in ctx.employees:
         works = [work[ei.get().pk, s.id, d] for s in ei.allowed_shift_types for d in range(1, num_days + 1) if s.id != 0]
-        hard_min = floor_to_multiple(ei.get().job_time * ctx.job_time_multiplier, 8)
-        soft_min = ei.get().job_time
+        hard_min = floor_to_multiple(ei.job_time * ctx.job_time_multiplier, 8)
+        soft_min = ei.job_time
         min_cost = 50
-        soft_max = ei.get().job_time
-        hard_max = 160
+        soft_max = ei.job_time
+        hard_max = ctx.job_time
         max_cost = 50
 
         if ctx.job_time_multiplier < 1:
-            hard_min = floor_to_multiple(ei.get().job_time * ctx.job_time_multiplier, 8) - 8
-            soft_min = floor_to_multiple(ei.get().job_time * ctx.job_time_multiplier, 8)
-            soft_max = ceil_to_multiple(ei.get().job_time * ctx.job_time_multiplier, 8)
-            hard_max = ei.get().job_time + 8
+            hard_min = floor_to_multiple(ei.job_time * ctx.job_time_multiplier, 8) - 8
+            soft_min = floor_to_multiple(ei.job_time * ctx.job_time_multiplier, 8)
+            soft_max = ceil_to_multiple(ei.job_time * ctx.job_time_multiplier, 8)
+            hard_max = ei.job_time + 8
         if ctx.job_time_multiplier >= 1:
-            hard_min = ei.get().job_time - 8
-            soft_min = floor_to_multiple(ei.get().job_time * ctx.overtime_multiplier, 8)
-            soft_max = ceil_to_multiple(ei.get().job_time * ctx.overtime_multiplier, 8)
+            hard_min = ei.job_time - 8
+            soft_min = floor_to_multiple(ei.job_time * ctx.overtime_multiplier, 8)
+            soft_max = ceil_to_multiple(ei.job_time * ctx.overtime_multiplier, 8)
             hard_max = soft_max + 8
-            if ei.get().job_time == 160:
+            if ei.job_time == ctx.job_time:
                 soft_min = soft_max
                 min_cost += 25
+        soft_min = min(ctx.job_time - 8, soft_min) if ei.job_time != ctx.job_time else min(ctx.job_time, soft_min)
 
-        # Deduct absent time from estimated work time
-        # TODO: THIS IS JUST A BANDAID, we need to account for absences earlier (while calculating overtime multiplier and such)
-        hard_min -= ei.absent_time
-        soft_min -= ei.absent_time
-        soft_max -= ei.absent_time
-        hard_max -= ei.absent_time
-
-        soft_min = min(152, soft_min) if ei.get().job_time != 160 else min(160, soft_min)
-        soft_max = min(160, soft_max)
-        hard_max = min(160, hard_max)
+        if not ctx.overtime_for_full_timers:
+            soft_max = min(ctx.job_time, soft_max)
+            hard_max = min(ctx.job_time, hard_max)
+        else:
+            soft_max = min(soft_max, ctx.job_time + floor_to_multiple(ctx.overtime_above_full_time // len(ctx.employees), 8))
+            hard_max = min(hard_max, ctx.job_time + ceil_to_multiple(ctx.overtime_above_full_time // len(ctx.employees), 8))
 
         print("emp %2i, jt %3i, hard_min %3i, soft_min %3i, soft_max %3i, hard_max %3i, overtime: %2i" %
-              (ei.get().pk, ei.get().job_time, hard_min, soft_min, soft_max, hard_max, soft_max - ei.get().job_time))
+              (ei.get().pk, ei.job_time, hard_min, soft_min, soft_max, hard_max, hard_max - ei.job_time))
         variables, coeffs = add_monthly_soft_sum_constraint(
             model, works, hard_min // 8, soft_min // 8, min_cost, soft_max // 8,
             hard_max // 8, max_cost,
             'work_time_constraint(employee %i, job_time %i)' %
-            (ei.get().pk, ei.get().job_time))
+            (ei.get().pk, ei.job_time))
         obj_int_vars.extend(variables)
         obj_int_coeffs.extend(coeffs)
 
@@ -563,6 +563,8 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         for d in range(1, num_days + 1):
             for ei in ctx.employees:
                 for s in ei.allowed_shift_types:
+                    if s.id == 0:
+                        continue
                     if solver.BooleanValue(work[ei.get().pk, s.id, d]):
                         work_time[ei.get().pk] += ctx.get_shift_info_by_id(s.id).get_duration_in_hours()
 
@@ -571,7 +573,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     # Delete excess shifts according to assigned working hours
     def delete_excess_shifts():
         s_excess_shifts = dict()
-        job_times = sorted(set(ei.get().job_time for ei in ctx.employees), reverse=True)
+        job_times = sorted(set(ei.job_time for ei in ctx.employees), reverse=True)
 
         for s, d, v in excess_shifts:
             candidates = [[ei.get(), s, d] for ei in ctx.employees if solver.BooleanValue(work[ei.get().pk, s, d])]
@@ -683,8 +685,8 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                     if solver.BooleanValue(work[ei.get().pk, s.id, d]):
                         sched += '%2s ' % s.name[0]
             print('employee %2i: %s | JT: %4i | WT: %4i | RATIO: %.2f' %
-                  (ei.get().pk, sched, ei.get().job_time, work_time[ei.get().pk],
-                   work_time[ei.get().pk] / ei.get().job_time))
+                  (ei.get().pk, sched, ei.job_time, work_time[ei.get().pk],
+                   work_time[ei.get().pk] / ei.job_time))
 
         print('\n%sTOTALS | JT: %4i | WT: %4i | JT RATIO: %.3f \n%s | OT RATIO: %.3f' %
               (' ' * 109, ctx.total_work_time, ctx.total_job_time, ctx.job_time_multiplier, ' ' * 137, ctx.overtime_multiplier))
@@ -731,10 +733,7 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
     shift_types.insert(0, shift_free)
 
     # Only consider employees with set job time
-    emp = [e for e in emp if e.job_time != 0]
-
-    # Sort employees by their job time
-    emp = sorted(emp, key=lambda e: e.job_time, reverse=True)
+    emp = [e for e in emp if e.job_time in ['1', '1/2', '1/4', '3/4']]
 
     data = solve_shift_scheduling(emp_for_workplaces,
                                   emp_preferences,
@@ -744,5 +743,6 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
                                   emp,  # employee list
                                   shift_types,  # shift type list
                                   year, month,  # date
+                                  jobtime,
                                   params='max_time_in_seconds:240.0', output_proto=None)
     return data
