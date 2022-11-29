@@ -27,6 +27,7 @@ class FreeDay(models.Model):
     def __str__(self):
         return str(self.day)
 
+
 class Schedule(models.Model):
     year = models.IntegerField(verbose_name='Rok')
     month = models.IntegerField(verbose_name='Miesiąc')

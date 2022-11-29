@@ -202,6 +202,7 @@ class EmployeeToUnitApiView(APIView):
                     employee.user_workplace.remove(workplace)
             else:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(status=status.HTTP_200_OK)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -230,6 +231,7 @@ class EmployeeToWorkplaceApiView(APIView):
                 employee.user_workplace.remove(workplace)
             else:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(status=status.HTTP_200_OK)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
