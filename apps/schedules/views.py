@@ -26,6 +26,22 @@ def free_days(year, month):
     return free_days
 
 
+# Function copied from:
+#   https://stackoverflow.com/questions/1806278/convert-fraction-to-float
+def convert_to_float(frac_str):
+    try:
+        return float(frac_str)
+    except ValueError:
+        num, denom = frac_str.split('/')
+        try:
+            leading, num = num.split(' ')
+            whole = float(leading)
+        except ValueError:
+            whole = 0
+        frac = float(num) / float(denom)
+        return whole - frac if whole < 0 else whole + frac
+
+
 class ShiftTypeManageView(TemplateView):
     template_name = 'schedules/shiftType_manage.html'
 
@@ -231,13 +247,18 @@ class ScheduleGetApiView(APIView):
                 date = datetime.date(int(year), int(month), x).strftime(date_format)
                 days.update({date: []})
 
+            jobtime = JobTime.objects.filter(year=int(year)).values_list(
+                calendar.month_name[int(month)].lower(), flat=True).first()
+            if jobtime is None:
+                jobtime = 160
+
             for shift in shifts_statistic:
                 shift_len = datetime.datetime.combine(datetime.date.min, shift.shift_type.hour_end) - \
                             datetime.datetime.combine(datetime.date.min, shift.shift_type.hour_start)
                 statistics.setdefault(shift.employee.id, {
                     'hours': 0,
                     'name': shift.employee.first_name + ' ' + shift.employee.last_name,
-                    'jobtime': shift.employee.job_time,
+                    'jobtime': convert_to_float(shift.employee.job_time) * jobtime,
                     'shift_type': {},
                     'absence': {}
                 })
@@ -278,6 +299,7 @@ class ScheduleGetApiView(APIView):
                 'days': days,
                 'statistics': statistics,
                 'free_days': free_days(int(year), int(month)),
+                'jobtime': jobtime,
             }
             return Response(data=response)
         else:
