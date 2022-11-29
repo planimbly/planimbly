@@ -21,8 +21,11 @@ class JobTime(models.Model):
 
 
 class FreeDay(models.Model):
-    day = models.DateField(verbose_name='Dzień wolny', unique=True)
+    name = models.CharField(verbose_name='Nazwa wolnego', max_length=256)
+    day = models.DateField(verbose_name='Data', unique=True)
 
+    def __str__(self):
+        return str(self.day)
 
 class Schedule(models.Model):
     year = models.IntegerField(verbose_name='Rok')

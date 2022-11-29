@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Schedule, ShiftType, Preference, Assignment, Shift, Absence
+from .models import FreeDay, Schedule, ShiftType, Preference, Assignment, Shift, Absence
 
 admin.site.register(Schedule)
 admin.site.register(ShiftType)
@@ -14,3 +14,4 @@ class ShiftAdmin(admin.ModelAdmin):
 admin.site.register(Shift, ShiftAdmin)
 admin.site.register(Absence)
 admin.site.register(Assignment)
+admin.site.register(FreeDay)

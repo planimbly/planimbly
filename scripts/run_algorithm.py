@@ -716,7 +716,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     return output_inflate()
 
 
-def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workplaces, emp_preferences, emp_absences, emp_assignments):
+def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workplaces, emp_preferences, emp_absences, emp_assignments, jobtime):
     workplace = Workplace.objects.all().first()
 
     # Calendar data

@@ -17,6 +17,14 @@ from apps.schedules.serializers import ShiftTypeSerializer, PreferenceSerializer
     AssignmentSerializer, JobTimeSerializer, FreeDaySerializer
 
 
+def free_days(year, month):
+    pl_holidays = list(holidays.PL(years=year).keys())
+    free_days = list(FreeDay.objects.filter(day__year=year).filter(day__month=month).values_list('day', flat=True))
+    
+    pl_holidays = list(filter(lambda x: x.month == month, pl_holidays))
+    free_days.extend(pl_holidays)
+    return free_days
+
 class ShiftTypeManageView(TemplateView):
     template_name = 'schedules/shiftType_manage.html'
 
@@ -135,8 +143,12 @@ class ScheduleCreateApiView(APIView):
         for assignment in time_assignments:
             emp_assignments.setdefault(assignment.employee.id, []).append(all_assignments)
 
+        jobtime = JobTime.objects.filter(year=int(year)).values_list(calendar.month_name[month].lower(), flat=True).first()
+        
         data = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month,
-                                                    emp_for_workplaces, emp_preferences, emp_absences, emp_assignments)
+                                                    emp_for_workplaces, emp_preferences, emp_absences, emp_assignments, jobtime)
+
+        
         for shift in data:
             shift.save()
         return Response()
@@ -186,8 +198,7 @@ class ScheduleReportGetApiView(APIView):
                     'absences': absences,
                 }
 
-            pl_holidays = holidays.PL(years=int(year)).keys()
-            print(pl_holidays)
+            data['free_days'] = free_days(int(year), int(month))
 
             return Response(data=data)
 
@@ -254,14 +265,14 @@ class ScheduleGetApiView(APIView):
                         }
                     }
                 ))
-
             response = {
                 'unit_id': workplace.workplace_unit.id,
                 'workplace_id': workplace.id,
                 'unit_name': workplace.workplace_unit.name,
                 'workplace_name': workplace.name,
                 'days': days,
-                'statistics': statistics
+                'statistics': statistics,
+                'free_days': free_days(int(year), int(month)),
             }
             return Response(data=response)
         else:
