@@ -1,0 +1,9 @@
+[Unit]
+Description=Planimbly gunicorn service
+
+[Service]
+User=server
+Group=server
+WorkingDirectory=/home/server/repos/planimbly-prod/planimbly
+EnvironmentFile=/home/server/repos/planimbly-prod/planimbly/.env
+ExecStart=/home/server/repos/planimbly-prod/planimbly/venv/bin/gunicorn planimbly.wsgi:app --config /home/server/repos/planimbly-prod/planimbly/production/on-premises/gunicorn/gunicorn.conf.py
