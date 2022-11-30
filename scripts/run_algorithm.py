@@ -317,8 +317,8 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
 
     model = cp_model.CpModel()
 
-    print("\nJob time   : %3i\nWork time  : %3i\nJT ratio   : %.3f\nOT ratio   : %.3f\n" %
-          (ctx.total_job_time, ctx.total_work_time, ctx.job_time_multiplier, ctx.overtime_multiplier))
+    print("\nJob time       : %4i\nMax work time  : %4i\nWork time      : %4i\nJT ratio       : %.3f\nOT ratio       : %.3f\n" %
+          (ctx.total_job_time, ctx.max_work_time, ctx.total_work_time, ctx.job_time_multiplier, ctx.overtime_multiplier))
 
     # Prepare list of allowed shift types for employees
     for ei in ctx.employees:

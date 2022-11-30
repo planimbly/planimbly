@@ -139,6 +139,7 @@ class Context:
 
     total_work_time = int
     total_job_time = int
+    max_work_time = int
 
     job_time_multiplier = float
     overtime_multiplier = float
@@ -166,6 +167,9 @@ class Context:
 
         self.total_work_time = self.calc_total_work_time()
         self.total_job_time = sum(ei.job_time for ei in self.employees)
+        # TODO: calculate max_work_time for each employee in EmployeeInfo
+        # TODO: calculate it from weekly_cover_demands, not hardcoded
+        self.max_work_time = len(self.employees) * (len(flatten(self.month_by_weeks)) - 4) * 8
 
         self.job_time_multiplier = self.total_work_time / self.total_job_time
         if len(self.employees) == len(self.get_full_time_employees()):
