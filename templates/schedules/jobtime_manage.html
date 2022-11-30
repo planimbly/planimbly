@@ -103,12 +103,20 @@
                                 this.jobtime_list = response.data;
                                 console.log(this.jobtime_list)
                             }
+                        )
+                        .catch(error => {
+                                this.response = error.response.data
+                            }
                         );
                     axios
                         .get(this.freeday_url)
                         .then(response => {
                                 this.freeday_list = response.data;
                                 console.log(this.freeday_list)
+                            }
+                        )
+                        .catch(error => {
+                                this.response = error.response.data
                             }
                         );
                 },
@@ -128,12 +136,20 @@
                                         axios
                                             .put(put_jobtime_manage_url, this.year_object)
                                             .then(response => {this.fetch_data()})
+                                            .catch(error => {
+                                                    this.response = error.response.data
+                                                }
+                                            )
                                     }
                                 }
                                 if (!flag){
                                     axios
                                         .post(this.jobtime_manage_url, this.year_object)
                                         .then(response => {this.fetch_data()})
+                                        .catch(error => {
+                                                this.response = error.response.data
+                                            }
+                                        )
                                 }
                             }
                         });
@@ -151,6 +167,10 @@
                                         day: this.newday,
                                     })
                                     .then(response => {this.fetch_data()})
+                                    .catch(error => {
+                                            this.response = error.response.data
+                                        }
+                                    )
                             }
                         });
                 },
@@ -168,6 +188,10 @@
                                         id: day_id
                                     })
                                     .then(response => {this.fetch_data()})
+                                    .catch(error => {
+                                            this.response = error.response.data
+                                        }
+                                    )
                             }
                         });
                 },

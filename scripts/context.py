@@ -167,8 +167,11 @@ class Context:
         self.total_job_time = sum(ei.job_time for ei in self.employees)
 
         self.job_time_multiplier = self.total_work_time / self.total_job_time
-        self.overtime_multiplier = (self.total_work_time - sum(ei.job_time for ei in self.get_full_time_employees()))\
-            / (self.total_job_time - sum(ei.job_time for ei in self.get_full_time_employees()))
+        if len(self.employees) == len(self.get_full_time_employees()):
+            self.overtime_multiplier = 1
+        else:
+            self.overtime_multiplier = (self.total_work_time - sum(ei.job_time for ei in self.get_full_time_employees()))\
+                / (self.total_job_time - sum(ei.job_time for ei in self.get_full_time_employees()))
         self.overtime_for_full_timers = sum(self.job_time - ei.absent_time for ei in self.employees) < self.total_work_time
         self.overtime_above_full_time = self.total_work_time - sum(self.job_time - ei.absent_time for ei in self.employees)
 
