@@ -473,7 +473,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     # BUG: when dealing with 6 week months, the algorithm fails because of this constraint
     for ct in weekly_sum_constraints:
         for ei in ctx.employees:
-            for w, week in enumerate(ctx.month_by_weeks):
+            for w, week in enumerate(ctx.month_by_billing_weeks):
                 shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = ct
 
                 if shift not in [s.id for s in ei.allowed_shift_types]:
@@ -523,7 +523,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
 
     # Cover constraints
     for s in ctx.shift_types[1:]:
-        for w, week in enumerate(ctx.month_by_weeks):
+        for w, week in enumerate(ctx.month_by_billing_weeks):
             for d in week:
                 works = [work[ei.get().pk, s.id, d[0]] for ei in [e for e in ctx.employees if s.get() in e.allowed_shift_types]]
                 # Ignore Off shift.
@@ -667,7 +667,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
 
         header = '\n' + ' ' * 13
         header_days = ' ' * 13
-        for w, week in enumerate(ctx.month_by_weeks):
+        for w, week in enumerate(ctx.month_by_billing_weeks):
             for d in week:
                 header += '%2s ' % get_letter_for_weekday(d[1])
                 header_days += '%2i ' % d[0]
@@ -678,18 +678,21 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
 
         for ei in ctx.employees:
             sched = ''
-            for d in range(1, num_days + 1):
-                if d % 7 == 0:
-                    sched += '   '
-                for s in ei.allowed_shift_types:
-                    if solver.BooleanValue(work[ei.get().pk, s.id, d]):
-                        sched += '%2s ' % s.name[0]
+            for w, week in enumerate(ctx.month_by_billing_weeks):
+                for d in week:
+                    for s in ei.allowed_shift_types:
+                        if solver.BooleanValue(work[ei.get().pk, s.id, d[0]]):
+                            sched += '%2s ' % s.name[0]
+                sched += '   '
+
             print('employee %2i: %s | JT: %4i | WT: %4i | RATIO: %.2f' %
                   (ei.get().pk, sched, ei.job_time, work_time[ei.get().pk],
                    work_time[ei.get().pk] / ei.job_time))
 
         print('\n%sTOTALS | JT: %4i | WT: %4i | JT RATIO: %.3f \n%s | OT RATIO: %.3f' %
-              (' ' * 109, ctx.total_work_time, ctx.total_job_time, ctx.job_time_multiplier, ' ' * 137, ctx.overtime_multiplier))
+              (' ' * (7 + num_days * 3 + len(ctx.month_by_billing_weeks) * 3),
+               ctx.total_work_time, ctx.total_job_time, ctx.job_time_multiplier,
+               ' ' * 140, ctx.overtime_multiplier))
 
     # We only return a list of shift objects
     def output_inflate():
