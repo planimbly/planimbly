@@ -1,7 +1,7 @@
 from datetime import date, datetime as dt, timedelta
 from apps.accounts.models import Employee
 from apps.schedules.models import ShiftType
-from scripts.helpers import get_month_by_weeks, flatten, get_letter_for_weekday
+from scripts.helpers import get_month_by_weeks, get_month_by_billing_weeks, flatten, get_letter_for_weekday
 
 
 class ShiftTypeInfo:
@@ -139,6 +139,7 @@ class Context:
 
     total_work_time = int
     total_job_time = int
+    max_work_time = int
 
     job_time_multiplier = float
     overtime_multiplier = float
@@ -154,6 +155,7 @@ class Context:
         self.month = month
         self.year = year
         self.month_by_weeks = get_month_by_weeks(year, month)
+        self.month_by_billing_weeks = get_month_by_billing_weeks(year, month)
 
         self.weekly_cover_demands = [tuple(s.get().demand for s in self.shift_types[1:]) for _ in range(7)]
 
@@ -165,6 +167,9 @@ class Context:
 
         self.total_work_time = self.calc_total_work_time()
         self.total_job_time = sum(ei.job_time for ei in self.employees)
+        # TODO: calculate max_work_time for each employee in EmployeeInfo
+        # TODO: calculate it from weekly_cover_demands, not hardcoded
+        self.max_work_time = len(self.employees) * (len(flatten(self.month_by_weeks)) - 4) * 8
 
         self.job_time_multiplier = self.total_work_time / self.total_job_time
         if len(self.employees) == len(self.get_full_time_employees()):
@@ -230,7 +235,7 @@ class Context:
         total_minutes = 0
         num_month_weekdays = []
         for d in range(len(self.weekly_cover_demands)):
-            num_month_weekdays.append(sum([x[1] == d for x in flatten(self.month_by_weeks)]))
+            num_month_weekdays.append(sum([x[1] == d for x in flatten(self.month_by_billing_weeks)]))
 
         for d in range(len(self.weekly_cover_demands)):
             for s in range(len(self.weekly_cover_demands[d])):  # s for num_month_weekdays, s+1 for shift_types
@@ -243,7 +248,7 @@ class Context:
         req = []
         for ei in self.employees:
             for pref in ei.preferences:
-                for week in self.month_by_weeks:
+                for week in self.month_by_billing_weeks:
                     for d in week:
                         if pref.active_days[d[1]] == "1":
                             req.append((ei.employee.pk, next(st.get().id for st in self.shift_types if pref.shift_type == st.get()), d[0], -1))
