@@ -132,8 +132,7 @@ class UnitViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         v_data = serializer.validated_data
-        unit = Unit(name=v_data['name'], unit_org=self.request.user.user_org,
-                    allow_preferences=v_data['allow_preferences'])
+        unit = Unit(name=v_data['name'], unit_org=self.request.user.user_org)
         unit.save()
 
 
