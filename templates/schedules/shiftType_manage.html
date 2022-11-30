@@ -28,6 +28,7 @@
     </nav> {% endcomment %}
     {% if is_any_workplace %}
     <div id="vue-app">
+        [[ calculate_daylist ]]
         <div class="row d-flex justify-content-between align-items-center">
             <div class="col d-flex justify-content-start">
                 <h3 class="content-title">Lista zmian</h3>
@@ -171,12 +172,12 @@
                 {% comment %} <td><input type="text" class="form-control" v-model="shiftType.active_days"></td> {% endcomment %}
 
                 <td> 
-                    <div class="dropdown" style="margin-top: 15px">
-                        <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuClickableInside" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" v-on:click="calculate_daylist(shiftType.active_days)">
+                    <div class="dropdown">
+                        <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuClickableInside" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
                             Wybierz dni
                         </button>
                         <ul class="dropdown-menu" style="margin-bottom: 50px">
-                            <li v-for="day of daylist">
+                            <li v-for="day of return_daylist(shiftType)">
                                 <div class="dropdown-item">
                                     <div class="active_days_dropdown">
                                         <input type="checkbox" v-model="day.val">
@@ -233,7 +234,7 @@
                         select_unit: {{ select_unit | safe}},
                         select_workplace: {{ select_workplace | safe }},
                         selected_workplace: '',
-                        daylist: this.st_numbers_to_list('0000000'),
+                        daylist: [],
                         daylist_add: this.st_numbers_to_list('0000000'),
                     }
                 },
@@ -250,11 +251,28 @@
                         get() {
                             return this.select_workplace[this.selected_unit]
                         }
-                    }
+                    },
+                    calculate_daylist() {
+                        if(this.shiftType_list != null){
+                            for(let shift of this.shiftType_list){
+                                let model = {
+                                    shiftType: shift,
+                                    active_days: this.st_numbers_to_list(shift.active_days),
+                                };
+                                this.daylist.push(model)
+                            }
+                        }
+                    },
                 },
                 methods: {
-                    calculate_daylist(active_days) {
-                        this.daylist = this.st_numbers_to_list(active_days)
+                    return_daylist(shiftType){
+                        if(this.daylist != []){
+                            for(let model of this.daylist){
+                                if (Object.values(model)[0] == shiftType){
+                                    return Object.values(model)[1]
+                                }
+                            }
+                        }
                     },
                     change_workplace() {
                         try {
@@ -287,6 +305,7 @@
                                                 name: this.name,
                                                 color: this.color,
                                                 demand: this.demand,
+                                                workplace: this.selected_workplace,
                                                 active_days: this.st_list_to_numbers(this.daylist_add),
                                                 is_used: this.is_used
                                             }
@@ -354,7 +373,8 @@
                                                 name: this.shiftType_list[i].name,
                                                 color: this.shiftType_list[i].color,
                                                 demand: this.shiftType_list[i].demand,
-                                                active_days: this.st_list_to_numbers(this.daylist),
+                                                workplace: this.selected_workplace,
+                                                active_days: this.st_list_to_numbers(this.daylist[i].active_days),
                                                 is_used: this.shiftType_list[i].is_used
                                             }
                                         )

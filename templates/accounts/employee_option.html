@@ -35,7 +35,6 @@
             <div>
                 <div class="emp_option_small_box"><h5>ID</h5><input type="text" class="w-50 form-control" v-model="employee_info.id" diasabled readonly></div>
                 <div class="emp_option_small_box"><h5>E-mail</h5><input type="text" class="w-50 form-control" v-model="employee_info.email" required></div>
-                {% comment %} <div class="emp_option_small_box"><h5>Etat</h5><input type="number" class="w-50 form-control" v-model="employee_info.job_time" required></div> {% endcomment %}
                 <div class="emp_option_small_box">
                     <h5>Etat</h5>
                     <select id="jobtimeSelect" class="w-50 form-select" v-model="selected_jobtime">
@@ -87,7 +86,7 @@
             <div class="list-group">
                 <div v-for="preference in preferences_list" :key="preference.id" class="list-group-item list-group-item-action position-static">
                     <div class="emp_option_table_box">
-                        <div>[[ preference.shift_type_obj.name ]]: [[ preference.shift_type_obj.hour_start.toString().slice(0, 5) ]] - [[ preference.shift_type_obj.hour_end.toString().slice(0, 5) ]]: [[ st_list_to_text(st_numbers_to_list(preference.active_days)) ]]</div>
+                        <div>[[ return_unit_name_for_workplace(preference.shift_type_obj.workplace) ]] - [[ return_workplace_name(preference.shift_type_obj.workplace) ]] - [[ preference.shift_type_obj.name ]]: [[ preference.shift_type_obj.hour_start.toString().slice(0, 5) ]] - [[ preference.shift_type_obj.hour_end.toString().slice(0, 5) ]]: [[ st_list_to_text(st_numbers_to_list(preference.active_days)) ]]</div>
                         <button v-on:click="remove_preference(preference.id)" class="material-icons" 
                                 style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
                     </div>
@@ -105,7 +104,7 @@
                 <div v-for="assignment in assignment_list" :key="assignment.id">
                     <div v-if="assignment.negative_flag == false" class="list-group-item list-group-item-action position-static">
                         <div class="emp_option_table_box">
-                            <div>[[ assignment.shift_type_obj.name ]]: [[ return_assigment_data(assignment) ]]</div>
+                            <div>[[ return_unit_name_for_workplace(assignment.shift_type_obj.workplace) ]] - [[ return_workplace_name(assignment.shift_type_obj.workplace) ]] - [[ assignment.shift_type_obj.name ]]: [[ return_assigment_data(assignment) ]]</div>
                             <button v-on:click="remove_assignment(assignment.id)" class="material-icons" 
                                     style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
                         </div>
@@ -122,7 +121,7 @@
                 <div v-for="assignment in assignment_list" :key="assignment.id">
                     <div v-if="assignment.negative_flag == true" class="list-group-item list-group-item-action position-static">
                         <div class="emp_option_table_box">
-                            <div>[[ assignment.shift_type_obj.name ]]: [[ return_assigment_data(assignment) ]]</div>
+                            <div>[[ return_unit_name_for_workplace(assignment.shift_type_obj.workplace) ]] - [[ return_workplace_name(assignment.shift_type_obj.workplace) ]] - [[ assignment.shift_type_obj.name ]]: [[ return_assigment_data(assignment) ]]</div>
                             <button v-on:click="remove_assignment(assignment.id)" class="material-icons" 
                                     style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
                         </div>
@@ -189,13 +188,6 @@
                       <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-
-                    {% comment %} <select id="unitSelect" class="form-select" v-model="selected_unit" v-on:change="workplace_list_fetch">
-                        <option v-for="unit in employee_info.user_unit" :value="unit.id">
-                            [[ unit.name ]]
-                        </option>
-                    </select> {% endcomment %}
-
                     <h5 class="modal-title" style="margin-bottom: 15px">Wybierz dział</h5>
 
                     <select id="workplaceSelect" class="form-select" v-model="selected_workplace" v-on:change="shiftType_list_fetch">
@@ -221,16 +213,6 @@
                             <div class="fw-bold"> [[ shiftType.name ]]: [[ shiftType.hour_start.toString().slice(0, 5) ]] - [[ shiftType.hour_end.toString().slice(0, 5) ]] </div>
                         </div>
                     </div>                   
-
-                    {% comment %} <div class="list-group" style="margin-top: 15px">
-                        <div v-for="day of daylist" class="list-group-item list-group-item-action">
-                            <div class="emp_option_list_box">
-                                <input type="checkbox" v-model="day.val">                        
-                                <div class="fw-bold"> [[ day.day ]] </div>
-                            </div>
-                        </div>
-                    </div> {% endcomment %}
-
                 </div>
             </div>
         </div>
@@ -398,6 +380,28 @@
                 },
             },
             methods: {
+                return_workplace_name(workplace_id){
+                    if (this.employee_info.user_workplace != null){
+                        for(let workplace of this.employee_info.user_workplace){
+                            if (workplace.id == workplace_id){
+                                return workplace.name
+                            }
+                        }
+                    }
+                },
+                return_unit_name_for_workplace(workplace_id){
+                    if (this.employee_info.user_workplace != null){
+                        for(let workplace of this.employee_info.user_workplace){
+                            if (workplace.id == workplace_id){
+                                for (let unit of this.unit_list){
+                                    if (unit.id == workplace.workplace_unit){
+                                        return unit.name
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 return_jobtime_obj(hours){
                     for (let jobtime_obj of this.jobtime_list){
                         if (hours == jobtime_obj.jobtime_hours){
@@ -461,6 +465,7 @@
                     axios
                         .get(this.emp_preferences_url)
                         .then(response_pref_data => (this.preferences_list = response_pref_data.data))
+                        .then(() => console.log(this.preferences_list))
                     this.daylist = this.st_numbers_to_list('0000000')
                 },
                 fetch_assignment_data(){

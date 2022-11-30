@@ -37,12 +37,13 @@ class EmployeeInfo:
     absences = []
     absent_days = []
     absent_time = 0
+    job_time = 0
     term_assignments = []
     negative_indefinite_assignments = []
     positive_indefinite_assignments = []
     allowed_shift_types = {}  # Key: Shift_type object, Value: list of allowed days
 
-    def __init__(self, emp: Employee, wp: list, pref: list, ab: list, ass: list):
+    def __init__(self, emp: Employee, wp: list, pref: list, ab: list, ass: list, jt: int):
         self.employee = emp
         self.workplaces = wp
         self.preferences = pref
@@ -53,11 +54,29 @@ class EmployeeInfo:
             self.positive_indefinite_assignments = self.prepare_assignments(ass)
         if len(self.negative_indefinite_assignments) > 0 and len(self.positive_indefinite_assignments) > 0:
             print("[WARNING] both negative and positive indefinite assignments were found for employee %i" % self.get().pk)
+        self.job_time = self.calculate_job_time(jt)
+        self.job_time -= self.absent_time
+        if self.job_time < 0:
+            print("[WARNING] employee %i has negative job time" % self.get().pk)
+
+    def calculate_job_time(self, jt):
+        match self.employee.job_time:
+            case '1':
+                return jt
+            case '1/2':
+                return jt // 2
+            case '1/4':
+                return jt // 4
+            case '3/4':
+                return jt * 3 // 4
+            case _:
+                return -1
 
     def prepare_assignments(self, assignments: list):
         ta = []
         nia = []
         pia = []
+        print(assignments)
         for a in assignments:
             if a.end is not None and a.start is not None:
                 # term assignments
@@ -95,7 +114,7 @@ class EmployeeInfo:
 
     def __str__(self):
         return "[EMPLOYEE] ID: %2i | JT: %3i | %s %s" % \
-               (self.employee.pk, self.employee.job_time, self.employee.first_name, self.employee.last_name)
+               (self.employee.pk, self.job_time, self.employee.first_name, self.employee.last_name)
 
 
 class Context:
@@ -116,16 +135,21 @@ class Context:
     illegal_transitions = []
     overnight_shifts = []
 
+    job_time = int
+
     total_work_time = int
     total_job_time = int
 
     job_time_multiplier = float
     overtime_multiplier = float
+    overtime_for_full_timers = bool
+    overtime_above_full_time = int
 
-    def __init__(self, emp: list[EmployeeInfo], st: list[ShiftType], year: int, month: int):
+    def __init__(self, emp: list[EmployeeInfo], st: list[ShiftType], year: int, month: int, jt: int):
         self.shift_types = [ShiftTypeInfo(s, s.pk) for s in st]
 
         self.employees = emp
+        self.job_time = jt
 
         self.month = month
         self.year = year
@@ -140,11 +164,13 @@ class Context:
         self.overnight_shifts = self.find_overnight_shifts()
 
         self.total_work_time = self.calc_total_work_time()
-        self.total_job_time = sum(ei.get().job_time for ei in self.employees)
+        self.total_job_time = sum(ei.job_time for ei in self.employees)
 
         self.job_time_multiplier = self.total_work_time / self.total_job_time
-        self.overtime_multiplier = (self.total_work_time - sum(ei.get().job_time for ei in self.get_full_time_employees()))\
-            / (self.total_job_time - sum(ei.get().job_time for ei in self.get_full_time_employees()))
+        self.overtime_multiplier = (self.total_work_time - sum(ei.job_time for ei in self.get_full_time_employees()))\
+            / (self.total_job_time - sum(ei.job_time for ei in self.get_full_time_employees()))
+        self.overtime_for_full_timers = sum(self.job_time - ei.absent_time for ei in self.employees) < self.total_work_time
+        self.overtime_above_full_time = self.total_work_time - sum(self.job_time - ei.absent_time for ei in self.employees)
 
     def find_illegal_transitions(self):
         """Finds illegal transitions between shift types
@@ -232,4 +258,4 @@ class Context:
         return fa
 
     def get_full_time_employees(self):
-        return [ei for ei in self.employees if ei.get().job_time == 160]
+        return [ei for ei in self.employees if ei.job_time == self.job_time]

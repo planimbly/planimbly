@@ -29,7 +29,7 @@
     {% if is_any_workplace %}
  
     <div id="vue-app">
-
+        [[ inflate_checked_workplace ]]
         <div class="col d-flex justify-content-start">
             <h3 class="content-title">Grafiki</h3>
         </div>
@@ -592,7 +592,14 @@
                     get() {
                         return this.select_workplace[this.selected_unit]
                     }
-                }
+                },
+                inflate_checked_workplace: {
+                    get() {
+                        for (let workplace of this.shift_types_for_each_workplace){
+                            this.checked_workplace.push(workplace.workplace.id)
+                        }
+                    }
+                },
             },
             mounted() {
 
