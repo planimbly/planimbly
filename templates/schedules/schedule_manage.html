@@ -29,7 +29,6 @@
     {% if is_any_workplace %}
  
     <div id="vue-app">
-        [[ inflate_checked_workplace ]]
         <div class="col d-flex justify-content-start">
             <h3 class="content-title">Grafiki</h3>
         </div>
@@ -246,7 +245,7 @@
                                         <div class="d-flex justify-content-between align-items-center mb-2">
                                             <div class="d-flex align-items-center">
                                                 <input v-bind:id="workplace_shifts.workplace.id" v-bind:value="workplace_shifts.workplace.id"
-                                                            class="form-check-input me-2" style="margin: 0px;" type="checkbox" checked
+                                                            class="form-check-input me-2" style="margin: 0px;" type="checkbox"
                                                             v-model="checked_workplace">
                                                 <div class="fw-bold">[[workplace_shifts.workplace.name]]</div>
                                             </div>
@@ -425,11 +424,16 @@
                         .get(this.base_url, {params: {'year': this.year_cal, 'month': this.month_cal}})
                         .then(response => {
                                 this.fetched_schedule = response.data;
-                                this.statistics = response.data['statistics']
-                                console.log(this.statistics)
-                                this.add_to_shifttype_name_list(Object.values(this.statistics)[0].shift_type)
+                                this.statistics = response.data['statistics'];
+                                //console.log(this.statistics);
+                                this.inflate_checked_workplace();
                             }
-                        );
+                        )
+                        .then(() => {
+                                if (Object.values(this.statistics).length != 0){
+                                    this.add_to_shifttype_name_list(Object.values(this.statistics)[0].shift_type)
+                                }
+                            });
                     axios
                         .get(this.employee_list_url)
                         .then(response => {
@@ -570,7 +574,13 @@
                             }
                         )
                 },
-                
+                inflate_checked_workplace() {
+                    if(this.current_workplace != null){
+                        for (let workplace of this.current_workplace){
+                            this.checked_workplace.push(workplace.id)
+                        }
+                    }
+                },
             },
             computed: {
                 base_url: {
@@ -593,16 +603,8 @@
                         return this.select_workplace[this.selected_unit]
                     }
                 },
-                inflate_checked_workplace: {
-                    get() {
-                        for (let workplace of this.shift_types_for_each_workplace){
-                            this.checked_workplace.push(workplace.workplace.id)
-                        }
-                    }
-                },
             },
             mounted() {
-
                 try {
                     this.selected_workplace = this.select_workplace[this.selected_unit][0]['id']
                 } catch {

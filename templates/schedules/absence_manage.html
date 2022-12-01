@@ -139,6 +139,10 @@
                                 this.fetch_data()
                             }
                         )
+                        .catch(error => {
+                                this.response = error.response.data
+                            }
+                        )
                 },
                 fetch_data() {
                     axios
@@ -147,12 +151,20 @@
                                 this.absence_list = response.data;
 
                             }
+                        )
+                        .catch(error => {
+                                this.response = error.response.data
+                            }
                         );
                     axios
                         .get(this.employee_url)
                         .then(response => {
                                 this.employee_list = response.data;
                                 console.log(this.employee_list)
+                            }
+                        )
+                        .catch(error => {
+                            this.response = error.response.data
                             }
                         );
                 },
@@ -165,6 +177,10 @@
                                 this.fetch_data()
                             }
                         )
+                        .catch(error => {
+                                this.response = error.response.data
+                            }
+                        );
                 },
             },
             computed: {},
