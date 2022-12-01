@@ -238,7 +238,8 @@ class ScheduleGetApiView(APIView):
             shifts = Shift.objects.filter(schedule__workplace=workplace).filter(schedule__month=month).filter(
                 schedule__year=year).order_by('date')
             shifts_statistic = Shift.objects.filter(schedule__workplace__workplace_unit=unit).filter(
-                schedule__month=month).filter(schedule__year=year).order_by('shift_type__hour_start')
+                schedule__month=month).filter(schedule__year=year).order_by('employee__order_number',
+                                                                            'shift_type__hour_start')
             days_num = calendar.monthrange(int(year), int(month))[1]
             days = {}
             statistics = {}
@@ -257,6 +258,7 @@ class ScheduleGetApiView(APIView):
                             datetime.datetime.combine(datetime.date.min, shift.shift_type.hour_start)
                 statistics.setdefault(shift.employee.id, {
                     'hours': 0,
+                    'order_number': shift.employee.order_number,
                     'name': shift.employee.first_name + ' ' + shift.employee.last_name,
                     'jobtime': convert_to_float(shift.employee.job_time) * jobtime,
                     'shift_type': {},

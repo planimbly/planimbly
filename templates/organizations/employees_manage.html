@@ -28,12 +28,13 @@
             <div class="col d-flex justify-content-start">
                 <h3 class="content-title">Lista pracowników</h3>
             </div>
-            
+
             <div class="col d-flex justify-content-end">
                 <button type="button" class="btn btn-outline-success mx-2" href="#">
                     Importuj pracowników
                 </button>
-                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal"
+                        data-bs-target="#addEmployeeModal">
                     Dodaj pracownika
                 </button>
             </div>
@@ -51,6 +52,14 @@
 
                         <div class="modal-body">
                             <div class="row g-3">
+                                <div class="col-6">
+                                    <div class="form-floating">
+                                        <input type="number" class="form-control" v-model="order_number"
+                                               id="inpuorder_number"
+                                               placeholder="Liczba porządkowa">
+                                        <label for="order_number">Liczba porządkowa</label>
+                                    </div>
+                                </div>
                                 <div class="col-6">
                                     <div class="form-floating">
                                         <input type="email" class="form-control" v-model="email" id="inputEmail"
@@ -103,12 +112,11 @@
         <table class="table styled-table">
             <thead>
             <tr>
-                <th scope="col">ID</th>
+                <th scope="col">Lp</th>
                 <th scope="col">E-mail</th>
                 <th scope="col">Login</th>
                 <th scope="col">Imię</th>
                 <th scope="col">Nazwisko</th>
-                {% comment %} <th scope="col">Kierownik</th> {% endcomment %}
                 <th scope="col">Zarządzaj</th>
                 <th scope="col">Zapisz</th>
                 <th scope="col">Usuń</th>
@@ -116,12 +124,12 @@
             </thead>
             <tbody>
             <tr v-for="(employee, i) in employee_list" :key="employee.id">
-                <th scope="row"><span>[[ employee.id ]]</span></th>
+                <!-- TODO może jakaś klasa css do zmniejszania długosci? -->
+                <td style="width: 100px"><input type="number" class="form-control" v-model="employee.order_number"></td>
                 <td><input type="text" class="form-control" v-model="employee.email"></td>
                 <td><input type="text" class="form-control" v-model="employee.username"></td>
                 <td><input type="text" class="form-control" v-model="employee.first_name"></td>
                 <td><input type="text" class="form-control" v-model="employee.last_name"></td>
-                {% comment %} <td><input type="checkbox" v-model="employee.is_supervisor"></td> {% endcomment %}
                 <td>
                     <a v-bind:href="return_reference_url(employee.id)">
                         <button type="button" class="btn btn-primary table-buttons">
@@ -156,6 +164,7 @@
                     username: '',
                     first_name: '',
                     last_name: '',
+                    order_number: 0,
                     is_supervisor: false,
                     employee_list: null,
                     response: null,
@@ -165,7 +174,7 @@
                 }
             },
             methods: {
-                return_reference_url(id){
+                return_reference_url(id) {
                     return '{% url 'employee_option' 123456789 %}'.replace(/123456789/, id);
                 },
                 fetch_data() {
@@ -187,7 +196,7 @@
                                         {
                                             email: this.email, username: this.username,
                                             first_name: this.first_name, last_name: this.last_name,
-                                            is_supervisor: this.is_supervisor
+                                            is_supervisor: this.is_supervisor, order_number: this.order_number
                                         }
                                     )
                                     .then(
@@ -201,6 +210,7 @@
                                 this.username = ''
                                 this.first_name = ''
                                 this.last_name = ''
+                                this.order_number = 0
                             }
                         });
                 },
@@ -248,7 +258,8 @@
                                             username: this.employee_list[i].username,
                                             first_name: this.employee_list[i].first_name,
                                             last_name: this.employee_list[i].last_name,
-                                            is_supervisor: this.employee_list[i].is_supervisor
+                                            is_supervisor: this.employee_list[i].is_supervisor,
+                                            order_number: this.employee_list[i].order_number
                                         }
                                     )
                                     .then(

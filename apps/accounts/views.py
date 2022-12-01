@@ -13,14 +13,15 @@ class EmployeeViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Employee.objects.all().filter(user_org=self.request.user.user_org) \
-            .exclude(id=self.request.user.id)
+            .exclude(is_supervisor=True)
         return queryset
 
     def perform_create(self, serializer):
         v_data = serializer.validated_data
         password = Employee.objects.make_random_password()
-        employee = get_user_model().objects.create_user(v_data['email'], v_data['username'],
-                                                        v_data['first_name'], v_data['last_name'], password,
+        employee = get_user_model().objects.create_user(v_data.get('email'), v_data.get('username'),
+                                                        v_data.get('first_name'), v_data.get('last_name'),
+                                                        v_data.get('order_number'), password,
                                                         self.request.user.user_org, False)
         send_user_activation_mail(employee, self.request)
 
