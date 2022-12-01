@@ -162,7 +162,7 @@ if env.bool("ENABLE_PROXY_SSL", default=False):
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS") # https://example.domain
+    CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS")
 
 # Date input
 DATE_INPUT_FORMATS = [
