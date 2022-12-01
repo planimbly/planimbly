@@ -424,9 +424,9 @@
                         .get(this.base_url, {params: {'year': this.year_cal, 'month': this.month_cal}})
                         .then(response => {
                                 this.fetched_schedule = response.data;
-                                this.statistics = response.data['statistics']
-                                console.log(this.statistics)
-                                this.inflate_checked_workplace
+                                this.statistics = response.data['statistics'];
+                                //console.log(this.statistics);
+                                this.inflate_checked_workplace();
                             }
                         )
                         .then(() => {
@@ -574,7 +574,13 @@
                             }
                         )
                 },
-                
+                inflate_checked_workplace() {
+                    if(this.current_workplace != null){
+                        for (let workplace of this.current_workplace){
+                            this.checked_workplace.push(workplace.id)
+                        }
+                    }
+                },
             },
             computed: {
                 base_url: {
@@ -597,16 +603,8 @@
                         return this.select_workplace[this.selected_unit]
                     }
                 },
-                inflate_checked_workplace: {
-                    get() {
-                        for (let workplace of this.shift_types_for_each_workplace){
-                            this.checked_workplace.push(workplace.workplace.id)
-                        }
-                    }
-                },
             },
             mounted() {
-
                 try {
                     this.selected_workplace = this.select_workplace[this.selected_unit][0]['id']
                 } catch {
