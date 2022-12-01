@@ -157,6 +157,13 @@ if env.bool("ENABLE_SSL", default=True):
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
 
+# SSL when using reverse proxy
+if env.bool("ENABLE_PROXY_SSL", default=False):
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS") # https://example.domain
+
 # Date input
 DATE_INPUT_FORMATS = [
     *django.conf.global_settings.DATE_INPUT_FORMATS,
