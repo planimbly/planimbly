@@ -1,5 +1,5 @@
 from django.apps import AppConfig
-from django.core.management import call_command
+# from django.core.management import call_command
 
 
 class AccountsConfig(AppConfig):
@@ -7,4 +7,5 @@ class AccountsConfig(AppConfig):
     name = 'apps.accounts'
 
     def ready(self):
-        call_command('create_groups')
+        # call_command('create_groups')
+        pass
