@@ -7,10 +7,11 @@ from django.urls import reverse
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.views.generic import TemplateView
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from planimbly.permissions import GroupRequiredMixin, Issupervisor
 from .forms import ManagerCreateForm, OrganizationCreateForm
 from .models import Unit, Workplace, WorkplaceClosing
 from .serializers import WorkplaceSerializer, UnitSerializer, WorkplaceClosingSerializer
@@ -45,8 +46,8 @@ def send_user_activation_mail(user, request):
     email.send()
 
 
-# TODO mixins + view safety
-class OrganizationCreateView(TemplateView):
+# TODO DO POPRAWY TWORZENIE ORGANIZACJI + UŻYTKOWNIKÓW, dużo zmian było
+class OrganizationCreateView(GroupRequiredMixin, TemplateView):
     template_name = 'organizations/organization_create.html'
 
     def get(self, request, *args, **kwargs):
@@ -73,11 +74,11 @@ class OrganizationCreateView(TemplateView):
             return self.render_to_response(context)
 
 
-class EmployeesManageView(TemplateView):
+class EmployeesManageView(GroupRequiredMixin, TemplateView):
     template_name = 'organizations/employees_manage.html'
 
 
-class EmployeeToUnitWorkplaceView(TemplateView):
+class EmployeeToUnitWorkplaceView(GroupRequiredMixin, TemplateView):
     template_name = 'organizations/employee_to_unit_workplace.html'
 
     def get_context_data(self, **kwargs):
@@ -101,11 +102,11 @@ class EmployeeToUnitWorkplaceView(TemplateView):
         return context
 
 
-class UnitsManageView(TemplateView):
+class UnitsManageView(GroupRequiredMixin, TemplateView):
     template_name = 'organizations/units_manage.html'
 
 
-class WorkplaceManageView(TemplateView):
+class WorkplaceManageView(GroupRequiredMixin, TemplateView):
     template_name = 'organizations/workplace_manage.html'
 
     def get_context_data(self, **kwargs):
@@ -124,7 +125,7 @@ class WorkplaceManageView(TemplateView):
 # API TEMPLATES
 class UnitViewSet(viewsets.ModelViewSet):
     serializer_class = UnitSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [Issupervisor]
 
     def get_queryset(self):
         queryset = Unit.objects.filter(unit_org=self.request.user.user_org)
@@ -138,7 +139,7 @@ class UnitViewSet(viewsets.ModelViewSet):
 
 class WorkplaceViewSet(viewsets.ModelViewSet):
     serializer_class = WorkplaceSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [Issupervisor]
 
     def get_queryset(self):
         unit_pk = self.kwargs['unit_pk']
@@ -153,7 +154,7 @@ class WorkplaceViewSet(viewsets.ModelViewSet):
 
 
 class EmployeesImportApiView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [Issupervisor]
 
     def post(self, request, *args, **kwargs):
         file = request.FILES['employeesList']
@@ -176,7 +177,7 @@ class EmployeesImportApiView(APIView):
 
 
 class EmployeeToUnitApiView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [Issupervisor]
 
     def get(self, request, unit_workplace_pk):
         unit = Unit.objects.filter(id=unit_workplace_pk).first()
@@ -206,7 +207,7 @@ class EmployeeToUnitApiView(APIView):
 
 
 class EmployeeToWorkplaceApiView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [Issupervisor]
 
     def get(self, request, unit_workplace_pk):
         workplace = Workplace.objects.filter(id=unit_workplace_pk).first()
@@ -237,4 +238,4 @@ class EmployeeToWorkplaceApiView(APIView):
 class WorkplaceClosingViewSet(viewsets.ModelViewSet):
     queryset = WorkplaceClosing.objects.all()
     serializer_class = WorkplaceClosingSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [Issupervisor]

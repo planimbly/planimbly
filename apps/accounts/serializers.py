@@ -6,7 +6,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ['id', 'email', 'username', 'first_name', 'last_name', 'is_supervisor', 'job_time', 'user_unit',
-                  'user_workplace']
+                  'user_workplace', 'order_number']
         extra_kwargs = {
             'id': {'read_only': True},
             'user_unit': {'read_only': True},

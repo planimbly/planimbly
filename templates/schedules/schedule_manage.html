@@ -93,6 +93,7 @@
             <table class="w-75 table">
                 <thead>
                     <tr>
+                        <th scope="col">lp.</th>
                         <th scope="col">Pracownik</th>
                         <th scope="col">Godziny/Etat</th>
                         <th scope="col">Bilans</th>
@@ -104,6 +105,7 @@
                 </thead>
                 <tbody>
                     <tr v-for="stat in statistics">
+                        <td>[[ stat.order_number ]]</td>
                         <td>[[ stat.name ]]</td>
                         <td>[[ stat.hours ]]/[[ stat.jobtime ]]h</td>
                         <td v-if="calculate_diff(stat.hours, stat.jobtime) < 0" style="color: red;">[[ calculate_diff(stat.hours, stat.jobtime) ]]</td>
@@ -363,6 +365,37 @@
                 }
             },
             methods: {
+                sort_object_of_objects(data, attr) {
+                    var arr = [];
+                    for (var prop in data) {
+                        if (data.hasOwnProperty(prop)) {
+                            var obj = {};
+                            obj[prop] = data[prop];
+                            obj.tempSortName = data[prop][attr];
+                            arr.push(obj);
+                        }
+                    }
+                
+                    arr.sort(function(a, b) {
+                        var at = a.tempSortName,
+                            bt = b.tempSortName;
+                        return at > bt ? 1 : ( at < bt ? -1 : 0 );
+                    });
+                
+                    var result = [];
+                    for (var i=0, l=arr.length; i<l; i++) {
+                        var obj = arr[i];
+                        delete obj.tempSortName;
+                        for (var prop in obj) {
+                            if (obj.hasOwnProperty(prop)) {
+                                var id = prop;
+                            }
+                        }
+                        var item = obj[id];
+                        result.push(item);
+                    }
+                    return result;
+                },
                 // month&year comboboxes in modals follow main comboboxes 
                 copy_year_month_to_modals(){
                     this.year = this.year_report = this.year_cal;
@@ -425,8 +458,9 @@
                         .then(response => {
                                 this.fetched_schedule = response.data;
                                 this.statistics = response.data['statistics'];
-                                //console.log(this.statistics);
+                                console.log(this.statistics);
                                 this.inflate_checked_workplace();
+                                this.statistics = this.sort_object_of_objects(this.statistics, 'order_number');
                             }
                         )
                         .then(() => {

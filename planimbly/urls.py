@@ -16,10 +16,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from apps.schedules.views import ScheduleManageView
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('apps.accounts.urls')),
     path('organizations/', include('apps.organizations.urls')),
     path('schedules/', include('apps.schedules.urls')),
-    path('', include('apps.organizations.urls'))
+    path('', ScheduleManageView.as_view(), name='home'),
 ]
