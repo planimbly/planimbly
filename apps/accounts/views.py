@@ -1,15 +1,16 @@
 from django.contrib.auth import get_user_model
 from django.views.generic import TemplateView
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets
 
 from apps.accounts.models import Employee
 from apps.accounts.serializers import EmployeeSerializer
 from apps.organizations.views import send_user_activation_mail
+from planimbly.permissions import Issupervisor, GroupRequiredMixin
 
 
 class EmployeeViewSet(viewsets.ModelViewSet):
     serializer_class = EmployeeSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [Issupervisor]
 
     def get_queryset(self):
         queryset = Employee.objects.all().filter(user_org=self.request.user.user_org) \
@@ -26,5 +27,5 @@ class EmployeeViewSet(viewsets.ModelViewSet):
         send_user_activation_mail(employee, self.request)
 
 
-class EmployeeOptionView(TemplateView):
+class EmployeeOptionView(GroupRequiredMixin, TemplateView):
     template_name = 'accounts/employee_option.html'

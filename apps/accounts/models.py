@@ -1,5 +1,5 @@
 from django.contrib.auth.base_user import BaseUserManager
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Group
 from django.db import models
 
 from apps.organizations.models import Organization, Workplace, Unit
@@ -50,8 +50,8 @@ class Employee(AbstractUser):
     is_supervisor = models.BooleanField(verbose_name="Czy jest kierownikiem?", default=False)
     user_org = models.ForeignKey(Organization, on_delete=models.CASCADE, blank=True, null=True,
                                  verbose_name="Organizacja użytkownika")
-    user_unit = models.ManyToManyField(Unit, verbose_name="Jednostki użytkownika")
-    user_workplace = models.ManyToManyField(Workplace, verbose_name="Działy użytkownika")
+    user_unit = models.ManyToManyField(Unit, verbose_name="Jednostki użytkownika", blank=True)
+    user_workplace = models.ManyToManyField(Workplace, verbose_name="Działy użytkownika", blank=True)
 
     objects = MyAccountManager()
 

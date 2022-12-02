@@ -5,7 +5,7 @@ import datetime
 import holidays
 from django.db.models import Sum
 from django.views.generic import TemplateView
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -15,6 +15,7 @@ from apps.organizations.models import Workplace, Unit
 from apps.schedules.models import ShiftType, Shift, Schedule, Preference, Absence, Assignment, JobTime, FreeDay
 from apps.schedules.serializers import ShiftTypeSerializer, PreferenceSerializer, AbsenceSerializer, \
     AssignmentSerializer, JobTimeSerializer, FreeDaySerializer
+from planimbly.permissions import GroupRequiredMixin, Issupervisor
 
 
 def free_days(year, month):
@@ -27,7 +28,7 @@ def free_days(year, month):
 
 
 # Function copied from:
-#   https://stackoverflow.com/questions/1806278/convert-fraction-to-float
+# https://stackoverflow.com/questions/1806278/convert-fraction-to-float
 def convert_to_float(frac_str):
     try:
         return float(frac_str)
@@ -42,7 +43,7 @@ def convert_to_float(frac_str):
         return whole - frac if whole < 0 else whole + frac
 
 
-class ShiftTypeManageView(TemplateView):
+class ShiftTypeManageView(GroupRequiredMixin, TemplateView):
     template_name = 'schedules/shiftType_manage.html'
 
     def get_context_data(self, **kwargs):
@@ -66,11 +67,11 @@ class ShiftTypeManageView(TemplateView):
         return context
 
 
-class JobTimeManageView(TemplateView):
+class JobTimeManageView(GroupRequiredMixin, TemplateView):
     template_name = 'schedules/jobtime_manage.html'
 
 
-class AbsenceManageView(TemplateView):
+class AbsenceManageView(GroupRequiredMixin, TemplateView):
     template_name = 'schedules/absence_manage.html'
 
     def get_context_data(self, **kwargs):
@@ -79,7 +80,7 @@ class AbsenceManageView(TemplateView):
         return context
 
 
-class ScheduleManageView(TemplateView):
+class ScheduleManageView(GroupRequiredMixin, TemplateView):
     template_name = 'schedules/schedule_manage.html'
 
     def get_context_data(self, **kwargs):
@@ -105,7 +106,7 @@ class ScheduleManageView(TemplateView):
 
 # API VIEWS
 class ScheduleCreateApiView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [Issupervisor]
 
     def post(self, request):
         year = self.request.data.get('year')
@@ -225,7 +226,7 @@ class ScheduleReportGetApiView(APIView):
 
 
 class ScheduleGetApiView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [Issupervisor]
 
     def get(self, request, workplace_pk):
         # 127.0.0.1:8000/schedules/api/2/schedule_get?year=2022&month=5
@@ -309,7 +310,7 @@ class ScheduleGetApiView(APIView):
 
 
 class ShiftManageApiView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [Issupervisor]
 
     def post(self, request):
         date = datetime.date.fromisoformat(self.request.data.get("Date"))
@@ -355,7 +356,7 @@ class ShiftManageApiView(APIView):
 class PreferenceViewSet(viewsets.ModelViewSet):
     queryset = Preference.objects.all()
     serializer_class = PreferenceSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [Issupervisor]
 
     def list(self, request, *args, **kwargs):
         if request.query_params.get('employee'):
@@ -372,7 +373,7 @@ class PreferenceViewSet(viewsets.ModelViewSet):
 
 class ShiftTypeViewSet(viewsets.ModelViewSet):
     serializer_class = ShiftTypeSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [Issupervisor]
 
     def get_queryset(self):
         queryset = ShiftType.objects.filter(is_archive=False).filter(workplace_id=self.kwargs['workplace_pk'])
@@ -399,7 +400,7 @@ class ShiftTypeViewSet(viewsets.ModelViewSet):
 class AbsenceViewSet(viewsets.ModelViewSet):
     queryset = Absence.objects.all()
     serializer_class = AbsenceSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [Issupervisor]
 
     def list(self, request, *args, **kwargs):
         if request.query_params.get('employee'):
@@ -417,7 +418,7 @@ class AbsenceViewSet(viewsets.ModelViewSet):
 class AssignmentViewSet(viewsets.ModelViewSet):
     queryset = Assignment.objects.all()
     serializer_class = AssignmentSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [Issupervisor]
 
     def list(self, request, *args, **kwargs):
         if request.query_params.get('employee'):
@@ -431,13 +432,13 @@ class AssignmentViewSet(viewsets.ModelViewSet):
 class JobTimeViewSet(viewsets.ModelViewSet):
     queryset = JobTime.objects.all()
     serializer_class = JobTimeSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [Issupervisor]
 
 
 class FreeDayViewSet(viewsets.ModelViewSet):
     queryset = FreeDay.objects.all()
     serializer_class = FreeDaySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [Issupervisor]
 
     def list(self, request, *args, **kwargs):
         if request.query_params.get('year'):
