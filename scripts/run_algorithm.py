@@ -747,5 +747,5 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
                                   shift_types,  # shift type list
                                   year, month,  # date
                                   jobtime,
-                                  params='max_time_in_seconds:240.0', output_proto=None)
+                                  params='max_time_in_seconds:120.0', output_proto=None)
     return data
