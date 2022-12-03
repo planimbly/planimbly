@@ -7,6 +7,7 @@ export default {
       attach_days_employees_report: Boolean,
       schedule_for_each_workplace: Array,
       workdays_for_each_employee: Object,
+      chosen_workplaces: Array,
     },
 
     data () {
