@@ -1,8 +1,10 @@
 name: build
 
 on:
-  - push
-  - pull_request
+  push:
+    branches-ignore:
+      - 'release'
+      - 'pre-release'
 
 jobs:
   build:
@@ -11,7 +13,7 @@ jobs:
       ALLOWED_HOSTS: localhost
     strategy:
       matrix:
-        os: [ubuntu-20.04, windows-latest]
+        os: [ubuntu-20.04]
         python-version: ['3.10.2']
 
     steps:
