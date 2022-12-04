@@ -7,7 +7,6 @@
 - [testowanie (ENG)](docs/dev-manuals/testing.md)
 - [struktura projektu (ENG)](docs/dev-manuals/proj_tree.md)
 
-
 # Konfiguracja projektu pod Dockerem
 
 1. Pobierz dockera
