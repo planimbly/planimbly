@@ -10,7 +10,7 @@ jobs:
   on-success:
     name: merge master --> pre-release
     runs-on: ubuntu-20.04
-
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: tukasz/direct-merge-action@master
         with:
