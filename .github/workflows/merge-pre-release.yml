@@ -1,0 +1,19 @@
+name: merge-pre-release
+
+on:
+  workflow_run:
+    workflows: [build]
+    types: [completed]
+    branches: [master]
+
+jobs:
+  merge-pre-release:
+    name: merge master --> pre-release
+    runs-on: ubuntu-20.04
+
+    steps:
+      uses: tukasz/direct-merge-action@master
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        source-branch: master
+        target-branch: pre-release
