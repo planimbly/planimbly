@@ -7,7 +7,7 @@ on:
     branches: [master]
 
 jobs:
-  merge-pre-release:
+  on-success:
     name: merge master --> pre-release
     runs-on: ubuntu-20.04
 
