@@ -6,13 +6,11 @@ on:
     types: [ closed ]
 
 jobs:
-  tag-master:
+  tag-release:
     runs-on: ubuntu-20.04
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        
-      - name: Tag release
-        uses: nionata/EzReleases@v1.2
+      - uses: rymndhng/release-on-push-action@master
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          bump_version_scheme: patch
