@@ -1,17 +1,19 @@
 name: auto-pr-release
 
 on:
-  push:
-    branches:
-    - pre-release
+  workflow_run:
+    workflows: [merge-pre-release]
+    types: [completed]
 
 jobs:
   pull-request:
     runs-on: ubuntu-20.04
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
     - uses: actions/checkout@v3
     - name: pull-request
       uses: repo-sync/pull-request@v2
       with:
+        source_branch: "pre-release"
         destination_branch: "release"
         pr_assignee: "SaluSL"
