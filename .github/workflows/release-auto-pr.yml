@@ -1,0 +1,18 @@
+name: auto-pr-release
+
+on:
+  push:
+    branches:
+    - pre-release
+
+jobs:
+  pull-request:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: pull-request
+      uses: docker://ghcr.io/repo-sync/pull-request:v2
+      with:
+        destination_branch: "release"
+        pr_assignee: "SaluSL"
+        github_token: ${{ secrets.GITHUB_TOKEN }}
