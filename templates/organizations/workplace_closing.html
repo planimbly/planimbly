@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+
+{% block head %}
+    {% comment %} <link rel="stylesheet" href="{% static 'css/schedules/jobtime.css' %}"> {% endcomment %}
+    <script type="application/javascript" src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script type="application/javascript" src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script>
+        axios.defaults.xsrfCookieName = 'csrftoken';
+        axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
+    </script>
+{% endblock head %}
+
+{% block content %}
+    <div id="vue-app">
+        
+        siemanko
+
+    </div>
+{% endblock %}
+
+{% block vue-content %}
+
+    <script type="module">
+        const {createApp} = Vue
+        createApp({
+            delimiters: ["[[", "]]"],
+            data() {
+                return {
+                    
+                }
+            },
+            methods: {
+                
+            },
+            computed: {
+                
+            },
+            mounted() {
+                this.fetch_data()
+            },
+        }).mount('#vue-app');
+
+    </script>
+{% endblock vue-content %}

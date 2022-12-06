@@ -474,7 +474,7 @@
                         .then(response => {
                                 this.fetched_schedule = response.data;
                                 this.statistics = response.data['statistics'];
-                                console.log(this.statistics);
+                                console.log(this.fetched_schedule);
                                 this.inflate_checked_workplace();
                                 this.statistics = this.sort_object_of_objects(this.statistics, 'order_number');
                             }
