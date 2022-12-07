@@ -2,7 +2,7 @@ from datetime import date, datetime as dt, timedelta
 from apps.accounts.models import Employee
 from apps.schedules.models import ShiftType
 from scripts.helpers import get_month_by_weeks, get_month_by_billing_weeks, flatten, get_letter_for_weekday
-from loguru import logger
+# temporary comment for github checks - from loguru import logger 
 
 
 class ShiftTypeInfo:
