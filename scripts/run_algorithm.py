@@ -27,6 +27,8 @@ from apps.schedules.models import Shift, ShiftType
 from scripts.helpers import get_month_by_weeks, get_letter_for_weekday, floor_to_multiple, ceil_to_multiple
 from scripts.context import Context, EmployeeInfo
 
+from loguru import logger
+
 global num_days
 
 FLAGS = flags.FLAGS
@@ -251,13 +253,46 @@ def add_monthly_soft_sum_constraint(model, works, hard_min, soft_min, min_cost,
 def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, emp_assignments, schedule_dict,
                            employees: list[Employee], shift_types: list[ShiftType],
                            year: int, month: int, jobtime, params, output_proto):
+    """Main algorithm function. It solves the whole problem.
+
+    Steps:
+        1. XXX
+        2. XXX
+        3. XXX
+
+    Args:
+        emp_for_workplaces: dictionary with employees assigned to workplace (workplace id: list of employees from workplace)
+        emp_preferences: dictionary with preference objects assigned to employees (employee id: list of his/her preferences)
+        emp_absences: dictionary with absence objects assigned to employees (employee id: list of his/her absences)
+        emp_assignments: dictionary with assignments objects assigned to employees (employee id: list of his/her absences)
+        schedule_dict: # TODO explain what schedule_dict is
+        employees: list of employees objects forwarded from backend and filtered in main algorithm function
+        shift_types: list of shifts (objects) considered while creating schedule
+        year: we create schedule for particular year...
+        month: ...and month (date)
+        jobtime: number of hours for full-time job
+        params: parameters for CP-Sat solver
+        output_proto: output for CP-Sat solver (?)
+
+      Returns:
+        list of shifts objects (date, employee, shift)
+      """
 
     # Dictionaries with:
-    work_time = dict()          # with work time assigned for each employee (key is emp.pk)
-    num_emp_absences = dict()   # with number of absent days for each employee (key is emp.pk)
+    work_time = dict()
+    """
+        Key: emp.pk\n
+        Value: work time assigned to each employee
+    """
+    num_emp_absences = dict()
+    """
+            Key: emp.pk\n
+            Value: number of absent days for each employee
+    """
 
     # TODO: check if below filtering can be done while creating emp_info
 
+    # Handling situation, when there is no "something" for an employee + preparing dictionaries for further action
     for e in employees:
         if e.pk not in emp_preferences:
             emp_preferences[e.pk] = []
@@ -275,7 +310,11 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                              emp_assignments[e.pk],
                              jobtime)
                 for e in employees]
+    """
+        List of EmployeeInfo objects
+    """
 
+    # Sorting employees in emp_info by their planned job time
     emp_info = sorted(emp_info, key=lambda e: e.job_time, reverse=True)
 
     for e in emp_info:
@@ -715,37 +754,42 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     print('  - status           : %s' % solver.StatusName(status))
     print('  - conflicts        : %i' % solver.NumConflicts())
     print('  - branches         : %i' % solver.NumBranches())
-    print('  - wall time (sec.) : %f' % solver.WallTime())
+    print('  - wall time (sec.) : %.3f' % solver.WallTime())
     print('')
 
     return output_inflate()
 
 
 def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workplaces, emp_preferences, emp_absences, emp_assignments, jobtime):
-    workplace = Workplace.objects.all().first()
+    # Starting logger
+    logger.info("Logging started...")
 
     # Calendar data
     global num_days
     num_days = get_month_by_weeks(year, month)[-1][-1][0]
 
+    # Adding free shift to shift_types
     shift_free = ShiftType(hour_start=datetime.time(datetime.strptime('00:00', '%H:%M')),
                            hour_end=datetime.time(datetime.strptime('00:00', '%H:%M')),
-                           name='-', workplace=workplace, active_days='1111111',
+                           name='-', workplace=Workplace.objects.all().first(), active_days='1111111',
                            is_used=True, is_archive=False)
     shift_free.pk = 0
     shift_types.insert(0, shift_free)
 
     # Only consider employees with set job time
-    emp = [e for e in emp if e.job_time in ['1', '1/2', '1/4', '3/4']]
+    emp = [e
+           if e.job_time in ['1', '1/2', '1/4', '3/4']
+           else logger.warning("Employee no. {} ({}) has invalid job time and won't be used in solving!".format(e.pk, e))
+           for e in emp]
 
     data = solve_shift_scheduling(emp_for_workplaces,
                                   emp_preferences,
                                   emp_absences,
                                   emp_assignments,
                                   schedule_dict,
-                                  emp,  # employee list
-                                  shift_types,  # shift type list
-                                  year, month,  # date
+                                  emp,
+                                  shift_types,
+                                  year, month,
                                   jobtime,
                                   params='max_time_in_seconds:120.0', output_proto=None)
     return data
