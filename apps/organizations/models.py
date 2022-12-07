@@ -29,8 +29,8 @@ class Workplace(models.Model):
 
 class WorkplaceClosing(models.Model):
     workplace = models.ForeignKey(Workplace, on_delete=models.CASCADE, verbose_name="Dział")
-    start = models.DateField(verbose_name="Początek zamknięcia", null=True, blank=True)
-    end = models.DateField(verbose_name="Koniec zamknięcia", null=True, blank=True)
+    start = models.DateField(verbose_name="Początek zamknięcia")
+    end = models.DateField(verbose_name="Koniec zamknięcia")
 
     def __str__(self):
         return self.workplace.__str__() + ' ' + str(self.start) + '/' + str(self.end)

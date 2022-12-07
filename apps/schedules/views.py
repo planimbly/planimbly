@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 
 import scripts.run_algorithm
 from apps.accounts.models import Employee
-from apps.organizations.models import Workplace, Unit
+from apps.organizations.models import Workplace, Unit, WorkplaceClosing
 from apps.schedules.models import ShiftType, Shift, Schedule, Preference, Absence, Assignment, JobTime, FreeDay
 from apps.schedules.serializers import ShiftTypeSerializer, PreferenceSerializer, AbsenceSerializer, \
     AssignmentSerializer, JobTimeSerializer, FreeDaySerializer
@@ -111,11 +111,11 @@ class ScheduleCreateApiView(APIView):
     def post(self, request):
         year = self.request.data.get('year')
         month = self.request.data.get('month')
+        workplace_list = self.request.data.get('workplace_list')
 
-        if not year or not month:
+        if not year or not month or not workplace_list:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        workplace_list = self.request.data.get('workplace_list')
         workplace_query = Workplace.objects.filter(id__in=workplace_list)
         schedule_dict = dict()
 
@@ -140,8 +140,10 @@ class ScheduleCreateApiView(APIView):
         employee_list = Employee.objects.filter(user_workplace__in=workplace_query).distinct().order_by('id')
         preferences = Preference.objects.filter(employee__in=employee_list)
 
+        # Sprawdzamy pierwszą datę w miesiącu i ostatnią
         first_day = datetime.date(int(year), int(month), 1)
         last_day = datetime.date(int(year), int(month), calendar.monthrange(int(year), int(month))[1])
+
         absences = Absence.objects.filter(employee__in=employee_list).filter(start__lte=last_day).filter(
             end__gte=first_day)
         emp_preferences = {}
@@ -154,7 +156,6 @@ class ScheduleCreateApiView(APIView):
 
         term_assignments = Assignment.objects.filter(employee__in=employee_list).filter(start__lte=last_day).filter(
             end__gte=first_day)
-
         general_assignments = Assignment.objects.filter(employee__in=employee_list).filter(start=None).filter(end=None)
 
         emp_assignments = {}
@@ -164,12 +165,16 @@ class ScheduleCreateApiView(APIView):
         for assignment in general_assignments:
             emp_assignments.setdefault(assignment.employee.id, []).append(assignment)
 
+        work_for_workplace_closing = {}
+        for work_id in workplace_list:
+            work_for_workplace_closing[work_id] = WorkplaceClosing.objects.filter(start__lte=last_day).filter(
+                end__gte=first_day).filter(workplace_id=work_id)
         jobtime = JobTime.objects.filter(year=int(year)).values_list(calendar.month_name[month].lower(),
                                                                      flat=True).first()
 
         data = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month,
                                                     emp_for_workplaces, emp_preferences, emp_absences, emp_assignments,
-                                                    jobtime)
+                                                    jobtime, work_for_workplace_closing)
 
         for shift in data:
             shift.save()
@@ -183,7 +188,9 @@ class ScheduleReportGetApiView(APIView):
         month = self.request.GET.get('month')
         date_format = '%Y-%m-%d'
         if year and month:
-            employee_list = Employee.objects.filter(user_unit__pk=unit_pk).distinct()
+            employee_list_pk = Shift.objects.filter(schedule__month=month).filter(schedule__year=year).filter(
+                schedule__workplace__workplace_unit__pk=unit_pk).values_list('employee_id', flat=True).distinct()
+            employee_list = Employee.objects.filter(pk__in=employee_list_pk)
             data = {}
             for employee in employee_list:
                 days = {}
