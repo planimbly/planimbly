@@ -3,7 +3,7 @@
 {% load static %}
 
 {% block head %}
-    {% comment %} <link rel="stylesheet" href="{% static 'css/schedules/jobtime.css' %}"> {% endcomment %}
+    <link rel="stylesheet" href="{% static 'css/organizations/workplace_closing.css' %}">
     <script type="application/javascript" src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script type="application/javascript" src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script>
@@ -14,8 +14,81 @@
 
 {% block content %}
     <div id="vue-app">
-        
-        siemanko
+        <div class="row d-flex justify-content-between align-items-center">
+            <div class="col d-flex justify-content-start">
+                <h3 class="content-title">Wyłączenia działów</h3>
+            </div>
+            <div class="row align-items-center mb-1">
+            <div class="col-auto mb-1">
+                <label class="col-form-label" for="unitSelect">Jednostka:</label>
+            </div>
+            <div class="col-auto mb-1">
+                <select id="unitSelect" class="form-select" v-model="selected_unit" v-on:change="workplace_list_fetch">
+                    <option :value="null" disabled hidden>Wybierz z listy</option>
+                    <option v-for="unit in unit_list" :value="unit.id">
+                        [[ unit.name ]]
+                    </option>
+                </select>
+            </div>
+            
+            <div class="col-auto mb-1">
+                <label class="col-form-label" for="workplaceSelect">Dział:</label>
+            </div>
+            <div class="col-auto mb-1">
+                <select id="workplaceSelect" class="form-select" v-model="selected_workplace"
+                        v-on:change="current_closing_compute">
+                    <option :value="null" disabled hidden>Wybierz z listy</option>
+                    <option v-for="workplace in workplaces_list" :value="workplace.id">
+                        [[ workplace.name ]]
+                    </option>
+                </select>
+            </div>
+            </div>
+        </div>
+
+        <div>
+            <h5 style="margin-top: 35px">Wyłączenia</h5>
+            <div class="list-group">
+                <div v-for="closure in current_closing_list" :key="closure.id" class="list-group-item list-group-item-action position-static w-50">
+                    <div class="closure_table_box">
+                        <div>[[ closure.workplace_obj.name ]]: [[ closure.start ]] - [[ closure.end ]]</div>
+                        <button v-on:click="remove_closing(closure.id)" class="material-icons" 
+                                style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
+                    </div>
+                </div>
+            </div>
+            <button data-bs-target="#addWorkplaceClosing" data-bs-toggle="modal" v-if="selected_workplace != null" data-bs-dismiss="modal" 
+                    class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj</button> 
+            <button data-bs-target="#addWorkplaceClosing" data-bs-toggle="modal" v-else disabled data-bs-dismiss="modal" 
+                    class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj</button> 
+        </div>
+
+        <div class="modal fade" id="addWorkplaceClosing" tabindex="-1">
+            <div class="modal-dialog modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                          <h5 class="modal-title">Dodawanie wyłączeń działów</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="closing_form" v-on:submit.prevent="add_closing">
+                            <div class="form-floating" style="margin-bottom: 10px">
+                                <input type="date" class="form-control" v-model="inputDateStart" id="inputDateStart" placeholder="Data rozpoczęcia wyłączenia" required>
+                                <label for="inputDateStart">Data rozpoczęcia wyłączenia</label>
+                            </div>
+    
+                            <div class="form-floating" style="margin-bottom: 10px">
+                                <input type="date" class="form-control" v-model="inputDateEnd" id="inputDateEnd" placeholder="Data końca wyłączenia" required>
+                                <label for="inputDateEnd">Data końca wyłączenia</label>
+                            </div>
+    
+                            <input type="submit" value="Zapisz" class="btn btn-outline-success" style="">
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
 
     </div>
 {% endblock %}
@@ -28,17 +101,118 @@
             delimiters: ["[[", "]]"],
             data() {
                 return {
-                    
+                    response: null,
+                    workplace_closing_list: null,
+                    workplace_closing_url: '/organizations/api/workplace_closing/',
+                    selected_unit: null,
+                    selected_workplace: null,
+                    unit_list: null,
+                    workplaces_list: null,
+                    current_closing_list: [],
+                    inputDateStart: null,
+                    inputDateEnd: null,
                 }
             },
             methods: {
+                fetch_data() {
+                    axios
+                        .get(this.workplace_closing_url)
+                        .then(response => {
+                                this.workplace_closing_list = response.data;
+                                console.log(this.workplace_closing_list)
+                            }
+                        )
+                        .catch(error => {this.response = error.response.data});
+                },
+                fetch_unit_data(){
+                    let units_url = '{% url 'unit-list' %}';
+                    axios
+                        .get(units_url)
+                        .then(response_unit_data => (this.unit_list = response_unit_data.data))
+                        .catch(error => {this.response = error.response.data});
+                },
+                workplace_list_fetch() {
+                    if (this.selected_unit != null){
+                        axios
+                            .get(this.workplace_url)
+                            .then(response_workplace_data => (this.workplaces_list = response_workplace_data.data))
+                            .catch(error => {this.response = error.response.data})
+                    }
+                },
                 
+                add_closing(){
+                    swal({
+                        title: "Potwierdź dodanie wykluczenia",
+                        icon: "info",
+                        buttons: true,
+                        dangerMode: false,
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
+                                let add_closure_url = this.workplace_closing_url
+                                axios
+                                .post(add_closure_url, 
+                                    {
+                                        start: this.inputDateStart,
+                                        end: this.inputDateEnd,
+                                        workplace: this.selected_workplace
+                                    }
+                                )
+                                .then(() => {
+                                    this.fetch_data()
+                                    this.current_closing_compute
+                                })
+                                //.catch(error => {this.response = error.response.data})
+                            }
+                        });
+                },
+                remove_closing(closure_id){
+                    swal({
+                        title: "Czy na pewno chcesz usunąć",
+                        icon: "warning",
+                        buttons: true,
+                        dangerMode: true,
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
+                                let remove_closure_url = this.workplace_closing_url + closure_id
+                                axios
+                                .delete(remove_closure_url,
+                                    {
+                                        id: closure_id,
+                                    }
+                                )
+                                .then(() => {
+                                    this.fetch_data()
+                                    this.current_closing_compute
+                                })
+                                //.catch(error => {this.response = error.response.data});
+                            }
+                        });
+                }
             },
             computed: {
-                
+                workplace_url: {
+                    get() {
+                        return '{% url 'workplace-list' 123456789 %}'.replace(/123456789/, this.selected_unit);
+                    }
+                },
+                current_closing_compute() {
+                    if (this.workplace_closing_list != null){
+                        let list = []
+                        for (let closure of this.workplace_closing_list){
+                            if (closure.workplace == this.selected_workplace){
+                                list.push(closure)
+                            }
+                        }
+                        this.current_closing_list = list
+                    }
+                },
             },
             mounted() {
                 this.fetch_data()
+                this.fetch_unit_data()
+                this.workplace_list_fetch()
             },
         }).mount('#vue-app');
 
