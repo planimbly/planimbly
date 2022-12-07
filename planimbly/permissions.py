@@ -1,4 +1,6 @@
 from django.core.exceptions import PermissionDenied
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 from rest_framework import permissions
 
 
@@ -26,7 +28,7 @@ class GroupRequiredMixin(object):
 
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
-            raise PermissionDenied
+            return HttpResponseRedirect(reverse('login'))
         else:
             if self.group_required is None:
                 self.group_required = ['supervisor']

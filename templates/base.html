@@ -54,9 +54,13 @@
                        data-bs-toggle="dropdown" aria-expanded="false">account_circle</i>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
                         <li style="text-align: center; font-weight: 600;">{{ user.username }}</li>
-                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
                         <li><a class="dropdown-item" href="{% url 'password_change' %}">Zmień hasło</a></li>
-                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
                         <li><a class="dropdown-item" href="{% url 'logout' %}">Wyloguj</a></li>
                     </ul>
                 </div>
@@ -68,23 +72,30 @@
                 <ul class="sidebar-list">
                     {% block sidebar-items %}
                         {% if user.is_authenticated %}
-                            <li class="sidebar-item"><a href="{% url 'units_manage' %}" class="del-def-style-a">Jednostki</a>
+                            <li class="sidebar-item"><a href="{% url 'units_manage' %}" class="del-def-style-a
+                            {% if request.resolver_match.view_name == 'units_manage' %}active{% endif %}">Jednostki</a>
                             </li>
-                            <li class="sidebar-item"><a href="{% url 'workplace_manage' %}" class="del-def-style-a">Działy</a>
+                            <li class="sidebar-item"><a href="{% url 'workplace_manage' %}" class="del-def-style-a
+                            {% if request.resolver_match.view_name == 'workplace_manage' %}active{% endif %}">Działy</a>
                             </li>
-                            <li class="sidebar-item"><a href="{% url 'schedule_manage' %}" class="del-def-style-a">Grafiki</a>
+                            <li class="sidebar-item"><a href="{% url 'schedule_manage' %}" class="del-def-style-a
+                            {% if request.resolver_match.view_name == 'schedule_manage' %}active{% endif %}">Grafiki</a>
                             </li>
-                            <li class="sidebar-item"><a href="{% url 'shiftType_manage' %}" class="del-def-style-a">Zmiany</a>
+                            <li class="sidebar-item"><a href="{% url 'shiftType_manage' %}" class="del-def-style-a
+                            {% if request.resolver_match.view_name == 'shiftType_manage' %}active{% endif %}">Zmiany</a>
                             </li>
-                            {% comment %} <li class="sidebar-item"><a href="{% url 'employee_to_unit_workplace' %}"
-                                                        class="del-def-style-a">Pracownicy</a></li> {% endcomment %}
-
-                            <li class="sidebar-item"><a href="{% url 'employees_manage' %}" class="del-def-style-a">Pracownicy</a>
+                            <li class="sidebar-item"><a href="{% url 'employees_manage' %}" class="del-def-style-a
+                            {% if request.resolver_match.view_name == 'employees_manage' or request.resolver_match.view_name == 'employee_option' %} active{% endif %}">Pracownicy</a>
                             </li>
-                            <li class="sidebar-item"><a href="{% url 'absence_manage' %}"
-                                                        class="del-def-style-a">Nieobecności</a></li>
-                            <li class="sidebar-item"><a href="{% url 'jobtime_manage' %}" class="del-def-style-a">Etaty i dni wolne</a></li>
-                            <li class="sidebar-item"><a href="{% url 'workplace_closing' %}" class="del-def-style-a">Wyłączenia działów</a></li>
+                            <li class="sidebar-item"><a href="{% url 'absence_manage' %}" class="del-def-style-a
+                            {% if request.resolver_match.view_name == 'absence_manage' %}active{% endif %}">Nieobecności</a>
+                            </li>
+                            <li class="sidebar-item"><a href="{% url 'jobtime_manage' %}" class="del-def-style-a
+                            {% if request.resolver_match.view_name == 'jobtime_manage' %}active{% endif %}">Etaty i dni
+                                wolne</a>
+                            </li>
+                            <li class="sidebar-item"><a href="{% url 'workplace_closing' %}" class="del-def-style-a">Wyłączenia
+                                działów</a></li>
                         {% else %}
                         {% endif %}
                     {% endblock sidebar-items %}
