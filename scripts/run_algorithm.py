@@ -220,6 +220,7 @@ def add_monthly_soft_sum_constraint(model, works, hard_min, soft_min, min_cost,
     a tuple (variables_list, coefficient_list) containing the different
     penalties created by the sequence constraint.
   """
+
     cost_variables = []
     cost_coefficients = []
     sum_var = model.NewIntVar(hard_min, hard_max, '')
@@ -507,9 +508,8 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
               (ei.get().pk, ei.job_time, hard_min, soft_min, soft_max, hard_max, hard_max - ei.job_time))
         variables, coeffs = add_monthly_soft_sum_constraint(
             model, works, hard_min // 8, soft_min // 8, min_cost, soft_max // 8,
-                          hard_max // 8, max_cost,
-                          'work_time_constraint(employee %i, job_time %i)' %
-                          (ei.get().pk, ei.job_time))
+            hard_max // 8, max_cost, 'work_time_constraint(employee %i, job_time %i)'
+            % (ei.get().pk, ei.job_time))
         obj_int_vars.extend(variables)
         obj_int_coeffs.extend(coeffs)
 
@@ -793,8 +793,7 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
     # Only consider employees with set job time
     emp = [e
            if e.job_time in ['1', '1/2', '1/4', '3/4']
-           else logger.warning(
-        "Employee no. {} ({}) has invalid job time and won't be used in solving!".format(e.pk, e))
+           else logger.warning("Employee no. {} ({}) has invalid job time and won't be used in solving!".format(e.pk, e))
            for e in emp]
 
     data = solve_shift_scheduling(emp_for_workplaces,
