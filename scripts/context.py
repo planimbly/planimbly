@@ -2,6 +2,7 @@ from datetime import date, datetime as dt, timedelta
 from apps.accounts.models import Employee
 from apps.schedules.models import ShiftType
 from scripts.helpers import get_month_by_weeks, get_month_by_billing_weeks, flatten, get_letter_for_weekday
+# temporary comment for github checks - from loguru import logger
 
 
 class ShiftTypeInfo:
@@ -56,8 +57,6 @@ class EmployeeInfo:
             print("[WARNING] both negative and positive indefinite assignments were found for employee %i" % self.get().pk)
         self.job_time = self.calculate_job_time(jt)
         self.job_time -= self.absent_time
-        if self.job_time < 0:
-            print("[WARNING] employee %i has negative job time" % self.get().pk)
 
     def calculate_job_time(self, jt):
         match self.employee.job_time:
@@ -69,8 +68,6 @@ class EmployeeInfo:
                 return jt // 4
             case '3/4':
                 return jt * 3 // 4
-            case _:
-                return -1
 
     def prepare_assignments(self, assignments: list):
         ta = []

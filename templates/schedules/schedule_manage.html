@@ -29,10 +29,10 @@
     {% if is_any_workplace %}
  
     <div id="vue-app">
-        <div class="col d-flex justify-content-start">
+        {% comment %}<div class="col d-flex justify-content-start">
             <h3 class="content-title">Grafiki</h3>
-        </div>
-        <div class="row m-2">  
+        </div>{% endcomment %} 
+        <div class="row m-2"> 
             <div class="col mb-1">
                 <select class="form-select" v-model="month_cal" v-on:change="fetch_data">
                     <option v-for="label in month_labels" :value="label.id">
@@ -64,7 +64,11 @@
 
             <div class="col d-flex justify-content-end">
                 <button type="button" class="btn btn-outline-primary me-2" data-bs-toggle="modal"
-                        data-bs-target="#generateReportModal">
+                        data-bs-target="#generateReportModal" v-if="available_workplace_report.length > 0">
+                    Wygeneruj raport
+                </button>
+                <button type="button" class="btn btn-outline-primary me-2" disabled v-else
+                        data-bs-toggle="tooltip" data-bs-placement="top" title="Nie wykryto grafiku dla danego miesiąca...">
                     Wygeneruj raport
                 </button>
 
@@ -154,7 +158,7 @@
                             <label for="year" class="form-label modal-style">Rok</label>
                         </div>
                         <div class="col-6">
-                            <input type="number" class="form-control" v-model="year_report" required>
+                            <input type="number" class="form-control" v-model="year_report" required disabled>
                         </div>
 
                         <div class="col-6">
@@ -162,7 +166,7 @@
                         </div>
                         <div class="col-6">
                             {% comment %} <input type="number" class="form-control" v-model="month" required> {% endcomment %}
-                            <select class="form-select overflow-hidden" v-model="month_report">
+                            <select class="form-control overflow-hidden" v-model="month_report" disabled>
                                 <option v-for="label in month_labels" :value="label.id">
                                     [[ label.name ]]
                                 </option>
@@ -170,7 +174,7 @@
                         </div>
                         
                         <div class="col6">
-                            <input class="form-check-input" type="checkbox" value="attach_days_employees_report" id="attachDaysEmployeesReport" checked>
+                            <input class="form-check-input" type="checkbox" value="attach_days_employees_report" id="attachDaysEmployeesReport" checked disabled>
                             <label class="form-check-label ms-2 mb-4" for="attachDaysEmployeesReport">
                                 Dołącz zestawienie dni pracy per pracownik
                             </label>
@@ -184,16 +188,21 @@
                                         <div class="d-flex align-items-center">
                                             <input v-bind:id="workplace_shifts.workplace.id" v-bind:value="workplace_shifts.workplace.id"
                                                         class="form-check-input me-2" style="margin: 0px;" type="checkbox"
-                                                        v-model="checked_workplace_report">
-                                            <div class="fw-bold">[[workplace_shifts.workplace.name]]</div>
+                                                        v-model="checked_workplace_report" v-if="available_workplace_report.includes(workplace_shifts.workplace.id)">
+                                            <input v-bind:id="workplace_shifts.workplace.id" v-bind:value="workplace_shifts.workplace.id"
+                                                        class="form-check-input me-2" style="margin: 0px;" type="checkbox"
+                                                        v-model="checked_workplace_report" v-else disabled>
+                                                        
+                                            <div>[[workplace_shifts.workplace.name]]</div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                     </div>
                 <div class="modal-footer">
-                  <button type="button" class="btn btn-primary" v-if="checked_workplace_report.length > 0" data-bs-toggle="modal" data-bs-target="#reportModal" v-on:click="fetch_report_data">Generuj</button>
-                  <button type="button" class="btn btn-primary disabled" v-else>Generuj</button>
+                  <button type="button" class="btn btn-primary" v-if="checked_workplace_report.length > 0" data-bs-toggle="modal" data-bs-target="#reportModal"
+                     v-on:click="fill_schedule_for_chosen_workplace(schedule_for_each_workplace, checked_workplace_report)">Generuj</button>
+                  <button type="button" class="btn btn-primary" disabled v-else>Generuj</button>
                 </div>
               </div>
             </div>
@@ -212,7 +221,7 @@
                         :year="year_report"
                         :month="month_report"
                         :attach_days_employees_report="attach_days_employees_report"
-                        :schedule_for_each_workplace="schedule_for_each_workplace"
+                        :schedule_for_each_workplace="schedule_for_chosen_workplace"
                         :workdays_for_each_employee="workdays_for_each_employee"
                         :chosen_workplaces="checked_workplace_report">
                     </schedule-report>
@@ -345,12 +354,14 @@
                     month_report: null,//new Date().getMonth() + 1,
                     checked_workplace: [],
                     checked_workplace_report: [],
+                    available_workplace_report: [],
                     loading: false,
                     available_workers: null,
                     available_shift_types: null,
                     statistics: null,
                     shift_types_for_each_workplace: [],
                     schedule_for_each_workplace: [],
+                    schedule_for_chosen_workplace: [],
                     workdays_for_each_employee: null,
                     attach_days_employees_report: true,
                     shifttype_name_list: [],
@@ -499,7 +510,9 @@
                     this.fetch_shift_types_for_each_workplace().then(result => {
                         this.shift_types_for_each_workplace = result;
                         });
+
                     this.copy_year_month_to_modals();
+                    this.fetch_report_data(); 
                 },
                 fetch_report_data(){
                     axios
@@ -507,7 +520,31 @@
                         .then(response => {this.workdays_for_each_employee = response.data;});
                     this.fetch_schedule_for_each_workplace().then(result => {
                         this.schedule_for_each_workplace = result;
+                    }).then(() => {
+                        this.check_report_workplace_availability(this.schedule_for_each_workplace);
                     });
+                },
+                check_report_workplace_availability(schedule_for_workplace){
+                    this.available_workplace_report = [];
+                    if (schedule_for_workplace.length > 0) {
+                        schedule_for_workplace.forEach(workplace_schedule => {
+                            
+                            if (workplace_schedule.schedule.days != null) {
+                                for (const day of Object.keys(workplace_schedule.schedule.days)) {
+                                    if (workplace_schedule.schedule.days[day].length > 0){
+                                        this.available_workplace_report.push(workplace_schedule.schedule.workplace_id);
+                                        break;
+                                    }
+                                }
+                            }
+
+                        });
+
+                        this.checked_workplace_report = this.available_workplace_report;
+                    }
+                },
+                fill_schedule_for_chosen_workplace(schedule_for_workplace, checked_workplaces){
+                    this.schedule_for_chosen_workplace = schedule_for_workplace.filter(schedule => checked_workplaces.includes(schedule.schedule.workplace_id));
                 },
                 change_workplace() {
                     try {
