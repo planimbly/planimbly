@@ -101,13 +101,11 @@
         <div>
             <h5>Przypisania</h5>
             <div class="list-group">
-                <div v-for="assignment in assignment_list" :key="assignment.id">
-                    <div v-if="assignment.negative_flag == false" class="list-group-item list-group-item-action position-static">
-                        <div class="emp_option_table_box">
-                            <div>[[ return_unit_name_for_workplace(assignment.shift_type_obj.workplace) ]] - [[ return_workplace_name(assignment.shift_type_obj.workplace) ]] - [[ assignment.shift_type_obj.name ]]: [[ return_assignment_data(assignment) ]]</div>
-                            <button v-on:click="remove_assignment(assignment.id)" class="material-icons" 
-                                    style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
-                        </div>
+                <div v-for="assignment in good_assignment_list" :key="assignment.id" class="list-group-item list-group-item-action position-static">
+                    <div class="emp_option_table_box">
+                        <div>[[ return_unit_name_for_workplace(assignment.shift_type_obj.workplace) ]] - [[ return_workplace_name(assignment.shift_type_obj.workplace) ]] - [[ assignment.shift_type_obj.name ]]: [[ return_assignment_data(assignment) ]]</div>
+                        <button v-on:click="remove_assignment(assignment.id)" class="material-icons" 
+                                style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
                     </div>
                 </div>
             </div>
@@ -118,13 +116,11 @@
         <div>
             <h5>Wykluczenia</h5>
             <div class="list-group">
-                <div v-for="assignment in assignment_list" :key="assignment.id">
-                    <div v-if="assignment.negative_flag == true" class="list-group-item list-group-item-action position-static">
-                        <div class="emp_option_table_box">
-                            <div>[[ return_unit_name_for_workplace(assignment.shift_type_obj.workplace) ]] - [[ return_workplace_name(assignment.shift_type_obj.workplace) ]] - [[ assignment.shift_type_obj.name ]]: [[ return_assignment_data(assignment) ]]</div>
-                            <button v-on:click="remove_assignment(assignment.id)" class="material-icons" 
-                                    style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
-                        </div>
+                <div v-for="assignment in bad_assignment_list" :key="assignment.id" class="list-group-item list-group-item-action position-static">
+                    <div class="emp_option_table_box">
+                        <div>[[ return_unit_name_for_workplace(assignment.shift_type_obj.workplace) ]] - [[ return_workplace_name(assignment.shift_type_obj.workplace) ]] - [[ assignment.shift_type_obj.name ]]: [[ return_assignment_data(assignment) ]]</div>
+                        <button v-on:click="remove_assignment(assignment.id)" class="material-icons" 
+                                style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
                     </div>
                 </div>
             </div>
@@ -328,6 +324,9 @@
                     assignment_list: null,
                     shift_list: null,
 
+                    good_assignment_list: [],
+                    bad_assignment_list: [],
+
                     response: null,
                     response_emp_data: null,
                     response_unit_data: null,
@@ -474,8 +473,20 @@
                     axios
                         .get(this.emp_assignment_url)
                         .then(response_assign_data => (this.assignment_list = response_assign_data.data))
-                        .catch(error => {this.response = error.response.data})
+                        .then(() => this.inflate_assignment_lists())
+                        //.catch(error => {this.response = error.response.data})
                     this.daylist_assign = this.st_numbers_to_list('0000000')
+                },
+                inflate_assignment_lists(){
+                    this.good_assignment_list = []
+                    this.bad_assignment_list = []
+                    for(let assign of this.assignment_list){
+                        if (assign.negative_flag == false){
+                            this.good_assignment_list.push(assign)
+                        } else {
+                            this.bad_assignment_list.push(assign)
+                        }
+                    }
                 },
                 fetch_unit_data(){
                     this.units_url = '{% url 'unit-list' %}';

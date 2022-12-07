@@ -125,24 +125,34 @@
             },
             methods: {
                 create_absence() {
-                    axios
-                        .post(this.absence_url,
-                            {
-                                start: this.start,
-                                end: this.end,
-                                employee: this.employee_id,
-                                type: this.type,
-                                hours_number: this.hours_number
+                    swal({
+                        title: "Potwierdź dodanie nieobecności",
+                        icon: "info",
+                        buttons: true,
+                        dangerMode: false,
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
+                                axios
+                                .post(this.absence_url,
+                                    {
+                                        start: this.start,
+                                        end: this.end,
+                                        employee: this.employee_id,
+                                        type: this.type,
+                                        hours_number: this.hours_number
+                                    }
+                                )
+                                .then(response => {
+                                        this.fetch_data()
+                                    }
+                                )
+                                .catch(error => {
+                                        this.response = error.response.data
+                                    }
+                                )
                             }
-                        )
-                        .then(response => {
-                                this.fetch_data()
-                            }
-                        )
-                        .catch(error => {
-                                this.response = error.response.data
-                            }
-                        )
+                        });  
                 },
                 fetch_data() {
                     axios
@@ -169,18 +179,28 @@
                         );
                 },
                 delete_absence(absence_id) {
-                    axios
-                        .delete(this.absence_url + absence_id + '/',
-                            {id: absence_id}
-                        )
-                        .then(response => {
-                                this.fetch_data()
+                    swal({
+                        title: "Potwierdź usunięcie nieobecności",
+                        icon: "warning",
+                        buttons: true,
+                        dangerMode: true,
+                    })
+                        .then((willAdd) => {
+                            if (willAdd) {
+                                axios
+                                .delete(this.absence_url + absence_id + '/',
+                                    {id: absence_id}
+                                )
+                                .then(response => {
+                                        this.fetch_data()
+                                    }
+                                )
+                                .catch(error => {
+                                        this.response = error.response.data
+                                    }
+                                );
                             }
-                        )
-                        .catch(error => {
-                                this.response = error.response.data
-                            }
-                        );
+                        });  
                 },
             },
             computed: {},

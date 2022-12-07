@@ -239,3 +239,7 @@ class WorkplaceClosingViewSet(viewsets.ModelViewSet):
     queryset = WorkplaceClosing.objects.all()
     serializer_class = WorkplaceClosingSerializer
     permission_classes = [Issupervisor]
+
+
+class WorkplaceClosingView(GroupRequiredMixin, TemplateView):
+    template_name = 'organizations/workplace_closing.html'

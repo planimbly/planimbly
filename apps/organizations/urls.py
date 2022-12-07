@@ -19,7 +19,8 @@ from rest_framework import routers
 
 from .views import OrganizationCreateView, EmployeesManageView, UnitsManageView, UnitViewSet, \
     WorkplaceManageView, WorkplaceViewSet, EmployeeToUnitApiView, \
-    EmployeeToWorkplaceApiView, EmployeeToUnitWorkplaceView, EmployeesImportApiView, WorkplaceClosingViewSet
+    EmployeeToWorkplaceApiView, EmployeeToUnitWorkplaceView, EmployeesImportApiView, WorkplaceClosingViewSet, \
+    WorkplaceClosingView
 
 default_router = routers.DefaultRouter()
 default_router.register(r'unit', UnitViewSet, basename='unit')
@@ -36,6 +37,7 @@ urlpatterns = [
     path('', login_required(UnitsManageView.as_view(), login_url='/accounts/login/'), name='units_manage'),
     path('workplace_manage/', WorkplaceManageView.as_view(), name='workplace_manage'),
     path('employees_to_unit_workplace/', EmployeeToUnitWorkplaceView.as_view(), name='employee_to_unit_workplace'),
+    path('workplace_closing/', WorkplaceClosingView.as_view(), name='workplace_closing'),
 
     # API urls
     path('api/', include(default_router.urls)),
