@@ -116,8 +116,10 @@ export default {
               return shiftBstart - shiftAstart;
             });
             
+          } else {
+            included_shiftTypes = [];
           }
-          console.log(included_shiftTypes);
+          
           return included_shiftTypes;
         }
         else return
@@ -149,7 +151,7 @@ export default {
                 if (workplace_schedule.schedule.days[day].length > 0){
                   for (const shift of Object.keys(workplace_schedule.schedule.days[day])){
                     const add_info = workplace_schedule.schedule.days[day][shift].worker.id.toString() in this.workdays_for_each_employee ?
-                          this.workdays_for_each_employee[workplace_schedule.schedule.days[day][shift].worker.id.toString()].employee_work_hours.toString()+'/160' :
+                          this.workdays_for_each_employee[workplace_schedule.schedule.days[day][shift].worker.id.toString()].employee_work_hours.toString() :
                           '(inna jednostka)';
                     
                     if (!(workplace_schedule.schedule.days[day][shift].worker.id in included_employees)){
