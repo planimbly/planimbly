@@ -83,7 +83,7 @@
                                 <div class="material-icons">archive</div>
                                 <div><a class="del-def-style-a">Działy</a></div>
                             </div>
-                            <div v-on:click="move_to('{% url 'schedule_manage' %}')" class="sidebar-item {% if request.resolver_match.view_name == 'schedule_manage' %}active{% endif %}">
+                            <div v-on:click="move_to('{% url 'schedule_manage' %}')" class="sidebar-item {% if request.resolver_match.view_name == 'schedule_manage' or request.resolver_match.view_name == 'home' %}active{% endif %}">
                                 <div class="material-icons">event</div>
                                 <div><a  class="del-def-style-a">Grafiki</a></div>
                             </div>
