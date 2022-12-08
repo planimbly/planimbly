@@ -18,16 +18,14 @@ from datetime import datetime
 
 from absl import flags
 from google.protobuf import text_format
+from loguru import logger
 from ortools.sat.python import cp_model
 
 from apps.accounts.models import Employee
 from apps.organizations.models import Workplace
 from apps.schedules.models import Shift, ShiftType
-
-from scripts.helpers import get_month_by_weeks, get_letter_for_weekday, floor_to_multiple, ceil_to_multiple
 from scripts.context import Context, EmployeeInfo
-
-from loguru import logger
+from scripts.helpers import get_month_by_weeks, get_letter_for_weekday, floor_to_multiple, ceil_to_multiple
 
 global num_days
 
@@ -222,6 +220,7 @@ def add_monthly_soft_sum_constraint(model, works, hard_min, soft_min, min_cost,
     a tuple (variables_list, coefficient_list) containing the different
     penalties created by the sequence constraint.
   """
+
     cost_variables = []
     cost_coefficients = []
     sum_var = model.NewIntVar(hard_min, hard_max, '')
@@ -356,8 +355,9 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
 
     model = cp_model.CpModel()
 
-    print("\nJob time       : %4i\nMax work time  : %4i\nWork time      : %4i\nJT ratio       : %.3f\nOT ratio       : %.3f\n" %
-          (ctx.total_job_time, ctx.max_work_time, ctx.total_work_time, ctx.job_time_multiplier, ctx.overtime_multiplier))
+    print(
+        "\nJob time       : %4i\nMax work time  : %4i\nWork time      : %4i\nJT ratio       : %.3f\nOT ratio       : %.3f\n" %
+        (ctx.total_job_time, ctx.max_work_time, ctx.total_work_time, ctx.job_time_multiplier, ctx.overtime_multiplier))
 
     # Prepare list of allowed shift types for employees
     for ei in ctx.employees:
@@ -376,12 +376,14 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                     ei.allowed_shift_types[s.get()] = [d for d in range(1, num_days + 1)]
                     # print("[NO ASSIGNMENT] Assigned shift %i to emp %i" % (s.get().id, ei.get().pk))
                 else:
-                    print("[WORKPLACE] Removed shift %s from employee %i [not in workplace %s]" % (s.get().name, ei.get().pk, s.get().workplace.name))
+                    print("[WORKPLACE] Removed shift %s from employee %i [not in workplace %s]" % (
+                        s.get().name, ei.get().pk, s.get().workplace.name))
 
         # Now we handle negative indefinite assignments
         for nia in ei.negative_indefinite_assignments:
             ei.allowed_shift_types.pop(nia, None)
-            print("[ASSIGNMENTS] Removed shift %i from employee %i [negative indefinite assignment]" % (nia.id, ei.get().pk))
+            print("[ASSIGNMENTS] Removed shift %i from employee %i [negative indefinite assignment]" % (
+                nia.id, ei.get().pk))
 
         # Allow shifts from term assignments
         for ta in ei.term_assignments:
@@ -422,7 +424,8 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
             else:
                 # Allow only assigned shift for this day
                 model.AddExactlyOne(work[ei.get().pk, s.id, d] for s in [term_assignments[d],
-                                                                         ctx.get_shift_info_by_id(0).get()])  # Don't forget about the free shift!
+                                                                         ctx.get_shift_info_by_id(
+                                                                             0).get()])  # Don't forget about the free shift!
                 print("[ASSIGNMENTS] added shift %i as term assignment for employee %i" %
                       (term_assignments[d].id, ei.get().pk))
 
@@ -468,7 +471,8 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     # Calculate work time constraints
     # TODO: Handle cases when full time per employee is not enough to cover the entire schedule!!
     for ei in ctx.employees:
-        works = [work[ei.get().pk, s.id, d] for s in ei.allowed_shift_types for d in range(1, num_days + 1) if s.id != 0]
+        works = [work[ei.get().pk, s.id, d] for s in ei.allowed_shift_types for d in range(1, num_days + 1) if
+                 s.id != 0]
         hard_min = floor_to_multiple(ei.job_time * ctx.job_time_multiplier, 8)
         soft_min = ei.job_time
         min_cost = 50
@@ -495,16 +499,17 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
             soft_max = min(ctx.job_time, soft_max)
             hard_max = min(ctx.job_time, hard_max)
         else:
-            soft_max = min(soft_max, ctx.job_time + floor_to_multiple(ctx.overtime_above_full_time // len(ctx.employees), 8))
-            hard_max = min(hard_max, ctx.job_time + ceil_to_multiple(ctx.overtime_above_full_time // len(ctx.employees), 8))
+            soft_max = min(soft_max,
+                           ctx.job_time + floor_to_multiple(ctx.overtime_above_full_time // len(ctx.employees), 8))
+            hard_max = min(hard_max,
+                           ctx.job_time + ceil_to_multiple(ctx.overtime_above_full_time // len(ctx.employees), 8))
 
         print("emp %2i, jt %3i, hard_min %3i, soft_min %3i, soft_max %3i, hard_max %3i, overtime: %2i" %
               (ei.get().pk, ei.job_time, hard_min, soft_min, soft_max, hard_max, hard_max - ei.job_time))
         variables, coeffs = add_monthly_soft_sum_constraint(
             model, works, hard_min // 8, soft_min // 8, min_cost, soft_max // 8,
-            hard_max // 8, max_cost,
-            'work_time_constraint(employee %i, job_time %i)' %
-            (ei.get().pk, ei.job_time))
+            hard_max // 8, max_cost, 'work_time_constraint(employee %i, job_time %i)'
+            % (ei.get().pk, ei.job_time))
         obj_int_vars.extend(variables)
         obj_int_coeffs.extend(coeffs)
 
@@ -547,7 +552,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         for ei in ctx.employees:
             for d in range(1, num_days):
                 if previous_shift not in [s.id for s in ei.allowed_shift_types] \
-                 or next_shift not in [s.id for s in ei.allowed_shift_types]:
+                        or next_shift not in [s.id for s in ei.allowed_shift_types]:
                     continue
 
                 transition = [work[ei.get().pk, previous_shift, d].Not(), work[ei.get().pk, next_shift, d + 1].Not()]
@@ -564,7 +569,8 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     for s in ctx.shift_types[1:]:
         for w, week in enumerate(ctx.month_by_billing_weeks):
             for d in week:
-                works = [work[ei.get().pk, s.id, d[0]] for ei in [e for e in ctx.employees if s.get() in e.allowed_shift_types]]
+                works = [work[ei.get().pk, s.id, d[0]] for ei in
+                         [e for e in ctx.employees if s.get() in e.allowed_shift_types]]
                 # Ignore Off shift.
                 demand = ctx.weekly_cover_demands[d[1]][s.id - 1]
                 worked = model.NewIntVar(demand, len(ctx.employees), '')
@@ -630,11 +636,14 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
 
         for s, d, v in sorted_excess_shifts:
             candidates = [[ei, s, d] for ei in ctx.employees if solver.BooleanValue(work[ei.get().pk, s, d])]
-            candidates = sorted(sorted(candidates, key=lambda x: x[0].job_time, reverse=True), key=lambda x: work_time[x[0].get().pk] - x[0].job_time)
+            candidates = sorted(sorted(candidates, key=lambda x: x[0].job_time, reverse=True),
+                                key=lambda x: work_time[x[0].get().pk] - x[0].job_time)
 
             for c in candidates:
                 print("employee %d job time %d work time %d diff %d" %
-                      (c[0].get().pk, c[0].job_time, work_time[c[0].get().pk], work_time[c[0].get().pk] - c[0].job_time))
+                      (
+                          c[0].get().pk, c[0].job_time, work_time[c[0].get().pk],
+                          work_time[c[0].get().pk] - c[0].job_time))
 
             # Step 1
             # See if there are employees who fulfilled their job time
@@ -648,8 +657,11 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                 # Delete their excess shifts
                 while len(full_timers) > 0:
                     em, sh, da = full_timers.pop(0)
-                    print('[EXCESS FULL TIMER] Deleted shift: \'%s\' for employee %d with job time of %d and work time %d on day %d'
-                          % (ctx.get_shift_info_by_id(sh).get().name, em.get().pk, em.job_time, work_time[em.get().pk], da))
+                    print(
+                        '[EXCESS FULL TIMER] Deleted shift: \'%s\' for employee %d with job time of %d and work time %d on day %d'
+                        % (
+                            ctx.get_shift_info_by_id(sh).get().name, em.get().pk, em.job_time, work_time[em.get().pk],
+                            da))
                     work[em.get().pk, sh, da] = 0
                     work[em.get().pk, 0, da] = 1
                     v -= 1
@@ -677,7 +689,8 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
             if v < 0:
                 raise ValueError(f'All of {s} shifts for day:{d} have been deleted. This should not ever happen.')
             elif v > 0:
-                raise ValueError(f'There is still {v} excess demand for shift{ctx.get_shift_info_by_id(s).name} on day{d}.\nList of excess shifts:{candidates}')
+                raise ValueError(
+                    f'There is still {v} excess demand for shift{ctx.get_shift_info_by_id(s).name} on day{d}.\nList of excess shifts:{candidates}')
 
     # Print solution.
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
@@ -760,7 +773,8 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     return output_inflate()
 
 
-def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workplaces, emp_preferences, emp_absences, emp_assignments, jobtime):
+def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workplaces, emp_preferences, emp_absences,
+                   emp_assignments, jobtime, work_for_workplace_closing):
     # Starting logger
     logger.info("Logging started...")
 
