@@ -533,15 +533,15 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         # Add work time constraints to the model
         for ei in ctx.employees:
             works = [work[ei.get().pk, s.id, d] for s in ei.allowed_shift_types for d in range(1, num_days + 1) if
-                 s.id != 0]
+                     s.id != 0]
             hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = ei.work_time_constraint
             print("emp %2i, jt %3i, hard_min %3i, soft_min %3i, soft_max %3i, hard_max %3i, overtime: %2i" %
-                (ei.get().pk, ei.job_time, hard_min, soft_min, soft_max, hard_max, hard_max - ei.job_time))
+                  (ei.get().pk, ei.job_time, hard_min, soft_min, soft_max, hard_max, hard_max - ei.job_time))
             variables, coeffs = add_monthly_soft_sum_constraint(
                 model, works, hard_min // 8, soft_min // 8, min_cost, soft_max // 8,
-                            hard_max // 8, max_cost,
-                            'work_time_constraint(employee %i, job_time %i)' %
-                            (ei.get().pk, ei.job_time))
+                hard_max // 8, max_cost,
+                'work_time_constraint(employee %i, job_time %i)' %
+                (ei.get().pk, ei.job_time))
             obj_int_vars.extend(variables)
             obj_int_coeffs.extend(coeffs)
     else:
@@ -831,7 +831,6 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
     #    for e in emp]
 
     emp = [e for e in emp if e.job_time in ['1', '1/2', '1/4', '3/4']]
-           
 
     data = solve_shift_scheduling(emp_for_workplaces,
                                   emp_preferences,
