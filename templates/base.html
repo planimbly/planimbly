@@ -75,38 +75,38 @@
                 <ul class="sidebar-list">
                     {% block sidebar-items %}
                         {% if user.is_authenticated %}
-                            <li class="sidebar-item {% if request.resolver_match.view_name == 'units_manage' %}active{% endif %}">
+                            <div v-on:click="move_to('{% url 'units_manage' %}')" class="sidebar-item {% if request.resolver_match.view_name == 'units_manage' %}active{% endif %}">
                                 <div class="material-icons">home</div>
-                                <div><a href="{% url 'units_manage' %}" class="del-def-style-a">Jednostki</a></div>
-                            </li>
-                            <li class="sidebar-item {% if request.resolver_match.view_name == 'workplace_manage' %}active{% endif %}">
+                                <div><a class="del-def-style-a">Jednostki</a></div>
+                            </div>
+                            <div v-on:click="move_to('{% url 'workplace_manage' %}')" class="sidebar-item {% if request.resolver_match.view_name == 'workplace_manage' %}active{% endif %}">
                                 <div class="material-icons">archive</div>
-                                <div><a href="{% url 'workplace_manage' %}" class="del-def-style-a">Działy</a></div>
-                            </li>
-                            <li class="sidebar-item {% if request.resolver_match.view_name == 'schedule_manage' %}active{% endif %}">
+                                <div><a class="del-def-style-a">Działy</a></div>
+                            </div>
+                            <div v-on:click="move_to('{% url 'schedule_manage' %}')" class="sidebar-item {% if request.resolver_match.view_name == 'schedule_manage' %}active{% endif %}">
                                 <div class="material-icons">event</div>
-                                <div><a href="{% url 'schedule_manage' %}" class="del-def-style-a">Grafiki</a></div>
-                            </li>
-                            <li class="sidebar-item {% if request.resolver_match.view_name == 'shiftType_manage' %}active{% endif %}">
+                                <div><a  class="del-def-style-a">Grafiki</a></div>
+                            </div>
+                            <div v-on:click="move_to('{% url 'shiftType_manage' %}')" class="sidebar-item {% if request.resolver_match.view_name == 'shiftType_manage' %}active{% endif %}">
                                 <div class="material-icons">book</div>
-                                <div><a href="{% url 'shiftType_manage' %}" class="del-def-style-a">Zmiany</a></div>
-                            </li>
-                            <li class="sidebar-item {% if request.resolver_match.view_name == 'employees_manage' or request.resolver_match.view_name == 'employee_option' %} active{% endif %}">
+                                <div><a class="del-def-style-a">Zmiany</a></div>
+                            </div>
+                            <div v-on:click="move_to('{% url 'employees_manage' %}')" class="sidebar-item {% if request.resolver_match.view_name == 'employees_manage' or request.resolver_match.view_name == 'employee_option' %} active{% endif %}">
                                 <div class="material-icons">people</div>
-                                <div><a href="{% url 'employees_manage' %}" class="del-def-style-a">Pracownicy</a></div>
-                            </li>
-                            <li class="sidebar-item {% if request.resolver_match.view_name == 'absence_manage' %}active{% endif %}">
+                                <div><a class="del-def-style-a">Pracownicy</a></div>
+                            </div>
+                            <div v-on:click="move_to('{% url 'absence_manage' %}')" class="sidebar-item {% if request.resolver_match.view_name == 'absence_manage' %}active{% endif %}">
                                 <span class="material-icons">person_off</span>
-                                <div><a href="{% url 'absence_manage' %}" class="del-def-style-a">Nieobecności</a></div>
-                            </li>
-                            <li class="sidebar-item {% if request.resolver_match.view_name == 'jobtime_manage' %}active{% endif %}">
+                                <div><a class="del-def-style-a">Nieobecności</a></div>
+                            </div>
+                            <div v-on:click="move_to('{% url 'jobtime_manage' %}')" class="sidebar-item {% if request.resolver_match.view_name == 'jobtime_manage' %}active{% endif %}">
                                 <div class="material-icons">list</div>
-                                <div><a href="{% url 'jobtime_manage' %}" class="del-def-style-a">Etaty i dni wolne</a></div>
-                            </li>
-                            <li class="sidebar-item {% if request.resolver_match.view_name == 'workplace_closing' %}active{% endif %}">
+                                <div><a class="del-def-style-a">Etaty i dni wolne</a></div>
+                            </div>
+                            <div v-on:click="move_to('{% url 'workplace_closing' %}')" class="sidebar-item {% if request.resolver_match.view_name == 'workplace_closing' %}active{% endif %}">
                                 <div class="material-icons">alarm</div>
-                                <div><a href="{% url 'workplace_closing' %}" class="del-def-style-a">Wyłączenia działów</a></div>
-                            </li>
+                                <div><a class="del-def-style-a">Wyłączenia działów</a></div>
+                            </div>
                         {% else %}
                         {% endif %}
                     {% endblock sidebar-items %}
@@ -163,7 +163,10 @@
             methods: {
                 changeSidebarState() {
                     this.isSidebarHidden = !this.isSidebarHidden;
-                }
+                },
+                move_to(place){
+                    window.location.href = place
+                },
             },
 
         }).mount('#app');
