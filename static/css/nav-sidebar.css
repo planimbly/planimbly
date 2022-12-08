@@ -106,6 +106,9 @@ html{
     color: #1D2129;
     font-weight: 600;
     cursor: pointer;
+    background-color: rgba(143, 143, 143, 0.178);
+    border-radius: 5px;
+    padding: 7px;
 
 }
 
