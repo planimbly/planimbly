@@ -67,8 +67,8 @@
                         data-bs-target="#generateReportModal" v-if="available_workplace_report.length > 0">
                     Wygeneruj raport
                 </button>
-                <button type="button" class="btn btn-outline-primary me-2" disabled v-else
-                        data-bs-toggle="tooltip" data-bs-placement="top" title="Nie wykryto grafiku dla danego miesiąca...">
+                <button type="button" class="btn btn-outline-primary me-2 position-relative" disabled v-else
+                        data-bs-toggle="tooltip" data-bs-placement="top" title="Nie wykryto grafiku dla danego miesiąca..." style="z-index: -1;">
                     Wygeneruj raport
                 </button>
 
