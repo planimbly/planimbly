@@ -77,9 +77,16 @@ html{
 }
 
 .sidebar-item{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    column-gap: 10px;
     margin-bottom: 0.33rem;
     overflow: hidden;
     text-overflow: ellipsis;
+    padding-left: 15px;
+    padding: 7px;
 }
 
  /*a, a:hover, a:focus, a:active {*/
@@ -99,6 +106,7 @@ html{
     color: #1D2129;
     font-weight: 600;
     cursor: pointer;
+
 }
 
 .sidebar-item:active {
@@ -120,5 +128,8 @@ html{
 }
 
 .active {
-    background-color: red;
+    background-color: rgba(56, 115, 255, 0.26);
+    border-radius: 5px;
+    padding: 7px;
+    color: #165DFF;
 }
