@@ -194,6 +194,7 @@ class ScheduleReportGetApiView(APIView):
                 schedule__workplace__workplace_unit__pk=unit_pk).values_list('employee_id', flat=True).distinct()
             employee_list = Employee.objects.filter(pk__in=employee_list_pk)
             data = {}
+            data['employees'] = {}
             for employee in employee_list:
                 days = {}
                 days_num = calendar.monthrange(int(year), int(month))[1]
@@ -219,7 +220,7 @@ class ScheduleReportGetApiView(APIView):
                 absences = Absence.objects.filter(employee__pk=employee.pk).filter(start__lte=last_day).filter(
                     end__gte=first_day).values('id', 'start', 'end', 'type')
 
-                data[employee.pk] = {
+                data['employees'][employee.pk] = {
                     'employee_id': employee.pk,
                     'employee_login': employee.username,
                     'employee_first_name': employee.first_name,

@@ -220,6 +220,7 @@ def add_monthly_soft_sum_constraint(model, works, hard_min, soft_min, min_cost,
     a tuple (variables_list, coefficient_list) containing the different
     penalties created by the sequence constraint.
   """
+
     cost_variables = []
     cost_coefficients = []
     sum_var = model.NewIntVar(hard_min, hard_max, '')
@@ -468,10 +469,8 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
             obj_bool_coeffs.extend(coeffs)
 
     # Calculate work time constraints
-    # TODO: Handle cases when full time per employee is not enough to cover the entire schedule!!
+    # Phase 1: Estimation
     for ei in ctx.employees:
-        works = [work[ei.get().pk, s.id, d] for s in ei.allowed_shift_types for d in range(1, num_days + 1) if
-                 s.id != 0]
         hard_min = floor_to_multiple(ei.job_time * ctx.job_time_multiplier, 8)
         soft_min = ei.job_time
         min_cost = 50
@@ -492,6 +491,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
             if ei.job_time == ctx.job_time:
                 soft_min = soft_max
                 min_cost += 25
+
         soft_min = min(ctx.job_time - 8, soft_min) if ei.job_time != ctx.job_time else min(ctx.job_time, soft_min)
 
         if not ctx.overtime_for_full_timers:
@@ -503,15 +503,49 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
             hard_max = min(hard_max,
                            ctx.job_time + ceil_to_multiple(ctx.overtime_above_full_time // len(ctx.employees), 8))
 
-        print("emp %2i, jt %3i, hard_min %3i, soft_min %3i, soft_max %3i, hard_max %3i, overtime: %2i" %
-              (ei.get().pk, ei.job_time, hard_min, soft_min, soft_max, hard_max, hard_max - ei.job_time))
-        variables, coeffs = add_monthly_soft_sum_constraint(
-            model, works, hard_min // 8, soft_min // 8, min_cost, soft_max // 8,
-                          hard_max // 8, max_cost,
-                          'work_time_constraint(employee %i, job_time %i)' %
-                          (ei.get().pk, ei.job_time))
-        obj_int_vars.extend(variables)
-        obj_int_coeffs.extend(coeffs)
+        ei.work_time_constraint = (hard_min, soft_min, min_cost, soft_max, hard_max, max_cost)
+
+    # Phase 2: Corrections
+    # Check if the scenario is feasible
+    if (ctx.total_work_time < ctx.max_work_time):
+        # Check if we have underestimated work time
+        work_time_diff = sum(x.work_time_constraint[4] for x in ctx.employees) - ctx.total_work_time
+        print(f'work_time_diff: {work_time_diff}')
+        if work_time_diff < 0:
+            # Yes, we did.. :(
+            if ctx.overtime_for_full_timers:
+                # Increase hard_max for everyone
+                correction = ceil_to_multiple(work_time_diff / len(ctx.employees), 8)
+                for ei in ctx.employees:
+                    ei.work_time_constraint[4] += correction
+            else:
+                # Increase hard_max only for people who haven't reached full time
+                correction = ceil_to_multiple(work_time_diff / len([ei for ei in ctx.employees if ei.work_time_constraint[4] < ctx.job_time]), 8)
+                for ei in ctx.employees:
+                    if ei.work_time_constraint[4] >= ctx.job_time:
+                        continue
+                    # Clamp work time to job time
+                    if ei.work_time_constraint[4] + correction > ctx.job_time:
+                        ei.work_time_constraint[4] = ctx.job_time
+                    else:
+                        ei.work_time_constraint[4] += correction
+
+        # Add work time constraints to the model
+        for ei in ctx.employees:
+            works = [work[ei.get().pk, s.id, d] for s in ei.allowed_shift_types for d in range(1, num_days + 1) if
+                     s.id != 0]
+            hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = ei.work_time_constraint
+            print("emp %2i, jt %3i, hard_min %3i, soft_min %3i, soft_max %3i, hard_max %3i, overtime: %2i" %
+                  (ei.get().pk, ei.job_time, hard_min, soft_min, soft_max, hard_max, hard_max - ei.job_time))
+            variables, coeffs = add_monthly_soft_sum_constraint(
+                model, works, hard_min // 8, soft_min // 8, min_cost, soft_max // 8,
+                hard_max // 8, max_cost,
+                'work_time_constraint(employee %i, job_time %i)' %
+                (ei.get().pk, ei.job_time))
+            obj_int_vars.extend(variables)
+            obj_int_coeffs.extend(coeffs)
+    else:
+        print('[ERROR] total allowed work time is not enough to fill the schedule for this month')
 
     # Weekly sum constraints
     # BUG: when dealing with 6 week months, the algorithm fails because of this constraint
@@ -791,11 +825,12 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
     shift_types.insert(0, shift_free)
 
     # Only consider employees with set job time
-    emp = [e
-           if e.job_time in ['1', '1/2', '1/4', '3/4']
-           else logger.warning(
-        "Employee no. {} ({}) has invalid job time and won't be used in solving!".format(e.pk, e))
-           for e in emp]
+    # emp = [e
+    #    if e.job_time in ['1', '1/2', '1/4', '3/4']
+    #    else logger.warning("Employee no. {} ({}) has invalid job time and won't be used in solving!".format(e.pk, e)) # ????????????????????
+    #    for e in emp]
+
+    emp = [e for e in emp if e.job_time in ['1', '1/2', '1/4', '3/4']]
 
     data = solve_shift_scheduling(emp_for_workplaces,
                                   emp_preferences,
