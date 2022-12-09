@@ -9,13 +9,14 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-import scripts.run_algorithm
 from apps.accounts.models import Employee
-from apps.organizations.models import Workplace, Unit, WorkplaceClosing
-from apps.schedules.models import ShiftType, Shift, Schedule, Preference, Absence, Assignment, JobTime, FreeDay
+from apps.organizations.models import Workplace, Unit
+from apps.schedules.models import ShiftType, Shift, Schedule, Preference, Absence, Assignment, JobTime, FreeDay, \
+    AlgorithmTask
 from apps.schedules.serializers import ShiftTypeSerializer, PreferenceSerializer, AbsenceSerializer, \
     AssignmentSerializer, JobTimeSerializer, FreeDaySerializer
 from planimbly.permissions import GroupRequiredMixin, Issupervisor
+from .tasks import run_algorithm
 
 
 def free_days(year, month):
@@ -112,7 +113,7 @@ class ScheduleCreateApiView(APIView):
         year = self.request.data.get('year')
         month = self.request.data.get('month')
         workplace_list = self.request.data.get('workplace_list')
-
+        '''
         if not year or not month or not workplace_list:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -177,7 +178,8 @@ class ScheduleCreateApiView(APIView):
                                                     jobtime, work_for_workplace_closing)
 
         for shift in data:
-            shift.save()
+            shift.save()'''
+        run_algorithm(year, month, request.user.id, workplace_list)
         return Response()
 
 
@@ -454,3 +456,10 @@ class FreeDayViewSet(viewsets.ModelViewSet):
             queryset = FreeDay.objects.all()
         serializer = FreeDaySerializer(queryset, many=True)
         return Response(serializer.data)
+
+
+class CheckAlgorithView(APIView):
+
+    def get(self, request):
+        a_task = AlgorithmTask.objects.filter(organization_id=request.user.user_org_id).exists()
+        return Response(status=status.HTTP_200_OK)

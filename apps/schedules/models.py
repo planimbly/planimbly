@@ -1,7 +1,7 @@
 from django.db import models
 
 from apps.accounts.models import Employee
-from apps.organizations.models import Workplace
+from apps.organizations.models import Workplace, Organization
 
 
 class JobTime(models.Model):
@@ -27,6 +27,9 @@ class FreeDay(models.Model):
     def __str__(self):
         return str(self.day)
 
+    class Meta:
+        ordering = ['day']
+
 
 class Schedule(models.Model):
     year = models.IntegerField(verbose_name='Rok')
@@ -35,6 +38,9 @@ class Schedule(models.Model):
 
     def __str__(self):
         return str(self.year) + ' ' + str(self.month) + ' ' + self.workplace.__str__()
+
+    class Meta:
+        ordering = ['month']
 
 
 class ShiftType(models.Model):
@@ -50,6 +56,9 @@ class ShiftType(models.Model):
 
     def __str__(self):
         return self.workplace.name + ' ' + self.name
+
+    class Meta:
+        ordering = ['hour_start']
 
 
 class Preference(models.Model):
@@ -76,6 +85,7 @@ class Assignment(models.Model):
 
     class Meta:
         unique_together = ('shift_type', 'employee', 'start', 'end', 'negative_flag')
+        ordering = ['start']
 
 
 class Shift(models.Model):
@@ -91,6 +101,7 @@ class Shift(models.Model):
 class Absence(models.Model):
     class Meta:
         unique_together = ('employee', 'start', 'end')
+        ordering = ['start']
 
     start = models.DateField(verbose_name="Początek nieobecności")
     end = models.DateField(verbose_name="Koniec nieobecności")
@@ -105,3 +116,8 @@ class Absence(models.Model):
 
     def __str__(self):
         return self.employee.__str__() + ' ' + str(self.start) + '/' + str(self.end) + ' ' + self.type
+
+
+class AlgorithmTask(models.Model):
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    process_pid = models.CharField(max_length=2048)

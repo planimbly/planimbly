@@ -71,7 +71,6 @@
             <div class="sidebar" id="sidebar" v-bind:style="`margin-left: ${moveSidebar};`">
                 <ul class="sidebar-list">
                     {% block sidebar-items %}
-                        {% if user.is_authenticated %}
                             <li class="sidebar-item"><a href="{% url 'units_manage' %}" class="del-def-style-a
                             {% if request.resolver_match.view_name == 'units_manage' %}active{% endif %}">Jednostki</a>
                             </li>
@@ -96,8 +95,6 @@
                             </li>
                             <li class="sidebar-item"><a href="{% url 'workplace_closing' %}" class="del-def-style-a">Wyłączenia
                                 działów</a></li>
-                        {% else %}
-                        {% endif %}
                     {% endblock sidebar-items %}
                 </ul>
             </div>
