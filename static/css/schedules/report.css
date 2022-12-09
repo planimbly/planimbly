@@ -8,6 +8,7 @@
     margin: 14px; /* MARGIN FOR PRINTER: DON'T CHANGE UNLESS YOU KNOW WHAT YOU'RE DOING */
     width: 1095px; /* WIDTH OF LANDSCAPE PDF - 2 x margin: DON'T CHANGE UNLESS YOU KNOW WHAT YOU'RE DOING */
     /* background-color: aquamarine; */
+    font-size: 0.65rem;
 }
 
 /**/
@@ -23,15 +24,19 @@
     /* background-color: beige; */
 }
 
+.PN-workplace-title{
+    font-size: 1.1em;
+}
+
 .PN-schedule-column{
     display: flex;
     flex-direction: column;
     border-style: solid;
     border-width: 1px;
     /* flex-grow: 1; */
-    min-width: 1rem;
+    min-width: 2em;
     border-bottom: none;
-    margin-bottom: 2rem;
+    margin-bottom: 2em;
 }
 
 .PN-schedule-column-label{
@@ -39,6 +44,7 @@
     text-align: center;
     padding-left: 2px;
     padding-right: 2px;
+    flex-grow: 0;
 }
 
 .PN-schedule-column-label-holiday{
@@ -52,11 +58,12 @@
 .PN-schedule-column-content{
     border-bottom: 1px solid;
     text-align: center;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
     display: flex;
     flex-direction: row;
     justify-content: center;
+    flex-grow: 1;
     /* padding-left: 0.3rem; */
     /* padding-right: 0.3rem; */
     /* border-right: 1px solid; */
@@ -68,13 +75,14 @@
 }
 
 .PN-schedule-column-content-employee{
-    background-color: cadetblue;
+    background-color: inherit;
     margin-left: 1px;
     margin-right: 1px;
     text-align: center;
     border-radius: 2px;
     padding-left: 0.5px;
     padding-right: 0.5px;
+    align-self: center;
 }
 
 /**/
@@ -82,26 +90,49 @@
 /**/
 .PN-report-employee-table-container{
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     flex-wrap: wrap;
     justify-content: flex-start;
     align-items: stretch;
     align-content: stretch;
-    background-color: aquamarine;
 }
 
-.PN-employee-column{
+.PN-employee-row{
     display: flex;
-    flex-direction: column;
-    border-style: solid;
-    border-width: 1px;
-    /* flex-grow: 1; */
-    min-width: 1rem;
+    flex-direction: row;
 }
-
-.PN-employee-column-label{
-    border-bottom: 3px solid;
-    text-align: center;
+.PN-employee-content{
     padding-left: 2px;
     padding-right: 2px;
+    border-style: solid;
+    border-width: 1px;
+    min-width: 2.2em;
 }
+.PN-employee-content-start{
+    padding-left: 2px;
+    padding-right: 2px;
+    border-style: solid;
+    border-width: 1px;
+    min-width: 11em;
+}
+
+.PN-day-label-row{
+    display: flex;
+    flex-direction: row;
+}
+
+.PN-day-label-content{
+    padding-left: 2px;
+    padding-right: 2px;
+    border-style: solid;
+    border-width: 1px;
+    min-width: 2.2em;
+}
+.PN-day-label-content-start{
+    padding-left: 2px;
+    padding-right: 2px;
+    border-style: solid;
+    border-width: 1px;
+    min-width: 11em;
+}
+
