@@ -40,7 +40,7 @@ export default {
       /* HELPER METHODS */
       get_nonwhite_random_color(){
         // TODO
-        return '#67c30d';
+        return '#000000';
       },
       
       /* MAIN METHODS */
@@ -58,7 +58,7 @@ export default {
             let sorted_employees_per_day_detail = [
               new Date(day + 'T01:00').getDate(),
               [],
-              ((week_day === 6)||(week_day == 0)) ? 1 : 0 // TODO: INCLUDE NATIONAL HOLIDAYS
+              ( ((week_day === 6)||(week_day == 0)) || (this.workdays_for_each_employee.free_days.includes(day)) ) ? 1 : 0 // TODO: INCLUDE NATIONAL HOLIDAYS
             ];
             for (const shiftType of sorted_shiftTypes){
               var workers_for_shifttype = [];
@@ -99,7 +99,8 @@ export default {
                     time_start: workplace_schedule.days[day][shift].time_start,
                     time_end: workplace_schedule.days[day][shift].time_end,
                     label:  workplace_schedule.days[day][shift].time_start.toString().slice(0, 5) + 
-                            "-" + workplace_schedule.days[day][shift].time_end.toString().slice(0, 5)
+                            "-" + workplace_schedule.days[day][shift].time_end.toString().slice(0, 5),
+                    shift_type_color: workplace_schedule.days[day][shift].shift_type_color
                   }
                 }
               }
@@ -127,7 +128,8 @@ export default {
           [null/*(=shiftType_id)*/, {
             shiftType_name: null,
             time_start: null,
-            time_end: null
+            time_end: null,
+            shift_type_color: null
           },]
         ]
       },
@@ -142,7 +144,7 @@ export default {
         
         let included_employees = {};
         
-        if ((this.schedule_for_each_workplace.length > 0) && (this.workdays_for_each_employee != null)) {
+        if ((this.schedule_for_each_workplace.length > 0) && (this.workdays_for_each_employee.employees != null)) {
           this.schedule_for_each_workplace.forEach(workplace_schedule => /*for (workplace_schedule of this.schedule_for_each_workplace)*/ {
             
             if (workplace_schedule.schedule.days != null) {
@@ -150,9 +152,9 @@ export default {
                 
                 if (workplace_schedule.schedule.days[day].length > 0){
                   for (const shift of Object.keys(workplace_schedule.schedule.days[day])){
-                    const add_info = workplace_schedule.schedule.days[day][shift].worker.id.toString() in this.workdays_for_each_employee ?
-                          this.workdays_for_each_employee[workplace_schedule.schedule.days[day][shift].worker.id.toString()].employee_work_hours.toString() :
-                          '(inna jednostka)';
+                    const add_info = (workplace_schedule.schedule.days[day][shift].worker.id.toString() in this.workdays_for_each_employee.employees) && 
+                          (this.workdays_for_each_employee.employees[workplace_schedule.schedule.days[day][shift].worker.id.toString()].employee_work_hours.toString() != "1") ?
+                          this.workdays_for_each_employee.employees[workplace_schedule.schedule.days[day][shift].worker.id.toString()].employee_work_hours.toString() : "";
                     
                     if (!(workplace_schedule.schedule.days[day][shift].worker.id in included_employees)){
                       included_employees[workplace_schedule.schedule.days[day][shift].worker.id] = {
@@ -201,20 +203,23 @@ export default {
     template: `
     <div class="PN-pdf-container">
       <div v-for="workpl_sch in schedule_for_each_workplace">
-        [[workpl_sch.schedule.workplace_name]]
+        <div class="PN-workplace-title mb-1"> [[workpl_sch.schedule.workplace_name]] </div>
         <div class="PN-report-schedule-table-container">
         
           <div class="PN-schedule-column"><div class="PN-schedule-column-label">&nbsp</div>
-            <div v-for="shift_type in workplace_included_shiftTypes(workpl_sch.schedule)" class="PN-schedule-column-content">
-              <div class="fw-bold">[[shift_type[1].shiftType_name]]</div>  
+            <div v-for="shift_type in workplace_included_shiftTypes(workpl_sch.schedule)" class="PN-schedule-column-content" :style="{ 'background-color': shift_type[1].shift_type_color }">
+              <div class="flex-column ms-1 me-1">
+                <div class="fw-bold">[[shift_type[1].shiftType_name]]</div>  
+                <div>[[shift_type[1].label]]</div> 
+              </div>
             </div>
           </div>
 
           <div v-for="empl_day in sorted_employees_per_day(workpl_sch.schedule.days, workplace_included_shiftTypes(workpl_sch.schedule))" class="PN-schedule-column">
             <div v-if="empl_day[2]==0" class="PN-schedule-column-label">[[ empl_day[0] ]]</div>
-            <div v-else class="PN-schedule-column-label" style="background-color: #888888">[[ empl_day[0] ]]</div>
-
-            <div v-for="empl_shift in empl_day[1]" class="PN-schedule-column-content">
+            <div v-else class="PN-schedule-column-label" style="background-color: #C2C2C2">[[ empl_day[0] ]]</div>
+            
+            <div v-for="empl_shift in empl_day[1]" class="PN-schedule-column-content" v-if="empl_day[2]==0">
                 <div v-if="empl_shift.length != 0" class="PN-flex-row">
                   <div v-for="empl in empl_shift" class="PN-schedule-column-content-employee">
                       [[empl]]
@@ -222,14 +227,19 @@ export default {
                 </div>
                 <div v-else class="PN-flew-row">
                   &nbsp
-                </div>
-                
+                </div>                 
             </div>
-          </div>
-
-          <div class="PN-schedule-column"><div class="PN-schedule-column-label">&nbsp</div>
-            <div v-for="shift_type in workplace_included_shiftTypes(workpl_sch.schedule)" class="PN-schedule-column-content">
-              <div class="fw-bold">[[shift_type[1].shiftType_name]]</div>  
+          
+          
+            <div v-for="empl_shift in empl_day[1]" class="PN-schedule-column-content" style="background-color: #C2C2C2" v-if="empl_day[2]!=0">
+                <div v-if="empl_shift.length != 0" class="PN-flex-row">
+                  <div v-for="empl in empl_shift" class="PN-schedule-column-content-employee"> 
+                      [[empl]]
+                  </div>
+                </div>
+                <div v-else class="PN-flew-row">
+                  &nbsp
+                </div>                 
             </div>
           </div>
         </div>
@@ -242,6 +252,38 @@ export default {
         </div>
       </div>
       
+      <div v-if="attach_days_employees_report">
+        <div class="PN-report-employee-table-container" v-if="workdays_for_each_employee != null && schedule_for_each_workplace[0] != null">
+          
+          <div class="PN-day-label-row">
+              <div class="PN-day-label-content-start">
+                &nbsp
+              </div>
+              <div v-for="(value, date) in schedule_for_each_workplace[0].schedule.days">
+                <div class="PN-day-label-content">
+                  [[new Date(date + 'T01:00').getDate()]]
+                </div>
+              </div>
+          </div>
+          <div v-for="employee in workdays_for_each_employee.employees" class="PN-employee-row">
+            <div class="PN-employee-content-start"> 
+              [[employee.employee_first_name]] [[employee.employee_last_name]] 
+            </div>
+            <div v-for="(workday, workdate) in employee.days" class="PN-employee-content"> 
+            
+              <div v-if="workday.length > 0">
+                [[workday[0].shift_type_name]]
+              </div>
+              <div v-else>
+                &nbsp
+              </div>
+            </div>
+        
+          </div>
+
+        </div>
+      </div>
+
       <!--
       <div v-for="workpl_sch in schedule_for_each_workplace">
         [[workplace_included_shiftTypes(workpl_sch.schedule)]]  
