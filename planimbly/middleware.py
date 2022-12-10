@@ -2,6 +2,7 @@ from django.http import HttpResponse
 from django.template.loader import render_to_string
 
 from apps.schedules.models import AlgorithmTask
+from apps.schedules.views import CheckAlgorithView
 
 
 class DenyAccesHueyMiddleware:
@@ -20,7 +21,16 @@ class DenyAccesHueyMiddleware:
         return response
 
     def process_view(self, request, view_func, view_args, view_kwargs):
+        try:
+            view_class = view_func.view_class
+        except:
+            view_class = None
+
         if not request.user.is_anonymous:
             if AlgorithmTask.objects.filter(organization_id=request.user.user_org_id).exists():
+                if view_class is not None:
+                    if view_class == CheckAlgorithView:
+                        return None
                 rendered = render_to_string('schedules/schedule_generating.html')
                 return HttpResponse(rendered)
+        return None

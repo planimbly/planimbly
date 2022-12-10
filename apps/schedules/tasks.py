@@ -67,7 +67,6 @@ def run_algorithm(year, month, user_id, workplace_list):
             end__gte=first_day).filter(workplace_id=work_id)
     jobtime = JobTime.objects.filter(year=int(year)).values_list(calendar.month_name[month].lower(),
                                                                  flat=True).first()
-
     data = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month,
                                                 emp_for_workplaces, emp_preferences, emp_absences, emp_assignments,
                                                 jobtime, work_for_workplace_closing)

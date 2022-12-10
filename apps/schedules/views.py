@@ -463,4 +463,7 @@ class CheckAlgorithView(APIView):
 
     def get(self, request):
         a_task = AlgorithmTask.objects.filter(organization_id=request.user.user_org_id).exists()
-        return Response(status=status.HTTP_200_OK)
+        task_status = False
+        if a_task:
+            task_status = True
+        return Response(status=status.HTTP_200_OK, data={'task_status': task_status})
