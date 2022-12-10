@@ -21,9 +21,9 @@ class DenyAccesHueyMiddleware:
         return response
 
     def process_view(self, request, view_func, view_args, view_kwargs):
-        try:
+        if hasattr(view_func, 'view_class'):
             view_class = view_func.view_class
-        except:
+        else:
             view_class = None
 
         if not request.user.is_anonymous:
