@@ -5,12 +5,27 @@
 
 .PN-pdf-container{
     /* margin: 1rem; */
-    margin: 14px; /* MARGIN FOR PRINTER: DON'T CHANGE UNLESS YOU KNOW WHAT YOU'RE DOING */
-    width: 1095px; /* WIDTH OF LANDSCAPE PDF - 2 x margin: DON'T CHANGE UNLESS YOU KNOW WHAT YOU'RE DOING */
+    margin: 28px; /* MARGIN FOR PRINTER: DON'T CHANGE UNLESS YOU KNOW WHAT YOU'RE DOING */
+    width: 1067px; /* WIDTH OF LANDSCAPE PDF - 2 x margin: DON'T CHANGE UNLESS YOU KNOW WHAT YOU'RE DOING */
     /* background-color: aquamarine; */
-    font-size: 0.65rem;
+    font-size: 0.55rem;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
 }
 
+.PN-report-header{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 100px;
+    margin-bottom: 10px;
+}
+
+.PN-report-header-item{
+    display: flex;
+    font-size: 1.4em;
+}
 /**/
 /* unit's schedule report classes */
 /**/
@@ -21,6 +36,7 @@
     justify-content: flex-start;
     align-items: stretch;
     align-content: stretch;
+    flex-grow: 1;
     /* background-color: beige; */
 }
 
@@ -33,10 +49,10 @@
     flex-direction: column;
     border-style: solid;
     border-width: 1px;
-    /* flex-grow: 1; */
+    flex-grow: 1;
     min-width: 2em;
     border-bottom: none;
-    margin-bottom: 2em;
+    margin-bottom: 1em;
 }
 
 .PN-schedule-column-label{
@@ -105,15 +121,22 @@
     padding-left: 2px;
     padding-right: 2px;
     border-style: solid;
-    border-width: 1px;
-    min-width: 2.2em;
+    border-width: 0.25px;
+    width: 2.485em;
+    overflow: hidden;
+    text-align: center;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 .PN-employee-content-start{
     padding-left: 2px;
     padding-right: 2px;
     border-style: solid;
-    border-width: 1px;
-    min-width: 11em;
+    border-width: 0.25px;
+    width: 14em;
+    overflow: hidden;
 }
 
 .PN-day-label-row{
@@ -125,14 +148,34 @@
     padding-left: 2px;
     padding-right: 2px;
     border-style: solid;
-    border-width: 1px;
-    min-width: 2.2em;
+    border-width: 0.25px;
+    width: 2.485em;
+    overflow: hidden;
+    text-align: center;
 }
 .PN-day-label-content-start{
     padding-left: 2px;
     padding-right: 2px;
     border-style: solid;
-    border-width: 1px;
-    min-width: 11em;
+    border-width: 0.25px;
+    width: 14em;
+    overflow: hidden;
 }
 
+.PN-day-counter-content{
+    padding-left: 2px;
+    padding-right: 2px;
+    border-style: solid;
+    border-width: 0.25px;
+    width: 6em;
+    overflow: hidden;
+    text-align: center;
+}
+
+.PN-parent-flex-center-div{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.material-icons.md-14 { font-size: 14px; vertical-align: middle; }
