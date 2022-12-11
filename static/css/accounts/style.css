@@ -117,3 +117,7 @@ select {
     padding: 3px;
     font-size: 24px;
 }
+
+[v-cloak] > * {
+    display: none;
+}
