@@ -117,40 +117,118 @@ class EmployeeInfo:
 
 
 class Context:
+    """
+    A class used to keep some bases for algorithm.
+
+    Attributes:
+    -------
+    employees : list[EmployeeInfo]
+        The list containing EmployeeInfo objects with all considered employees
+    shift_types : list[ShiftType]
+        The list containing ShiftType objects with all considered shifts
+    weekly_cover_demands : list
+        The list containing information about cover demands for shifts
+    month : int
+        The month we generate schedule for.
+    year : int
+        The year for the month.
+    month_by_weeks : list
+        The list of list. Primary lists represents month. Sub-lists represent weeks. Elements are tuples (day number, weekday number).
+    month_by_billing_weeks : list
+        The same stuff as month_by_weeks, however weeks are days 1-7, 8-14, etc..
+    job_time : int
+        The amount of hours for full time employees to fulfil their minimum hours number.
+    fixed_assignments : list
+        The list containing employee's id, shift's id and day for a fixed (set, hardcoded) schedule assignment.
+    requests : list
+        The list containing employee's id, shift's id, day and request weight for an employee requested assignment.
+    illegal_transitions : list
+        The list containing
+    overnight_shifts : list
+        The list containing detected overnight shifts (we need them for night shifts limitations).
+    total_work_time : int
+        The number of hours during month to cover based on weekly cover demands.
+    total_job_time : int
+        The sum of employees job times.
+    max_work_time : int
+        Maximal work time we can assign to employees.
+    job_time_multiplier : float
+        Total work time to total job time ratio.
+    overtime_multiplier : float
+        Overtime ratio for part-time employees.
+    overtime_for_full_timers = bool
+        True/false indicator for full-timers overtime (if true, we give additional hours to full-timers)
+    overtime_above_full_time : int
+        The number of hours to divide among full-timers.
+
+    Methods:
+    -------
+    find_illegal_transitions
+        Finds illegal transitions between shift types
+    find_overnight_shifts
+        Determines which shifts are happening overnight.
+    get_shift_info_by_id
+        Simple function to quickly get ShiftTypeInfo object from shift id.
+    calculate_total_worktime
+        Calculates total worktime during month (IN HOURS!), based on cover demands.
+    prepare_requests
+        Fetches employees requests and prepares them to be used later.
+    prepare_fixed_assignments
+        Prepares absent days for each employee to be added to fixed assignments.
+    get_full_time_employees
+        Filters employees and gets a list of full time employees.
+    """
+
+    # Bases: shifts and employees
     employees = []
     shift_types = []
+    weekly_cover_demands = []
 
+    # Timing and billing variables
     month = 0
     year = 0
     month_by_weeks = []
+    month_by_billing_weeks = []
 
-    weekly_cover_demands = []
+    job_time = int
 
     # Fixed assignment: (employee, shift, day).
     fixed_assignments = []
     # Request: (employee, shift, day, weight // negative weight -> employee desires assignment)
     requests = []
 
+    # Illegal transitions and overnight shifts lists
     illegal_transitions = []
     overnight_shifts = []
 
-    job_time = int
-
+    # Worktime and job time variables
     total_work_time = int
     total_job_time = int
     max_work_time = int
 
+    # Multipliers
     job_time_multiplier = float
     overtime_multiplier = float
     overtime_for_full_timers = bool
     overtime_above_full_time = int
 
-    def __init__(self, emp: list[EmployeeInfo], st: list[ShiftType], year: int, month: int, jt: int):
+    def __init__(self, emp: list[EmployeeInfo], st: list[ShiftType], year: int, month: int, jt: int) -> None:
+        """
+        Args:
+            emp: list of EmployeeInfo objects containing information about employees,
+            st - list of ShiftType objects containing information about shifts,
+            year - considered year passed from main function,
+            month - considered month passed from main function,
+            jt - full-time job worktime for given month,
+        """
+
+        # Preparing bases: shifts and employees
         self.shift_types = [ShiftTypeInfo(s, s.pk) for s in st]
 
         self.employees = emp
         self.job_time = jt
 
+        # Preparing timing and billing stuff
         self.month = month
         self.year = year
         self.month_by_weeks = get_month_by_weeks(year, month)
@@ -164,12 +242,14 @@ class Context:
         self.illegal_transitions = self.find_illegal_transitions()
         self.overnight_shifts = self.find_overnight_shifts()
 
-        self.total_work_time = self.calc_total_work_time()
+        # Calculating worktime and job time stuff
+        self.total_work_time = self.calculate_total_worktime()
         self.total_job_time = sum(ei.job_time for ei in self.employees)
         # TODO: calculate max_work_time for each employee in EmployeeInfo
         # TODO: calculate it from weekly_cover_demands, not hardcoded
         self.max_work_time = len(self.employees) * (len(flatten(self.month_by_weeks)) - 4) * 8
 
+        # Calculating multipliers
         self.job_time_multiplier = self.total_work_time / self.total_job_time
         if len(self.employees) == len(self.get_full_time_employees()):
             self.overtime_multiplier = 1
@@ -179,15 +259,19 @@ class Context:
         self.overtime_for_full_timers = sum(self.job_time - ei.absent_time for ei in self.employees) < self.total_work_time
         self.overtime_above_full_time = self.total_work_time - sum(self.job_time - ei.absent_time for ei in self.employees)
 
-    def find_illegal_transitions(self):
+    def find_illegal_transitions(self) -> list[tuple[int, int, int]]:
         """Finds illegal transitions between shift types
-        Returns a list of tuples of given structure:
-        (i, j, p)
-        i - index of shift that is transitioning to 'j'
-        j - index of shift that 'i' transitions to
-        p - penalty of transition between shift 'i' to shift 'j'
+
+        - i - index of shift that is transitioning to 'j',
+        - j - index of shift that 'i' transitions to,
+        - p - penalty of transition between shift 'i' to shift 'j'
+
+        Returns:
+            a list of tuples of given structure (i, j, p)
         """
+
         it = []
+
         for i in self.shift_types[1:]:
             i_start = dt.combine(date.min, i.get().hour_start)
             i_end = i_start + timedelta(minutes=i.duration)  # do all above in case of overnight shifts
@@ -197,27 +281,31 @@ class Context:
                 j_start = dt.combine(date.min + timedelta(days=1), j.get().hour_start)
                 s_delta = j_start - i_end
                 s_delta = int(s_delta.total_seconds() // 60)
-                # print(f"Delta between {i.get().name} and {j.get().name}: {s_delta / 60}h")
                 if s_delta < (11 * 60):  # break if difference between: i, j is below 11 hours
                     print(f"Found illegal transition: {i.get().name} to {j.get().name}")
                     # TODO: think about returning a list instead of tuples (np żeby przechowywać transitions dla więcej niż 2 zmian)
                     it.append((i.id, j.id, 0))
+
         return it
 
-    def find_overnight_shifts(self):
-        """Determines which shifts are happening overnight
-        Returns a tuple of given structure for each overnight shift constraint:
-        (shift, hard_min, soft_min, min_penalty,
-                soft_max, hard_max, max_penalty)
+    def find_overnight_shifts(self) -> tuple[list[tuple[int, int, int, int, int, int, int]], list[tuple[int, int, int, int, int, int, int]]]:
+        """ Determines which shifts are happening overnight.
+
+        Returns:
+            a tuple of given structure for each overnight shift constraint - (shift, hard_min, soft_min, min_penalty, soft_max, hard_max, max_penalty)
         """
-        # NOTE: * kiedyś może trzeba będzie poeksperymentować z karami za nocki, lub damy ustawić to użytkownikowi
-        #       * na razie to działa poprawnie tylko w przypadku gdy jest tylko jedna nocna zmiana
+
+        # FIXME: * kiedyś może trzeba będzie poeksperymentować z karami za nocki, lub damy ustawić to użytkownikowi
+        #        * na razie to działa poprawnie tylko w przypadku gdy jest tylko jedna nocna zmiana
         # TODO: przerobić funkcję do weekly constraints żeby mogła przyjmować sumę shiftów
+
         sc = []
         wsc = []
+
         for i in self.shift_types:
             start = i.get().hour_start.hour
             end = i.get().hour_end.hour
+            # TODO: we should be comparing hours with datetime, just in case sometime we have super long shifts to consider
             if end < start:
                 print(f"Found overnight shift: {i.get().name}")
                 # Between 2 and 3 consecutive days of night shifts, 1 and 4 are possible but penalized.
@@ -225,14 +313,30 @@ class Context:
                 # At least 1 night shift per week (penalized). At most 4 (hard).
                 # TODO: Maybe consider term assignments here ???
                 wsc.append((i.get().id, 0, 1, 2, 3, 4, 0))
+
         return sc, wsc
 
-    def get_shift_info_by_id(self, index: int):
+    def get_shift_info_by_id(self, index: int) -> ShiftTypeInfo:
+        """ Simple function to quickly get ShiftTypeInfo object from shift id.
+
+        Args:
+            index: given shift id
+        Returns:
+            wanted ShiftTypeInfo object
+        """
+
         return next(x for x in self.shift_types if x.id == index)
 
-    def calc_total_work_time(self):
+    def calculate_total_worktime(self) -> int | float:
+        """ Calculates total worktime during month (IN HOURS!), based on cover demands.
+
+            Returns:
+                number of hours to share among employees during month (either int or float - depends on shifts duration).
+        """
+
         total_minutes = 0
         num_month_weekdays = []
+
         for d in range(len(self.weekly_cover_demands)):
             num_month_weekdays.append(sum([x[1] == d for x in flatten(self.month_by_billing_weeks)]))
 
@@ -241,10 +345,18 @@ class Context:
                 if self.shift_types[s + 1] == "-":
                     continue
                 total_minutes += num_month_weekdays[d] * self.shift_types[s + 1].duration
+
         return total_minutes / 60
 
-    def prepare_requests(self):
+    def prepare_requests(self) -> list:
+        """ Fetches employees requests and prepares them to be used later.
+
+        Returns:
+            list of employees requests prepared to be added to model in run_algorithm.py.
+        """
+
         req = []
+
         for ei in self.employees:
             for pref in ei.preferences:
                 for week in self.month_by_billing_weeks:
@@ -257,12 +369,26 @@ class Context:
 
         return req
 
-    def prepare_fixed_assignments(self):
+    def prepare_fixed_assignments(self) -> list:
+        """ Prepares absent days for each employee to be added to fixed assignments.
+
+        Returns:
+            list of absences prepared to be added to fixed assignments.
+        """
+
         fa = []
+
         for ei in self.employees:
             for d in ei.get_absent_days_in_month(self.month):
                 fa.append((ei.employee.pk, 0, d))
+
         return fa
 
-    def get_full_time_employees(self):
+    def get_full_time_employees(self) -> list:
+        """Filters employees and gets a list of full time employees.
+
+        Returns:
+            list of full time employees or empty list if there are no full time employees.
+        """
+
         return [ei for ei in self.employees if ei.job_time == self.job_time]
