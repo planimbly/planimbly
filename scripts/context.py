@@ -107,7 +107,7 @@ class EmployeeInfo:
             for i in range((ab.end - ab.start).days + 1):
                 inter_date = ab.start + timedelta(days=i)
                 ad.append(inter_date)
-                print("[ABSENCE] EMP: %2i | DAY: %2i" % (ab.employee.pk, inter_date.day))
+                logger.success("[ABSENCE] EMP: {:2d} | DAY: {:2d}".format(ab.employee.pk, inter_date.day))
         return ad, at
 
     def get_absent_days_in_month(self, month: int):
