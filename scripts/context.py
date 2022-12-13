@@ -7,31 +7,64 @@ from loguru import logger
 
 class ShiftTypeInfo:
     """
-        # TODO: docstrings here
-    """
-    shift_type = ShiftType
-    duration = 0
-    id = 0
+    A class used to keep enhanced information about shifts.
 
-    def __init__(self, st: ShiftType, index: int):
+    Attributes:
+    -------
+    shift_type : ShiftType
+        Variable to keep certain ShiftType object (shift).
+    duration : int
+        The number representing shift durations in minutes.
+    id = int
+        Shift's id.
+
+    Methods:
+    -------
+    get_duration_in_minutes
+        Returns shift duration in minutes.
+    get_duration_in_hours
+        Calculates shift duration in hours.
+    get
+        Simple function to quickly get ShiftType object from ShiftTypeInfo object.
+    """
+
+    shift_type = ShiftType
+    duration = int
+    id = int
+
+    def __init__(self, st: ShiftType, index: int) -> None:
         self.shift_type = st
         self.id = index
-        self.duration = (dt.combine(date.min, self.shift_type.hour_end) -
-                         dt.combine(date.min, self.shift_type.hour_start)).seconds // 60
-        print(self)
+        self.duration = (dt.combine(date.min, self.shift_type.hour_end) - dt.combine(date.min, self.shift_type.hour_start)).seconds // 60
+        logger.success(print(self))
 
-    def get_duration_in_minutes(self):
+    def get_duration_in_minutes(self) -> int:
+        """ Returns shift duration in minutes.
+
+        Returns:
+            int number of minutes representing shift duration.
+        """
         return self.duration
 
-    def get_duration_in_hours(self):
+    def get_duration_in_hours(self) -> int | float:
+        """ Calculates shift duration in hours.
+
+        Returns:
+            int or float number of hours representing shift duration.
+        """
         return self.duration / 60
 
-    def get(self):
+    def get(self) -> ShiftType:
+        """Simple function to quickly get ShiftType object from ShiftTypeInfo object.
+
+        Returns:
+            ShiftType object from given ShiftTypeInfo object.
+        """
         return self.shift_type
 
-    def __str__(self):
-        return "[SHIFT] ID: %i | Duration: %.1f | %s | %s | demand: %i" % \
-               (self.id, self.get_duration_in_hours(), self.shift_type.workplace, self.shift_type.name, self.shift_type.demand)
+    def __str__(self) -> str:
+        return "[SHIFT] ID: {:2d} | {} | {} | Duration (h): {:.1f} | Demand: {:d}".format(
+            self.id, self.shift_type.workplace, self.shift_type.name, self.get_duration_in_hours(), self.shift_type.demand)
 
 
 class EmployeeInfo:
