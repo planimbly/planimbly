@@ -8,6 +8,9 @@ class Organization(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        ordering = ['name']
+
 
 # Jednostka
 class Unit(models.Model):
@@ -16,6 +19,9 @@ class Unit(models.Model):
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        ordering = ['name']
 
 
 # Dział
@@ -26,6 +32,9 @@ class Workplace(models.Model):
     def __str__(self):
         return self.workplace_unit.name + ' ' + self.name
 
+    class Meta:
+        ordering = ['name']
+
 
 class WorkplaceClosing(models.Model):
     workplace = models.ForeignKey(Workplace, on_delete=models.CASCADE, verbose_name="Dział")
@@ -34,3 +43,6 @@ class WorkplaceClosing(models.Model):
 
     def __str__(self):
         return self.workplace.__str__() + ' ' + str(self.start) + '/' + str(self.end)
+
+    class Meta:
+        ordering = ['start']

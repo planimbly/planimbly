@@ -48,5 +48,3 @@ urlpatterns = [
          name='employee_to_workplace_api'),
     path('api/employees_import/', EmployeesImportApiView.as_view(), name='employees_import_api'),
 ]
-'''path('<int:unit_workplace_pk>/employees_to_workplace/', EmployeeToWorkplaceView.as_view(),
-     name='employee_to_workplace'),'''

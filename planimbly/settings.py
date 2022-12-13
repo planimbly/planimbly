@@ -13,6 +13,8 @@ from pathlib import Path
 
 import django.conf.global_settings
 from environs import Env
+from huey import RedisHuey
+from redis import ConnectionPool
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -49,6 +51,7 @@ INSTALLED_APPS = [
     'widget_tweaks',
     'rest_framework',
     'django_extensions',
+    'huey.contrib.djhuey',
 
 ]
 
@@ -61,6 +64,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    'planimbly.middleware.DenyAccesHueyMiddleware',
 ]
 
 ROOT_URLCONF = 'planimbly.urls'
@@ -186,3 +191,7 @@ if DEBUG:
     mimetypes.add_type("application/javascript", ".js", True)
     VUE2_CDN = 'https://cdn.jsdelivr.net/npm/vue/dist/vue.js'
     VUE3_CDN = 'https://unpkg.com/vue@3'
+
+# HUEY config
+pool = ConnectionPool(host='localhost', port=6379, max_connections=20)
+HUEY = RedisHuey('planimbly', connection_pool=pool)
