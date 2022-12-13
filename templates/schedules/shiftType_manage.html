@@ -27,44 +27,43 @@
         <hr class="breadcrumb" style="opacity: 1">
     </nav> {% endcomment %}
     {% if is_any_workplace %}
-        <div id="vue-app">
-            [[ calculate_daylist ]]
-            <div class="row d-flex justify-content-between align-items-center">
-                <div class="col d-flex justify-content-start">
-                    <h3 class="content-title">Lista zmian</h3>
-                </div>
-                <div class="row align-items-center mb-1">
-                    <div class="col-auto mb-1">
-                        <label class="col-form-label" for="unitSelect">Jednostka:</label>
-                    </div>
-                    <div class="col-auto mb-1">
-                        <select id="unitSelect" class="form-select" v-model="selected_unit"
-                                v-on:change="change_workplace">
-                            <option v-for="unit in select_unit" :value="unit.id">
-                                [[ unit.name ]]
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="col-auto mb-1">
-                        <label class="col-form-label" for="workplaceSelect">Dział:</label>
-                    </div>
-                    <div class="col-auto mb-1">
-                        <select id="workplaceSelect" class="form-select" v-model="selected_workplace"
-                                v-on:change="fetch_data">
-                            <option v-for="workplace in current_workplace" :value="workplace.id">
-                                [[ workplace.name ]]
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="col d-flex justify-content-end">
-                        <button type="button" class="btn btn-outline-success" data-bs-toggle="modal"
-                                data-bs-target="#addShiftModal">
-                            Dodaj zmianę
-                        </button>
-                    </div>
-                </div>
+    <div id="vue-app" v-cloak>
+        [[ calculate_daylist ]]
+        <div class="row d-flex justify-content-between align-items-center">
+            <div class="col d-flex justify-content-start">
+                <h3 class="content-title">Lista zmian</h3>
+            </div>
+            <div class="row align-items-center mb-1">
+            <div class="col-auto mb-1">
+                <label class="col-form-label" for="unitSelect">Jednostka:</label>
+            </div>
+            <div class="col-auto mb-1">
+                <select id="unitSelect" class="form-select" v-model="selected_unit"
+                        v-on:change="change_workplace">
+                    <option v-for="unit in select_unit" :value="unit.id">
+                        [[ unit.name ]]
+                    </option>
+                </select>
+            </div>
+            
+            <div class="col-auto mb-1">
+                <label class="col-form-label" for="workplaceSelect">Dział:</label>
+            </div>
+            <div class="col-auto mb-1">
+                <select id="workplaceSelect" class="form-select" v-model="selected_workplace"
+                        v-on:change="fetch_data">
+                    <option v-for="workplace in current_workplace" :value="workplace.id">
+                        [[ workplace.name ]]
+                    </option>
+                </select>
+            </div>
+            
+            <div class="col d-flex justify-content-end">
+                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal"
+                        data-bs-target="#addShiftModal">
+                    Dodaj zmianę
+                </button>
+            </div>
             </div>
 
             <div class="modal fade" id="addShiftModal" tabindex="-1" aria-labelledby="shiftModalLabel"

@@ -303,6 +303,7 @@ class ScheduleGetApiView(APIView):
                             'id': shift.employee.id,
                             'first_name': shift.employee.first_name,
                             'last_name': shift.employee.last_name,
+                            'order_number': shift.employee.order_number,
                         }
                     }
                 ))
