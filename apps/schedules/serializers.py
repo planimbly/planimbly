@@ -15,7 +15,7 @@ class JobTimeSerializer(serializers.ModelSerializer):
 class FreeDaySerializer(serializers.ModelSerializer):
     class Meta:
         model = FreeDay
-        fields = ['id', 'day']
+        fields = ['id', 'day', 'name']
         extra_kwargs = {
             'id': {'read_only': True}
         }
