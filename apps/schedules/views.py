@@ -420,6 +420,7 @@ class AbsenceViewSet(viewsets.ModelViewSet):
             queryset = Absence.objects.filter(employee_id=request.query_params.get('employee'))
         else:
             queryset = Absence.objects.all()
+        queryset = queryset.filter(employee__user_org_id=request.user.user_org_id)
         serializer = AbsenceSerializer(queryset, many=True)
         return Response(serializer.data)
 

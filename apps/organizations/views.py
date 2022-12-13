@@ -67,7 +67,6 @@ class OrganizationCreateView(GroupRequiredMixin, TemplateView):
                                                            first_name=v_data.get('first_name'),
                                                            last_name=v_data.get('last_name'),
                                                            order_number=v_data.get('order_number'), password=password,
-                                                           job_time=v_data.get('job_time'),
                                                            user_org=org)
             send_user_activation_mail(manager, self.request)
             return HttpResponseRedirect(reverse('employees_manage'))
@@ -244,6 +243,11 @@ class WorkplaceClosingViewSet(viewsets.ModelViewSet):
     queryset = WorkplaceClosing.objects.all()
     serializer_class = WorkplaceClosingSerializer
     permission_classes = [Issupervisor]
+
+    def list(self, request, *args, **kwargs):
+        queryset = WorkplaceClosing.objects.filter(workplace__workplace_unit__unit_org_id=request.user.user_org_id)
+        serializer = self.serializer_class(queryset, many=True)
+        return Response(serializer.data)
 
 
 class WorkplaceClosingView(GroupRequiredMixin, TemplateView):

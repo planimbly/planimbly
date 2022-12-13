@@ -13,4 +13,4 @@ class OrganizationCreateForm(forms.ModelForm):
 class ManagerCreateForm(forms.ModelForm):
     class Meta:
         model = Employee
-        fields = ['email', 'username', 'first_name', 'last_name', 'order_number', 'job_time']
+        fields = ['order_number', 'username', 'first_name', 'last_name', 'email']
