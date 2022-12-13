@@ -75,7 +75,7 @@ def run_algorithm(year, month, user_id, workplace_list):
     return
 
 
-@huey.signal(signals.SIGNAL_ERROR, signals.SIGNAL_COMPLETE)
+@huey.signal(signals.SIGNAL_ERROR, signals.SIGNAL_COMPLETE, signals.SIGNAL_CANCELED)
 def task_ended_handler(signal, task, exc=None):
     user_org_id = Employee.objects.get(pk=task.args[2]).user_org_id
     a_task = AlgorithmTask.objects.get(organization_id=user_org_id, process_pid=task.id)

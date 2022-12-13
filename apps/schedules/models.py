@@ -5,7 +5,8 @@ from apps.organizations.models import Workplace, Organization
 
 
 class JobTime(models.Model):
-    year = models.IntegerField(verbose_name='Rok', unique=True)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, verbose_name="Organizacja")
+    year = models.IntegerField(verbose_name='Rok', )
     january = models.IntegerField(verbose_name='Styczeń')
     february = models.IntegerField(verbose_name='Luty')
     march = models.IntegerField(verbose_name='Marzec')
@@ -19,16 +20,20 @@ class JobTime(models.Model):
     november = models.IntegerField(verbose_name='Listopad')
     december = models.IntegerField(verbose_name='Grudzień')
 
+    class Meta:
+        unique_together = ('organization', 'year')
+
 
 class FreeDay(models.Model):
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, verbose_name="Organizacja")
     name = models.CharField(verbose_name='Nazwa wolnego', max_length=256)
-    day = models.DateField(verbose_name='Data', unique=True)
+    day = models.DateField(verbose_name='Data')
 
     def __str__(self):
         return str(self.day)
 
     class Meta:
-        ordering = ['day']
+        unique_together = ('organization', 'day')
 
 
 class Schedule(models.Model):
