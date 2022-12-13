@@ -19,9 +19,8 @@ class MyAccountManager(BaseUserManager):
         # TODO automatyczne tworzenie username
         if job_time is None:
             job_time = '1'
-        user = self.model(email=self.normalize_email(email), username=username, first_name=first_name,
-                          last_name=last_name, order_number=order_number, user_org=user_org, is_supervisor=is_supervisor
-                          , job_time=job_time)
+        user = self.model(email=self.normalize_email(email), username=username, first_name=first_name, last_name=last_name,
+                          order_number=order_number, user_org=user_org, is_supervisor=is_supervisor, job_time=job_time)
         user.set_password(password)
         user.save(using=self._db)
         return user
