@@ -88,11 +88,23 @@ source ./venv/bin/activate
 cd ../../
 ```
 8. Instalujemy wymagane biblioteki
+
 ```
 python -m pip install -r requirements.txt
 python -m pip install -r requirements_dev.txt
 ```
 
-
 ### Uwaga, jeżeli instalujecie jakikolwiek pakiet, musicie dodać go do requirements.txt poprzez komendę: python -m pip freeze > requirements.txt
 
+# Konfiguracja Huey:
+
+1. Instalujemy pakiet redis, huey (jest w reqiurements.txt)
+2. Instalujemy redisa oraz wsl z tego linku https://redis.io/docs/getting-started/installation/install-redis-on-windows/
+3. Włączamy serwer Redis na tym samym porcie
+4. Za każdym razem jak włączamy serwer, w innym terminalu wpisujemy:
+
+```
+python manage.py run_huey
+```
+
+w tym terminalu są logi z wykonywania algorytmu

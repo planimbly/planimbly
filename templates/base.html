@@ -22,7 +22,7 @@
           href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
           rel="stylesheet">
-        
+
     {#  vue.js v3  #}
     {#    <script src="https://unpkg.com/vue@3"></script>#}
     {% block vue-cdn %}
@@ -74,7 +74,6 @@
             <div class="sidebar" id="sidebar" v-bind:style="`margin-left: ${moveSidebar};`">
                 <ul class="sidebar-list">
                     {% block sidebar-items %}
-                        {% if user.is_authenticated %}
                             <div v-on:click="move_to('{% url 'units_manage' %}')" class="sidebar-item {% if request.resolver_match.view_name == 'units_manage' %}active{% endif %}">
                                 <div class="material-icons">home</div>
                                 <div><a class="del-def-style-a">Jednostki</a></div>
@@ -107,8 +106,6 @@
                                 <div class="material-icons">alarm</div>
                                 <div><a class="del-def-style-a">Wyłączenia działów</a></div>
                             </div>
-                        {% else %}
-                        {% endif %}
                     {% endblock sidebar-items %}
                 </ul>
             </div>
