@@ -724,7 +724,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                 raise ValueError(f'All of {s} shifts for day:{d} have been deleted. This should not ever happen.')
             elif v > 0:
                 raise ValueError(
-                    f'There is still {v} excess demand for shift{ctx.get_shift_info_by_id(s).name} on day{d}.\nList of excess shifts:{candidates}')
+                    f'There is still {v} excess demand for shift{ctx.get_shift_info_by_id(s).get().name} on day{d}.\nList of excess shifts:{candidates}')
 
     # Print solution.
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
