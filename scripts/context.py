@@ -241,8 +241,11 @@ class Context:
 
         # Preparing timing and billing stuff
         self.month = month
+        logger.trace("Given month: {}".format(self.month))
         self.year = year
+        logger.trace("Given year: {}".format(self.year))
         self.month_by_weeks = get_month_by_weeks(year, month)
+        logger.trace("Month separated into weeks: {}".format(self.month_by_weeks))
         self.month_by_billing_weeks = get_month_by_billing_weeks(year, month)
         logger.trace("Month separated into billing weeks: {}".format(self.month_by_billing_weeks))
         self.job_time = jt
@@ -277,9 +280,11 @@ class Context:
         # Calculating worktime and job time stuff
         self.total_work_time = self.calculate_total_worktime()
         self.total_job_time = sum(ei.job_time for ei in self.employees)
+        logger.trace("Calculated total worktime: {}; job time: {}.".format(self.total_work_time, self.total_job_time))
         # TODO: calculate max_work_time for each employee in EmployeeInfo
         # TODO: calculate it from weekly_cover_demands, not hardcoded
         self.max_work_time = len(self.employees) * (len(flatten(self.month_by_weeks)) - 4) * 8
+        logger.trace("Calculated maximum worktime: {}".format(self.max_work_time))
 
         # Calculating multipliers
         self.job_time_multiplier = self.total_work_time / self.total_job_time
@@ -295,6 +300,8 @@ class Context:
 
         self.overtime_for_full_timers = sum(self.job_time - ei.absent_time for ei in self.employees) < self.total_work_time
         self.overtime_above_full_time = self.total_work_time - sum(self.job_time - ei.absent_time for ei in self.employees)
+        logger.trace("Calculated overtime multiplier {}; for full-timers {}, above full-time {}.".format(
+            self.overtime_multiplier, self.overtime_for_full_timers, self.overtime_above_full_time))
 
     def find_illegal_transitions(self) -> list[tuple[int, int, int]]:
         """Finds illegal transitions between shift types
@@ -306,6 +313,8 @@ class Context:
         Returns:
             a list of tuples of given structure (i, j, p)
         """
+
+        logger.trace("Looking for illegal transitions started...")
 
         it = []
 
@@ -323,6 +332,8 @@ class Context:
                     # TODO: think about returning a list instead of tuples (np żeby przechowywać transitions dla więcej niż 2 zmian)
                     it.append((i.id, j.id, 0))
 
+        logger.trace("Looking for illegal transitions ended.")
+
         return it
 
     def find_overnight_shifts(self) -> tuple[list[tuple[int, int, int, int, int, int, int]], list[tuple[int, int, int, int, int, int, int]]]:
@@ -335,6 +346,8 @@ class Context:
         # FIXME: * kiedyś może trzeba będzie poeksperymentować z karami za nocki, lub damy ustawić to użytkownikowi
         #        * na razie to działa poprawnie tylko w przypadku gdy jest tylko jedna nocna zmiana
         # TODO: przerobić funkcję do weekly constraints żeby mogła przyjmować sumę shiftów
+
+        logger.trace("Looking for overnight shifts started...")
 
         sc = []
         wsc = []
@@ -350,6 +363,8 @@ class Context:
                 # At least 1 night shift per week (penalized). At most 4 (hard).
                 # TODO: Maybe consider term assignments here ???
                 wsc.append((i.get().id, 0, 1, 2, 3, 4, 0))
+
+        logger.trace("Looking for overnight shifts ended.")
 
         return sc, wsc
 
@@ -371,6 +386,8 @@ class Context:
                 number of hours to share among employees during month (either int or float - depends on shifts duration).
         """
 
+        logger.trace("Calculating total worktime started...")
+
         total_minutes = 0
         num_month_weekdays = []
 
@@ -383,6 +400,8 @@ class Context:
                     continue
                 total_minutes += num_month_weekdays[d] * self.shift_types[s + 1].duration
 
+        logger.trace("Calculating total worktime ended.")
+
         return total_minutes / 60
 
     def prepare_requests(self) -> list:
@@ -391,6 +410,8 @@ class Context:
         Returns:
             list of employees requests prepared to be added to model in run_algorithm.py.
         """
+
+        logger.trace("Preparing requests started...")
 
         req = []
 
