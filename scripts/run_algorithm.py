@@ -356,8 +356,10 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     model = cp_model.CpModel()
 
     print(
-        "\nJob time       : %4i\nMax work time  : %4i\nWork time      : %4i\nJT ratio       : %.3f\nOT ratio       : %.3f\n" %
+        "\nTotal job time       : %4i\nMax work time  : %4i\nTotal work time      : %4i\nJT ratio       : %.3f\nOT ratio       : %.3f" %
         (ctx.total_job_time, ctx.max_work_time, ctx.total_work_time, ctx.job_time_multiplier, ctx.overtime_multiplier))
+
+    print(f"Job time: {ctx.job_time}")
 
     # Prepare list of allowed shift types for employees
     for ei in ctx.employees:
@@ -454,12 +456,9 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         for ei in ctx.employees:
             if shift not in [s.id for s in ei.allowed_shift_types]:
                 continue
-            works = [work[ei.get().pk, shift, d] for d in range(1, num_days + 1)]
 
-            if shift == 0:
-                absences = ei.get_absent_days_in_month(month)
-                for ab in absences:
-                    del works[ab]
+            absences = ei.get_absent_days_in_month(month)
+            works = [work[ei.get().pk, shift, d] for d in range(1, num_days + 1) if d not in absences]
 
             variables, coeffs = add_soft_sequence_constraint(
                 model, works, hard_min, soft_min, min_cost, soft_max, hard_max,
@@ -479,15 +478,15 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         max_cost = 50
 
         if ctx.job_time_multiplier < 1:
-            hard_min = floor_to_multiple(ei.job_time * ctx.job_time_multiplier, 8) - 8
-            soft_min = floor_to_multiple(ei.job_time * ctx.job_time_multiplier, 8)
-            soft_max = ceil_to_multiple(ei.job_time * ctx.job_time_multiplier, 8)
-            hard_max = ei.job_time + 8
+            hard_min = min(ei.max_work_time, floor_to_multiple(ei.job_time * ctx.job_time_multiplier, 8) - 8)
+            soft_min = min(ei.max_work_time, floor_to_multiple(ei.job_time * ctx.job_time_multiplier, 8))
+            soft_max = min(ei.max_work_time, ceil_to_multiple(ei.job_time * ctx.job_time_multiplier, 8))
+            hard_max = min(ei.max_work_time, ei.job_time + 8)
         if ctx.job_time_multiplier >= 1:
             hard_min = ei.job_time - 8
-            soft_min = floor_to_multiple(ei.job_time * ctx.overtime_multiplier, 8)
-            soft_max = ceil_to_multiple(ei.job_time * ctx.overtime_multiplier, 8)
-            hard_max = soft_max + 8
+            soft_min = min(ei.max_work_time, floor_to_multiple(ei.job_time * ctx.overtime_multiplier, 8))
+            soft_max = min(ei.max_work_time, ceil_to_multiple(ei.job_time * ctx.overtime_multiplier, 8))
+            hard_max = min(ei.max_work_time, soft_max + 8)
             if ei.job_time == ctx.job_time:
                 soft_min = soft_max
                 min_cost += 25
@@ -495,17 +494,22 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         soft_min = min(ctx.job_time - 8, soft_min) if ei.job_time != ctx.job_time else min(ctx.job_time, soft_min)
 
         if not ctx.overtime_for_full_timers:
-            soft_max = min(ctx.job_time, soft_max)
-            hard_max = min(ctx.job_time, hard_max)
+            soft_max = min(ei.max_work_time, min(ctx.job_time, soft_max))
+            hard_max = min(ei.max_work_time, min(ctx.job_time, hard_max))
         else:
-            soft_max = min(soft_max,
-                           ctx.job_time + floor_to_multiple(ctx.overtime_above_full_time // len(ctx.employees), 8))
-            hard_max = min(hard_max,
-                           ctx.job_time + ceil_to_multiple(ctx.overtime_above_full_time // len(ctx.employees), 8))
+            # We probably don't need to do accurate estimates here for now, though it might spare us some computing power
+            # soft_max = min(ei.max_work_time, min(soft_max,
+            #                ctx.job_time + floor_to_multiple(ctx.overtime_above_full_time // len(ctx.employees), 8)))
+            # hard_max = min(ei.max_work_time, min(hard_max,
+            #                ctx.job_time + ceil_to_multiple(ctx.overtime_above_full_time // len(ctx.employees), 8)))
+            hard_min = min(ctx.job_time - 8, ei.max_work_time - 8)
+            soft_min = min(ctx.job_time, ei.max_work_time - 8)
+            hard_max = soft_max = ei.max_work_time
 
         ei.work_time_constraint = (hard_min, soft_min, min_cost, soft_max, hard_max, max_cost)
 
     # Phase 2: Corrections
+    # TODO: Clamp all values to max_work_time
     # Check if the scenario is feasible
     if (ctx.total_work_time < ctx.max_work_time):
         # Check if we have underestimated work time
@@ -513,22 +517,27 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         print(f'work_time_diff: {work_time_diff}')
         if work_time_diff < 0:
             # Yes, we did.. :(
-            if ctx.overtime_for_full_timers:
+            if ctx.overtime_for_full_timers:  # This block of code should never be hit!
+                logger.critical("There were some unknown problems calculating work time...")
                 # Increase hard_max for everyone
                 correction = ceil_to_multiple(work_time_diff / len(ctx.employees), 8)
                 for ei in ctx.employees:
                     ei.work_time_constraint[4] += correction
+                    ei.work_time_constraint[4] = min(ei.work_time_constraint[4], ei.max_work_time)
             else:
                 # Increase hard_max only for people who haven't reached full time
+                # These "correction" calculations need to be more complex, we need to consider max_work_time etc.
                 correction = ceil_to_multiple(work_time_diff / len([ei for ei in ctx.employees if ei.work_time_constraint[4] < ctx.job_time]), 8)
                 for ei in ctx.employees:
                     if ei.work_time_constraint[4] >= ctx.job_time:
                         continue
+                    # if ei.work_time_constraint[4] >= ei.max_work_time:
                     # Clamp work time to job time
                     if ei.work_time_constraint[4] + correction > ctx.job_time:
-                        ei.work_time_constraint[4] = ctx.job_time
+                        ei.work_time_constraint[4] = min(ctx.job_time, ei.max_work_time)
                     else:
                         ei.work_time_constraint[4] += correction
+                        ei.work_time_constraint[4] = min(ei.work_time_constraint[4], ei.max_work_time)
 
         # Add work time constraints to the model
         for ei in ctx.employees:
@@ -545,7 +554,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
             obj_int_vars.extend(variables)
             obj_int_coeffs.extend(coeffs)
     else:
-        print('[ERROR] total allowed work time is not enough to fill the schedule for this month')
+        logger.critical('Total allowed work time is not enough to fill the schedule for this month!!!')
 
     # Weekly sum constraints
     # BUG: when dealing with 6 week months, the algorithm fails because of this constraint
@@ -557,20 +566,17 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                 if shift not in [s.id for s in ei.allowed_shift_types]:
                     continue
 
-                if len(week) < 3:  # TODO: this is temporary fix...
+                if len(week) < 3:  # TODO: this is a temporary fix...
                     continue
 
                 # Account for absences
                 if shift == 0:
-                    num_absences = sum(x in ei.get_absent_days_in_month(month) for x in week)
-
-                    if num_absences:
-                        print("[WEEKLY CONSTRAINT] week %i emp %i num_absences %i" % (w, ei.get().pk, num_absences))
-                        if num_absences == 7:
-                            continue
-                        elif num_absences > soft_max:
+                    num_absences = sum(x in ei.get_absent_days_in_month(month) for x in [d[0] for d in week])
+                    if num_absences > 0:
+                        if num_absences > soft_max:
                             hard_max = min(num_absences + 1, 7)
                             soft_max = min(num_absences, 7)
+                            print("[WEEKLY CONSTRAINT CORRECTION] week %i emp %i num_absences %i" % (w, ei.get().pk, num_absences))
 
                 works = [work[ei.get().pk, shift, d[0]] for d in week]
                 variables, coeffs = add_weekly_soft_sum_constraint(
@@ -805,6 +811,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     print('')
 
     return output_inflate()
+    # return {'data': output_inflate(), 'status': True if (status == cp_model.OPTIMAL or status == cp_model.FEASIBLE) else False}
 
 
 def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workplaces, emp_preferences, emp_absences,
