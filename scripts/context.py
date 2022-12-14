@@ -84,7 +84,7 @@ class EmployeeInfo:
     positive_indefinite_assignments = []
     allowed_shift_types = {}  # Key: Shift_type object, Value: list of allowed days
     weekly_constraints = []
-    work_time_constraint = (0, 0, 0, 0, 0, 0)  # (hard_min, soft_min, min_cost, soft_max, hard_max, max_cost)
+    work_time_constraint = [0, 0, 0, 0, 0, 0]  # (hard_min, soft_min, min_cost, soft_max, hard_max, max_cost)
 
     def __init__(self, emp: Employee, wp: list, pref: list, ab: list, ass: list, jt: int):
         self.employee = emp
@@ -100,7 +100,7 @@ class EmployeeInfo:
         self.job_time = self.calculate_job_time(jt)
         self.job_time -= self.absent_time
 
-    def calculate_job_time(self, jt):
+    def calculate_job_time(self, jt) -> int:
         match self.employee.job_time:
             case '1':
                 return jt
@@ -110,6 +110,8 @@ class EmployeeInfo:
                 return jt // 4
             case '3/4':
                 return jt * 3 // 4
+            case _:
+                return jt
 
     def prepare_assignments(self, assignments: list):
         ta = []
@@ -418,11 +420,11 @@ class Context:
 
         return next(x for x in self.shift_types if x.id == index)
 
-    def calculate_total_work_time(self) -> int | float:
+    def calculate_total_work_time(self) -> int:
         """ Calculates total work time during month (IN HOURS!), based on cover demands.
 
             Returns:
-                number of hours to share among employees during month (either int or float - depends on shifts duration).
+                number of hours to share among employees during month.
         """
 
         logger.trace("Calculating total work time started...")
@@ -441,7 +443,7 @@ class Context:
 
         logger.trace("Calculating total work time ended.")
 
-        return total_minutes / 60
+        return total_minutes // 60
 
     # TODO: Consider weekend constraints and every other constraint regarding free shifts here, for now we only account for absences
     def calculate_max_work_time(self):
