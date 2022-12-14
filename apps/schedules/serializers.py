@@ -24,7 +24,8 @@ class FreeDaySerializer(serializers.ModelSerializer):
 class ShiftTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShiftType
-        fields = ['id', 'hour_start', 'hour_end', 'name', 'workplace', 'demand', 'color', 'active_days', 'is_used']
+        fields = ['id', 'hour_start', 'hour_end', 'name', 'shift_code', 'workplace', 'demand', 'color', 'active_days',
+                  'is_used']
         extra_kwargs = {
             'id': {'read_only': True}
         }

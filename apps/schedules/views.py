@@ -213,6 +213,7 @@ class ScheduleReportGetApiView(APIView):
                             'shift_type_id': shift.shift_type.id,
                             'shift_type_color': shift.shift_type.color,
                             'shift_type_name': shift.shift_type.name,
+                            'shift_code': shift.shift_type.shift_code,
                             'workplace_id': shift.shift_type.workplace.id,
                             'workplace_name': shift.shift_type.workplace.name
                         }
@@ -296,6 +297,7 @@ class ScheduleGetApiView(APIView):
                         'id': shift.id,
                         'shift_type_id': shift.shift_type.id,
                         'shift_type_color': shift.shift_type.color,
+                        'shift_code': shift.shift_type.shift_code,
                         'time_start': shift.shift_type.hour_start,
                         'time_end': shift.shift_type.hour_end,
                         'name': shift.shift_type.name,
@@ -399,6 +401,7 @@ class ShiftTypeViewSet(viewsets.ModelViewSet):
         shiftType = ShiftType(hour_start=v_data['hour_start'],
                               hour_end=v_data['hour_end'],
                               name=v_data['name'],
+                              shift_code=v_data['shift_code'],
                               active_days=v_data['active_days'],
                               demand=v_data['demand'],
                               color=v_data['color'],
