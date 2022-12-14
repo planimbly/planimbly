@@ -71,39 +71,48 @@
                                     <div class="form-floating">
                                         <input type="number" class="form-control" v-model="order_number"
                                                id="inpuorder_number"
-                                               placeholder="Liczba porządkowa">
+                                               placeholder="Liczba porządkowa" required>
                                         <label for="order_number">Liczba porządkowa</label>
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="form-floating">
                                         <input type="email" class="form-control" v-model="email" id="inputEmail"
-                                               placeholder="E-mail">
+                                               placeholder="E-mail" required>
                                         <label for="inputEmail">E-mail</label>
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="form-floating">
                                         <input type="text" class="form-control" v-model="username" id="inputLogin"
-                                               placeholder="Login">
+                                               placeholder="Login" required>
                                         <label for="inputLogin">Login</label>
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="form-floating">
                                         <input type="text" class="form-control" v-model="first_name" id="inputName"
-                                               placeholder="Imię">
+                                               placeholder="Imię" required>
                                         <label for="inputName">Imię</label>
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="form-floating">
                                         <input type="text" class="form-control" v-model="last_name" id="inputSurname"
-                                               placeholder="Nazwisko">
+                                               placeholder="Nazwisko" required>
                                         <label for="inputSurname">Nazwisko</label>
                                     </div>
                                 </div>
-
+                                <div class="col-6">
+                                    <div class="form-floating">
+                                        <select id="jobtimeSelect" class="form-select" v-model="selected_jobtime" style="padding-top: .625rem" required>
+                                            <option :value="null" disabled hidden>Wybierz z listy</option>
+                                            <option v-for="jobtime in jobtime_list" :value="jobtime">
+                                                <div class="fw-bold">[[ jobtime.jobtime_fraction ]]</div>
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -161,9 +170,7 @@
 {% endblock content %}
 
 {% block vue-content %}
-    {#    <script type="//application/javascript">#}
     <script type="module">
-        {#var app = new Vue({#}
         const {createApp} = Vue
         var vue_app = createApp({
             delimiters: ["[[", "]]"],
@@ -180,6 +187,13 @@
                     base_url: '{% url 'employee-list' %}',
                     import_url: '{% url 'employees_import_api' %}',
                     reference_url: '{% url 'employee_option' 123456789 %}'.replace(/123456789/, 3),
+                    selected_jobtime: null,
+                    jobtime_list: [
+                        {jobtime_fraction: '1/4', jobtime_hours: 40, jobtime_name: 'Jedna czwarta etatu'},
+                        {jobtime_fraction: '1/2', jobtime_hours: 80, jobtime_name: 'Pół etatu'},
+                        {jobtime_fraction: '3/4', jobtime_hours: 120, jobtime_name: 'Trzy czwarte etatu'},
+                        {jobtime_fraction: '1', jobtime_hours: 160, jobtime_name: 'Cały etat'},
+                    ],
                 }
             },
             methods: {
@@ -216,7 +230,8 @@
                                             username: this.username,
                                             first_name: this.first_name,
                                             last_name: this.last_name,
-                                            order_number: this.order_number
+                                            order_number: this.order_number,
+                                            job_time: this.selected_jobtime.jobtime_fraction,
                                         }
                                     )
                                     .then(

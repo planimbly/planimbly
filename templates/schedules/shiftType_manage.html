@@ -224,12 +224,9 @@
 {% block vue-content %}
     {% if is_any_workplace %}
         <script type="module">
-            {#var app = new Vue#}
             const {createApp} = Vue
-
             var app = createApp({
                 delimiters: ["[[", "]]"],
-                {#el: '#vue-app',#}
                 data() {
                     return {
                         hour_start: '',

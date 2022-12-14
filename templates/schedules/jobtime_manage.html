@@ -59,16 +59,16 @@
             </div>
 
             <div>
-                <form class="month_box" v-on:submit.prevent="create_freeday()">
-                    <div class="form-floating" style="margin-bottom: 10px; width: 300px">
+                <form class="content_box" v-on:submit.prevent="create_freeday()">
+                    <div class="form-floating" style="margin-bottom: 10px; width: 250px">
                         <input type="date" class="form-control" v-model="newday" id="inputDateStart"
                                placeholder="Dodaj dzień wolny" required>
                         <label for="inputDateStart">Dodaj dzień wolny</label>
                     </div>
-                    <div class="form-floating" style="margin-bottom: 10px; width: 300px">
+                    <div class="form-floating" style="margin-bottom: 10px; max-width: 200px">
                         <input type="text" class="form-control" v-model="newname" id="inputName"
                                placeholder="Dodaj dzień wolny" required>
-                        <label for="inputName">nazwa</label>
+                        <label for="inputName">Nazwa</label>
                     </div>
                     <input type="submit" value="Dodaj" class="btn btn-outline-success" style="height: 72px">
                 </form>

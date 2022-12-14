@@ -7,31 +7,64 @@ from loguru import logger
 
 class ShiftTypeInfo:
     """
-        # TODO: docstrings here
-    """
-    shift_type = ShiftType
-    duration = 0
-    id = 0
+    A class used to keep enhanced information about shifts.
 
-    def __init__(self, st: ShiftType, index: int):
+    Attributes:
+    -------
+    shift_type : ShiftType
+        Variable to keep certain ShiftType object (shift).
+    duration : int
+        The number representing shift durations in minutes.
+    id = int
+        Shift's id.
+
+    Methods:
+    -------
+    get_duration_in_minutes
+        Returns shift duration in minutes.
+    get_duration_in_hours
+        Calculates shift duration in hours.
+    get
+        Simple function to quickly get ShiftType object from ShiftTypeInfo object.
+    """
+
+    shift_type = ShiftType
+    duration = int
+    id = int
+
+    def __init__(self, st: ShiftType, index: int) -> None:
         self.shift_type = st
         self.id = index
-        self.duration = (dt.combine(date.min, self.shift_type.hour_end) -
-                         dt.combine(date.min, self.shift_type.hour_start)).seconds // 60
-        print(self)
+        self.duration = (dt.combine(date.min, self.shift_type.hour_end) - dt.combine(date.min, self.shift_type.hour_start)).seconds // 60
+        logger.success(print(self))
 
-    def get_duration_in_minutes(self):
+    def get_duration_in_minutes(self) -> int:
+        """ Returns shift duration in minutes.
+
+        Returns:
+            int number of minutes representing shift duration.
+        """
         return self.duration
 
-    def get_duration_in_hours(self):
+    def get_duration_in_hours(self) -> int | float:
+        """ Calculates shift duration in hours.
+
+        Returns:
+            int or float number of hours representing shift duration.
+        """
         return self.duration / 60
 
-    def get(self):
+    def get(self) -> ShiftType:
+        """Simple function to quickly get ShiftType object from ShiftTypeInfo object.
+
+        Returns:
+            ShiftType object from given ShiftTypeInfo object.
+        """
         return self.shift_type
 
-    def __str__(self):
-        return "[SHIFT] ID: %i | Duration: %.1f | %s | %s | demand: %i" % \
-               (self.id, self.get_duration_in_hours(), self.shift_type.workplace, self.shift_type.name, self.shift_type.demand)
+    def __str__(self) -> str:
+        return "[SHIFT] ID: {:2d} | {} | {} | Duration (h): {:.1f} | Demand: {:d}".format(
+            self.id, self.shift_type.workplace, self.shift_type.name, self.get_duration_in_hours(), self.shift_type.demand)
 
 
 class EmployeeInfo:
@@ -45,6 +78,7 @@ class EmployeeInfo:
     absent_days = []
     absent_time = 0
     job_time = 0
+    max_work_time = 0
     term_assignments = []
     negative_indefinite_assignments = []
     positive_indefinite_assignments = []
@@ -278,13 +312,13 @@ class Context:
             logger.info("No overnight shifts")
 
         # Calculating worktime and job time stuff
-        self.total_work_time = self.calculate_total_worktime()
+        self.total_work_time = self.calculate_total_work_time()
         self.total_job_time = sum(ei.job_time for ei in self.employees)
         logger.trace("Calculated total worktime: {}; job time: {}.".format(self.total_work_time, self.total_job_time))
-        # TODO: calculate max_work_time for each employee in EmployeeInfo
-        # TODO: calculate it from weekly_cover_demands, not hardcoded
-        self.max_work_time = len(self.employees) * (len(flatten(self.month_by_weeks)) - 4) * 8
+
+        self.max_work_time = self.calculate_max_work_time()
         logger.trace("Calculated maximum worktime: {}".format(self.max_work_time))
+        self.employees = sorted(self.employees, key=lambda e: e.max_work_time)
 
         # Calculating multipliers
         self.job_time_multiplier = self.total_work_time / self.total_job_time
@@ -298,8 +332,13 @@ class Context:
             self.overtime_multiplier = (self.total_work_time - sum(ei.job_time for ei in self.get_full_time_employees())) \
                                    / (self.total_job_time - sum(ei.job_time for ei in self.get_full_time_employees()))
 
-        self.overtime_for_full_timers = sum(self.job_time - ei.absent_time for ei in self.employees) < self.total_work_time
-        self.overtime_above_full_time = self.total_work_time - sum(self.job_time - ei.absent_time for ei in self.employees)
+        # Check if there will be overtime for full time workers
+        self.overtime_for_full_timers = sum(min(self.job_time, ei.max_work_time) for ei in self.employees) < self.total_work_time
+        if self.overtime_for_full_timers:
+            logger.warning("There might be overtime for full time workers!")
+
+        # Calculate total overtime above monthly job time
+        self.overtime_above_full_time = self.total_work_time - sum(min(self.job_time, ei.max_work_time) for ei in self.employees)
         logger.trace("Calculated overtime multiplier {}; for full-timers {}, above full-time {}.".format(
             self.overtime_multiplier, self.overtime_for_full_timers, self.overtime_above_full_time))
 
@@ -379,14 +418,14 @@ class Context:
 
         return next(x for x in self.shift_types if x.id == index)
 
-    def calculate_total_worktime(self) -> int | float:
-        """ Calculates total worktime during month (IN HOURS!), based on cover demands.
+    def calculate_total_work_time(self) -> int | float:
+        """ Calculates total work time during month (IN HOURS!), based on cover demands.
 
             Returns:
                 number of hours to share among employees during month (either int or float - depends on shifts duration).
         """
 
-        logger.trace("Calculating total worktime started...")
+        logger.trace("Calculating total work time started...")
 
         total_minutes = 0
         num_month_weekdays = []
@@ -400,9 +439,32 @@ class Context:
                     continue
                 total_minutes += num_month_weekdays[d] * self.shift_types[s + 1].duration
 
-        logger.trace("Calculating total worktime ended.")
+        logger.trace("Calculating total work time ended.")
 
         return total_minutes / 60
+
+    # TODO: Consider weekend constraints and every other constraint regarding free shifts here, for now we only account for absences
+    def calculate_max_work_time(self):
+        """ Calculates maximum allowed work time for each employee
+
+        Returns:
+            sum of all employees maximum allowed work time
+        """
+        logger.trace("Calculating max allowed work time started...")
+        mwt = 0
+        for ei in self.employees:
+            for week in get_month_by_billing_weeks(self.year, self.month):
+                num_absences = sum(x in ei.get_absent_days_in_month(self.month) for x in [d[0] for d in week])
+                max_week_work_time = 8 * len(week)
+                if num_absences > 1:
+                    max_week_work_time -= num_absences * 8
+                elif len(week) > 3:
+                    max_week_work_time -= 8  # Minimum one free shift per 7 day week by default
+                ei.max_work_time += max(max_week_work_time, 0)
+            logger.info("Max work time for employee {}: {}h".format(ei.get().pk, ei.max_work_time))
+            mwt += ei.max_work_time
+        logger.trace("Calculating max allowed work time ended.")
+        return mwt
 
     def prepare_requests(self) -> list:
         """ Fetches employees requests and prepares them to be used later.

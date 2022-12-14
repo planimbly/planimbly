@@ -119,11 +119,9 @@
 {% block vue-content %}
     {% if is_any_unit %}
         <script type="module">
-            {#var app = new Vue#}
             const {createApp} = Vue
             var app = createApp({
                 delimiters: ["[[", "]]"],
-                {#el: '#vue-app',#}
                 data() {
                     return {
                         name: '',
@@ -144,7 +142,6 @@
                 },
                 methods: {
                     fetch_data() {
-                        console.log(this.base_url)
                         axios
                             .get(this.base_url)
                             .then(response => (this.workplace_list = response.data))
