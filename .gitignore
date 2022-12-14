@@ -48,3 +48,4 @@ production_volumes
 production_volumes/
 
 env_variables.yaml
+frontend_tests/unit/templates/
