@@ -13,7 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib.auth.decorators import login_required
+# from django.contrib.auth.decorators import login_required
 from django.urls import path, include
 from rest_framework import routers
 
@@ -29,12 +29,12 @@ workplace_router = routers.DefaultRouter()
 workplace_router.register(r'workplace', WorkplaceViewSet, basename='workplace')
 
 urlpatterns = [
-    path('create/', OrganizationCreateView.as_view(template_name='organizations/organization_create.html'),
+    path('create/', OrganizationCreateView.as_view(),
          name='organization_create'),
 
     path('employees_manage/', EmployeesManageView.as_view(), name='employees_manage'),
     path('units_manage/', UnitsManageView.as_view(), name='units_manage'),
-    path('', login_required(UnitsManageView.as_view(), login_url='/accounts/login/'), name='units_manage'),
+    path('', UnitsManageView.as_view(), name='units_manage'),
     path('workplace_manage/', WorkplaceManageView.as_view(), name='workplace_manage'),
     path('employees_to_unit_workplace/', EmployeeToUnitWorkplaceView.as_view(), name='employee_to_unit_workplace'),
     path('workplace_closing/', WorkplaceClosingView.as_view(), name='workplace_closing'),
