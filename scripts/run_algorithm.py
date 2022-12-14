@@ -614,7 +614,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                 min_free_shifts = 1
             elif hard_max_hours >= ctx.job_time * 3 // 4:
                 min_free_shifts = 2
-            elif hard_max_hours >= ctx.job_time // 2:
+            else:
                 min_free_shifts = 3
         # There probably is overtime over full job time, ignore these constraints in this case
         else:
