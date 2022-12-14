@@ -20,15 +20,15 @@ for subdir, dirs, files in os.walk(rootdir):
             file != 'employees_import.html' and \
             file != 'organization_create.html' and \
             file != 'schedule_generating.html'
-        
+
         print(file_path)
         print(savefile_path)
-        
+
         if file == 'base.html':
             js = BeautifulSoup(open(file_path, 'r'), 'html.parser').find('script', attrs={"type": "application/javascript"}).text
 
-        if condition :
+        if condition:
             js = BeautifulSoup(open(file_path, 'r'), 'html.parser').find('script', attrs={"type": "module"}).text
 
-        if js != None:
+        if js is not None:
             open(savefile_path, 'w').write(js)
