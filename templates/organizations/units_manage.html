@@ -101,10 +101,8 @@
 
 {% block vue-content %}
     <script type="module">
-        {#var app = new Vue#}
         const {createApp} = Vue
         var app = createApp({
-            {#el: '#vue-app',#}
             delimiters: ["[[", "]]"],
             data() {
                 return {
