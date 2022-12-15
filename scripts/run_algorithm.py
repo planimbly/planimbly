@@ -250,8 +250,8 @@ def add_monthly_soft_sum_constraint(model, works, hard_min, soft_min, min_cost,
 
 
 def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, emp_assignments, schedule_dict,
-                           employees: list[Employee], shift_types: list[ShiftType],
-                           year: int, month: int, jobtime, params, output_proto):
+                           employees: list[Employee], shift_types: list[ShiftType], work_for_workplace_closing,
+                           year: int, month: int, job_time, params, output_proto):
     """Main algorithm function. It solves the whole problem.
 
     Steps:
@@ -269,7 +269,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         shift_types: list of shifts (objects) considered while creating schedule
         year: we create schedule for particular year...
         month: ...and month (date)
-        jobtime: number of hours for full-time job
+        job_time: number of hours for full-time job
         params: parameters for CP-Sat solver
         output_proto: output for CP-Sat solver (?)
 
@@ -291,7 +291,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
 
     # TODO: check if below filtering can be done while creating emp_info
 
-    # Handling situation, when there is no "something" for an employee + preparing dictionaries for further action
+    # Handling situation, when there is no "something" for an employee + preparing lists for further action
     for e in employees:
         if e.pk not in emp_preferences:
             emp_preferences[e.pk] = []
@@ -307,7 +307,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                              emp_preferences[e.pk],
                              emp_absences[e.pk],
                              emp_assignments[e.pk],
-                             jobtime)
+                             job_time)
                 for e in employees]
     """
         List of EmployeeInfo objects
@@ -319,7 +319,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     for e in emp_info:
         print(e)
 
-    ctx = Context(emp_info, shift_types, year, month, jobtime)
+    ctx = Context(emp_info, shift_types, year, month, job_time)
 
     for ei in ctx.employees:
         num_emp_absences[ei.get()] = sum(1 for x in ei.get_absent_days_in_month(month))
@@ -868,7 +868,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
 
 
 def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workplaces, emp_preferences, emp_absences,
-                   emp_assignments, jobtime, work_for_workplace_closing):
+                   emp_assignments, job_time, work_for_workplace_closing):
     # Starting logger
     logger.info("Logging started...")
 
@@ -899,7 +899,8 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
                                   schedule_dict,
                                   emp,
                                   shift_types,
+                                  work_for_workplace_closing,
                                   year, month,
-                                  jobtime,
-                                  params='max_time_in_seconds:120.0', output_proto=None)
+                                  job_time,
+                                  params='max_time_in_seconds:2.0', output_proto=None)
     return data

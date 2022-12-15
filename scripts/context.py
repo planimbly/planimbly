@@ -29,14 +29,15 @@ class ShiftTypeInfo:
     """
 
     shift_type = ShiftType
-    duration = int
-    id = int
+    duration = int()
+    id = int()
 
     def __init__(self, st: ShiftType, index: int) -> None:
         self.shift_type = st
         self.id = index
         self.duration = (dt.combine(date.min, self.shift_type.hour_end) - dt.combine(date.min, self.shift_type.hour_start)).seconds // 60
-        logger.success(print(self))
+
+        logger.success(self)
 
     def get_duration_in_minutes(self) -> int:
         """ Returns shift duration in minutes.
