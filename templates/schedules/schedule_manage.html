@@ -459,6 +459,8 @@
                     }
                 },
                 create_schedule() {
+                    console.log("checked_workpalce below");
+                    console.log(this.checked_workplace);
                     this.loading = true
                     axios
                         .post(this.create_schedule_url,
@@ -480,6 +482,7 @@
                         )
                 },
                 fetch_data() {
+                    this.checked_workplace = [];
                     axios
                         .get(this.base_url, {params: {'year': this.year_cal, 'month': this.month_cal}})
                         .then(response => {
