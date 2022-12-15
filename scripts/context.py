@@ -17,6 +17,10 @@ class ShiftTypeInfo:
         The number representing shift durations in minutes.
     id = int
         Shift's id.
+    closings : list
+        The list of WorkplaceClosing objects containing information about closed days for certain shift.
+    closing_days : list
+        The list containing days, when workplace is closed and shift unused.
 
     Methods:
     -------
@@ -24,6 +28,10 @@ class ShiftTypeInfo:
         Returns shift duration in minutes.
     get_duration_in_hours
         Calculates shift duration in hours.
+    prepare_closing_days
+        Turns WorkplaceClosing objects into the list of days when shift is unused.
+    get_closing_days_in_month
+        Fetches all days in certain month, when shift is unused.
     get
         Simple function to quickly get ShiftType object from ShiftTypeInfo object.
     """
@@ -32,7 +40,10 @@ class ShiftTypeInfo:
     duration = int()
     id = int()
 
-    def __init__(self, st: ShiftType, index: int) -> None:
+    closings = list()
+    closing_days = list()
+
+    def __init__(self, st: ShiftType, index: int()) -> None:
         self.shift_type = st
         self.id = index
         self.duration = (dt.combine(date.min, self.shift_type.hour_end) - dt.combine(date.min, self.shift_type.hour_start)).seconds // 60
@@ -54,6 +65,35 @@ class ShiftTypeInfo:
             int or float number of hours representing shift duration.
         """
         return self.duration / 60
+
+    def prepare_closing_days(self) -> list:
+        """ Turns WorkplaceClosing objects into the list of days when shift is unused.
+
+        Returns:
+            list of days when shift is unused.
+        """
+
+        logger.trace("Preparing closing days started...")
+
+        cd = []
+
+        for cl in self.closings:
+            for i in range((cl.end - cl.start).days + 1):
+                inter_date = cl.start + timedelta(days=i)
+                cd.append(inter_date)
+                logger.success("[CLOSING] WORK.: {:2d} | DAY: {:2d}".format(cl.workplace.pk, inter_date.day))
+
+        logger.trace("Preparing closing days ended.")
+
+        return cd
+
+    def get_closing_days_in_month(self, month: int, year: int) -> list:
+        """ Fetches all days in certain month, when shift is unused.
+
+        Returns:
+            list of days, when shift is unused.
+        """
+        return [d.day for d in self.closing_days if d.month == month and d.year == year]
 
     def get(self) -> ShiftType:
         """Simple function to quickly get ShiftType object from ShiftTypeInfo object.

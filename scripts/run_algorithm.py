@@ -327,6 +327,14 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     # Sanitize employee list by absences
     ctx.employees = [ei for ei in ctx.employees if num_days > num_emp_absences[ei.get()]]
 
+    for st in ctx.shift_types:
+        if st.id not in work_for_workplace_closing:
+            st.closings = []
+        else:
+            st.closings = work_for_workplace_closing[st.id]
+            st.closing_days = st.prepare_closing_days()
+            st.get_closing_days_in_month(month, year)
+
     # Shift constraints on continuous sequence :
     #     (shift, hard_min, soft_min, min_penalty, soft_max, hard_max, max_penalty)
     shift_constraints = [
