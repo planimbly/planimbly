@@ -316,6 +316,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     """
 
     # Sorting employees in emp_info by their planned job time
+    # TODO: move this sorting to backend
     emp_info = sorted(emp_info, key=lambda e: e.job_time, reverse=True)
 
     ctx = Context(emp_info, shift_types, year, month, job_time)
@@ -893,6 +894,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
 
 def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workplaces, emp_preferences, emp_absences,
                    emp_assignments, job_time, work_for_workplace_closing):
+
     # Starting logger
     logger.remove()
     logger.level("ADDED", no=23, color="<blue><bold>", icon="\u2795")

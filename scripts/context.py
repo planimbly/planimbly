@@ -1,8 +1,10 @@
 from datetime import date, datetime as dt, timedelta
+
+from loguru import logger
+
 from apps.accounts.models import Employee
 from apps.schedules.models import ShiftType
 from scripts.helpers import get_month_by_weeks, get_month_by_billing_weeks, flatten, get_letter_for_weekday
-from loguru import logger
 
 
 class ShiftTypeInfo:
@@ -112,31 +114,41 @@ class EmployeeInfo:
     """
         # TODO: docstrings here
     """
+    # Bases: employee and his/her workplaces
     employee = Employee
     workplaces = []
+
+    # Preferences and assignments
     preferences = []
-    absences = []
-    absent_days = []
-    absent_time = 0
-    job_time = 0
-    max_work_time = 0
+    assignments = []
     term_assignments = []
     negative_indefinite_assignments = []
     positive_indefinite_assignments = []
+
+    # Absences (objects, separated days, time)
+    absences = []
+    absent_days = []
+    absent_time = 0
+
+    # Job time and maximum work time
+    job_time = 0
+    max_work_time = 0
+
+    # Constraint helpers
     allowed_shift_types = {}  # Key: Shift_type object, Value: list of allowed days
     weekly_constraints = []
     work_time_constraint = [0, 0, 0, 0, 0, 0]  # (hard_min, soft_min, min_cost, soft_max, hard_max, max_cost)
 
     def __init__(self, emp: Employee, wp: list, pref: list, ab: list, ass: list, jt: int):
+        # Preparing bases - employee and workplaces
         self.employee = emp
         logger.debug("Employee: {} {} ({})".format(self.employee.first_name, self.employee.last_name, self.employee))
         self.workplaces = wp
+
+        # Preparing preferences and assignments
         self.preferences = pref
-        self.absences = ab
-        self.absent_days, self.absent_time = self.prepare_absent_days()
-        self.term_assignments, \
-            self.negative_indefinite_assignments, \
-            self.positive_indefinite_assignments = self.prepare_assignments(ass)
+        self.assignments = ass
+        self.term_assignments, self.negative_indefinite_assignments, self.positive_indefinite_assignments = self.prepare_assignments()
         if len(self.negative_indefinite_assignments) > 0 and len(self.positive_indefinite_assignments) > 0:
             logger.warning("[WARNING] Both negative and positive indefinite assignments found for employee {:d}".format(self.get().pk))
 
@@ -165,12 +177,12 @@ class EmployeeInfo:
                 logger.warning("Something is wrong with calculating job time for employee {}".format(self.employee.pk))
                 return jt
 
-    def prepare_assignments(self, assignments: list):
+    def prepare_assignments(self):
         ta = []
         nia = []
         pia = []
-        print(assignments)
-        for a in assignments:
+
+        for a in self.assignments:
             if a.end is not None and a.start is not None:
                 # term assignments
                 for i in range((a.end - a.start).days + 1):
@@ -188,9 +200,10 @@ class EmployeeInfo:
 
         return ta, nia, pia
 
-    def prepare_absent_days(self):
+    def prepare_absent_days(self) -> (list, int):
         ad = []
         at = 0
+
         for ab in self.absences:
             at += ab.hours_number
             for i in range((ab.end - ab.start).days + 1):
@@ -204,7 +217,7 @@ class EmployeeInfo:
         """ Returns days on which given employee is absent """
         return [d.day for d in self.absent_days if d.month == month and d.year == year]
 
-    def get(self):
+    def get(self) -> Employee:
         return self.employee
 
     def __str__(self) -> str:
@@ -333,6 +346,7 @@ class Context:
         """
 
         # Preparing bases: shifts and employees
+        self.employees = emp
         self.shift_types = [ShiftTypeInfo(s, s.pk) for s in st]
         self.weekly_cover_demands = [tuple(s.get().demand for s in self.shift_types[1:]) for _ in range(7)]
 
@@ -342,7 +356,6 @@ class Context:
         self.month_by_weeks = get_month_by_weeks(year, month)
         self.month_by_billing_weeks = get_month_by_billing_weeks(year, month)
         self.job_time = jt
-        logger.trace("Given job time for month: {}".format(self.job_time))
 
         # Preparing requests and absences
         self.requests = self.prepare_requests()
@@ -358,6 +371,8 @@ class Context:
         self.max_work_time = self.calculate_max_work_time()
 
         # Calculating multipliers
+        self.employees = sorted(self.employees, key=lambda e: e.max_work_time)
+
         self.job_time_multiplier = self.total_work_time / self.total_job_time
 
         if len(self.get_full_time_employees()) == 0:
@@ -484,8 +499,11 @@ class Context:
         Returns:
             sum of all employees maximum allowed work time
         """
+
         logger.trace("Calculating max allowed work time started...")
+
         mwt = 0
+
         for ei in self.employees:
             for week in get_month_by_billing_weeks(self.year, self.month):
                 num_absences = sum(x in ei.get_absent_days_in_month(self.month, self.year) for x in [d[0] for d in week])
@@ -497,7 +515,9 @@ class Context:
                 ei.max_work_time += max(max_week_work_time, 0)
             logger.info("Max work time for employee {}: {}h".format(ei.get().pk, ei.max_work_time))
             mwt += ei.max_work_time
+
         logger.trace("Calculating max allowed work time ended.")
+
         return mwt
 
     def prepare_requests(self) -> list:
