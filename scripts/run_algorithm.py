@@ -267,6 +267,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         schedule_dict: # TODO explain what schedule_dict is
         employees: list of employees objects forwarded from backend and filtered in main algorithm function
         shift_types: list of shifts (objects) considered while creating schedule
+        work_for_workplace_closing: dictionary with workplace closing dates (workplace id: list of WorkplaceClosing objects)
         year: we create schedule for particular year...
         month: ...and month (date)
         job_time: number of hours for full-time job

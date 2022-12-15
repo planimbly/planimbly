@@ -502,7 +502,7 @@ class Context:
                 if num_absences > 1:
                     max_week_work_time -= num_absences * 8
                 elif len(week) > 3:
-                    max_week_work_time -= 8  # Minimum one free shift per 7 day week by default
+                    max_week_work_time -= 8  # Minimum one free shift per 7-day week by default
                 ei.max_work_time += max(max_week_work_time, 0)
             logger.info("Max work time for employee {}: {}h".format(ei.get().pk, ei.max_work_time))
             mwt += ei.max_work_time
