@@ -125,7 +125,7 @@
     width: 2.485em;
     overflow: hidden;
     text-align: center;
-
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -137,6 +137,7 @@
     border-width: 0.25px;
     width: 14em;
     overflow: hidden;
+    overflow-wrap: break-word;
 }
 
 .PN-day-label-row{
