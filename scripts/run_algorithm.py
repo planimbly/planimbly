@@ -25,7 +25,7 @@ from apps.accounts.models import Employee
 from apps.organizations.models import Workplace
 from apps.schedules.models import Shift, ShiftType
 from scripts.context import Context, EmployeeInfo
-from scripts.helpers import get_month_by_weeks, get_letter_for_weekday, floor_to_multiple, ceil_to_multiple
+from scripts.helpers import get_month_by_weeks, get_letter_for_weekday, floor_to_multiple, ceil_to_multiple, flatten
 
 global num_days
 
@@ -440,7 +440,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                 print("[ASSIGNMENTS] Removed shift %s on day %i from employee %i [negative term assignment]" %
                       (ta[0].name, ta[2].day, ei.get().pk))
 
-    # TODO: useless??
+    # TODO: this will be used for generating schedule on top of existing schedule (in specific date range)
     # Fixed assignments.
     for e, s, d in ctx.fixed_assignments:
         model.Add(work[e, s, d] == 1)
@@ -506,38 +506,46 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
             soft_min = min(ctx.job_time, ei.max_work_time - 8)
             hard_max = soft_max = ei.max_work_time
 
-        ei.work_time_constraint = (hard_min, soft_min, min_cost, soft_max, hard_max, max_cost)
+        ei.work_time_constraint = [hard_min, soft_min, min_cost, soft_max, hard_max, max_cost]
 
-    # Phase 2: Corrections
-    # TODO: Clamp all values to max_work_time
+    # Phase 2: Corrections and adding constraints
     # Check if the scenario is feasible
-    if (ctx.total_work_time < ctx.max_work_time):
+    if ctx.total_work_time < ctx.max_work_time:
         # Check if we have underestimated work time
         work_time_diff = sum(x.work_time_constraint[4] for x in ctx.employees) - ctx.total_work_time
         print(f'work_time_diff: {work_time_diff}')
         if work_time_diff < 0:
+            hard_max = int
             # Yes, we did.. :(
             if ctx.overtime_for_full_timers:  # This block of code should never be hit!
                 logger.critical("There were some unknown problems calculating work time...")
                 # Increase hard_max for everyone
-                correction = ceil_to_multiple(work_time_diff / len(ctx.employees), 8)
+                correction: int = ceil_to_multiple(work_time_diff / len(ctx.employees), 8)
                 for ei in ctx.employees:
-                    ei.work_time_constraint[4] += correction
-                    ei.work_time_constraint[4] = min(ei.work_time_constraint[4], ei.max_work_time)
+                    hard_max = ei.work_time_constraint[4]
+                    hard_max = min(hard_max + correction, ei.max_work_time)
+                    ei.work_time_constraint[4] = hard_max
             else:
                 # Increase hard_max only for people who haven't reached full time
                 # These "correction" calculations need to be more complex, we need to consider max_work_time etc.
-                correction = ceil_to_multiple(work_time_diff / len([ei for ei in ctx.employees if ei.work_time_constraint[4] < ctx.job_time]), 8)
+                correction: int = ceil_to_multiple(work_time_diff / len([ei for ei in ctx.employees if ei.work_time_constraint[4] < ctx.job_time]), 8)
+                i = 0
                 for ei in ctx.employees:
-                    if ei.work_time_constraint[4] >= ctx.job_time:
+                    hard_max = ei.work_time_constraint[4]
+                    if hard_max >= ei.max_work_time:
+                        i += 1
+                        correction = ceil_to_multiple(work_time_diff / len([ei for ei in ctx.employees if ei.work_time_constraint[4] < ctx.job_time]) - i, 8)
+                for ei in ctx.employees:
+                    hard_max = ei.work_time_constraint[4]
+                    if hard_max >= ctx.job_time:
                         continue
-                    # if ei.work_time_constraint[4] >= ei.max_work_time:
                     # Clamp work time to job time
-                    if ei.work_time_constraint[4] + correction > ctx.job_time:
-                        ei.work_time_constraint[4] = min(ctx.job_time, ei.max_work_time)
+                    if hard_max + correction > ctx.job_time:
+                        hard_max = min(ctx.job_time, ei.max_work_time)
+                        ei.work_time_constraint[4] = hard_max
                     else:
-                        ei.work_time_constraint[4] += correction
-                        ei.work_time_constraint[4] = min(ei.work_time_constraint[4], ei.max_work_time)
+                        hard_max = min(hard_max + correction, ei.max_work_time)
+                        ei.work_time_constraint[4] = hard_max
 
         # Add work time constraints to the model
         for ei in ctx.employees:
@@ -586,6 +594,51 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                     (ei.get().pk, shift, w))
                 obj_int_vars.extend(variables)
                 obj_int_coeffs.extend(coeffs)
+
+    # Weekend constraints
+    for ei in ctx.employees:
+        hard_max_hours = ei.work_time_constraint[4]
+        min_free_shifts = 0
+        # No overtime over job time
+        if hard_max_hours == ei.calculate_job_time(ctx.job_time):
+            match ei.get().job_time:
+                case '1':
+                    min_free_shifts = 1
+                case '3/4':
+                    min_free_shifts = 2
+                case '1/2':
+                    min_free_shifts = 3
+        # Overtime, but not over full job time
+        elif hard_max_hours > ei.calculate_job_time(ctx.job_time) and hard_max_hours <= ctx.job_time:
+            if hard_max_hours == ctx.job_time:
+                min_free_shifts = 1
+            elif hard_max_hours >= ctx.job_time * 3 // 4:
+                min_free_shifts = 2
+            else:
+                min_free_shifts = 3
+        # There probably is overtime over full job time, ignore these constraints in this case
+        else:
+            continue
+
+        works_saturday = [work[ei.get().pk, 0, d[0]] for d in flatten(get_month_by_weeks(year, month)) if d[1] == 5]
+        works_sunday = [work[ei.get().pk, 0, d[0]] for d in flatten(get_month_by_weeks(year, month)) if d[1] == 6]
+        print(ei.get().pk, hard_max_hours, min_free_shifts)
+
+        variables, coeffs = add_monthly_soft_sum_constraint(
+            model, works_saturday, min_free_shifts, min_free_shifts, 0, len(works_saturday),
+            len(works_saturday), 0,
+            'weekend_constraint(employee %i, min_free_saturdays %i)' %
+            (ei.get().pk, min_free_shifts))
+        obj_int_vars.extend(variables)
+        obj_int_coeffs.extend(coeffs)
+
+        variables, coeffs = add_monthly_soft_sum_constraint(
+            model, works_sunday, min_free_shifts, min_free_shifts, 0, len(works_sunday),
+            len(works_sunday), 0,
+            'weekend_constraint(employee %i, min_free_sundays %i)' %
+            (ei.get().pk, min_free_shifts))
+        obj_int_vars.extend(variables)
+        obj_int_coeffs.extend(coeffs)
 
     # Penalized transitions
     for previous_shift, next_shift, cost in penalized_transitions:
