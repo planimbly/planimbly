@@ -512,8 +512,9 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
             # hard_max = min(ei.max_work_time, min(hard_max,
             #                ctx.job_time + ceil_to_multiple(ctx.overtime_above_full_time // len(ctx.employees), 8)))
             hard_min = min(ctx.job_time - 8, ei.max_work_time - 8)
-            soft_min = min(ctx.job_time, ei.max_work_time - 8)
-            hard_max = soft_max = ei.max_work_time
+            soft_min = min(floor_to_multiple(ctx.total_work_time // len(ctx.employees), 8), ei.max_work_time)
+            soft_max = min(ceil_to_multiple(ctx.total_work_time // len(ctx.employees), 8), ei.max_work_time)
+            hard_max = ei.max_work_time
 
         ei.work_time_constraint = [hard_min, soft_min, min_cost, soft_max, hard_max, max_cost]
 
@@ -529,32 +530,48 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
             if ctx.overtime_for_full_timers:  # This block of code should never be hit!
                 logger.critical("There were some unknown problems calculating work time...")
                 # Increase hard_max for everyone
-                correction: int = ceil_to_multiple(work_time_diff / len(ctx.employees), 8)
+                corr: int = ceil_to_multiple(work_time_diff / len(ctx.employees), 8)
                 for ei in ctx.employees:
                     hard_max = ei.work_time_constraint[4]
-                    hard_max = min(hard_max + correction, ei.max_work_time)
+                    hard_max = min(hard_max + corr, ei.max_work_time)
                     ei.work_time_constraint[4] = hard_max
             else:
                 # Increase hard_max only for people who haven't reached full time
                 # These "correction" calculations need to be more complex, we need to consider max_work_time etc.
-                correction: int = ceil_to_multiple(work_time_diff / len([ei for ei in ctx.employees if ei.work_time_constraint[4] < ctx.job_time]), 8)
+                corr: int = ceil_to_multiple(work_time_diff / len([ei for ei in ctx.employees if ei.work_time_constraint[4] < ctx.job_time]), 8)
                 i = 0
                 for ei in ctx.employees:
+                    if i >= len([ei for ei in ctx.employees if ei.work_time_constraint[4] < ctx.job_time]):
+                        ctx.overtime_for_full_timers = True
+                        break
+                    corr = ceil_to_multiple(work_time_diff / len([ei for ei in ctx.employees if ei.work_time_constraint[4] < ctx.job_time]) - i, 8)
+
                     hard_max = ei.work_time_constraint[4]
-                    if hard_max >= ei.max_work_time:
+                    if hard_max >= ei.max_work_time or hard_max >= ctx.job_time:
                         i += 1
-                        correction = ceil_to_multiple(work_time_diff / len([ei for ei in ctx.employees if ei.work_time_constraint[4] < ctx.job_time]) - i, 8)
+
                 for ei in ctx.employees:
-                    hard_max = ei.work_time_constraint[4]
-                    if hard_max >= ctx.job_time:
-                        continue
-                    # Clamp work time to job time
-                    if hard_max + correction > ctx.job_time:
-                        hard_max = min(ctx.job_time, ei.max_work_time)
-                        ei.work_time_constraint[4] = hard_max
+                    if not ctx.overtime_for_full_timers:
+                        hard_max = ei.work_time_constraint[4]
+                        if hard_max >= ctx.job_time:
+                            i += 1
+                            corr = ceil_to_multiple(work_time_diff / len([ei for ei in ctx.employees if ei.work_time_constraint[4] < ctx.job_time]) - i, 8)
+                            continue
+                        # Clamp work time to job time
+                        if hard_max + corr > ctx.job_time:
+                            hard_max = min(ctx.job_time, ei.max_work_time)
+                            ei.work_time_constraint[4] = hard_max
+                        else:
+                            hard_max = min(hard_max + corr, ei.max_work_time)
+                            ei.work_time_constraint[4] = hard_max
                     else:
-                        hard_max = min(hard_max + correction, ei.max_work_time)
-                        ei.work_time_constraint[4] = hard_max
+                        # hard_min, soft_min, soft_max, hard_max
+                        ei.work_time_constraint[0] = min(ctx.job_time - 8, ei.max_work_time - 8)
+                        ei.work_time_constraint[1] = min(floor_to_multiple(ctx.total_work_time // len(ctx.employees), 8), ei.max_work_time)
+                        ei.work_time_constraint[3] = min(ceil_to_multiple(ctx.total_work_time // len(ctx.employees), 8), ei.max_work_time)
+                        ei.work_time_constraint[4] = ei.max_work_time
+            work_time_diff = sum(x.work_time_constraint[4] for x in ctx.employees) - ctx.total_work_time
+            print(f'work_time_diff after corrections: {work_time_diff}')
 
         # Add work time constraints to the model
         for ei in ctx.employees:
@@ -889,6 +906,7 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
     shift_free = ShiftType(hour_start=datetime.time(datetime.strptime('00:00', '%H:%M')),
                            hour_end=datetime.time(datetime.strptime('00:00', '%H:%M')),
                            name='-', workplace=Workplace.objects.all().first(), active_days='1111111',
+                           shift_code="---",
                            is_used=True, is_archive=False)
     shift_free.pk = 0
     shift_types.insert(0, shift_free)
@@ -911,5 +929,5 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
                                   work_for_workplace_closing,
                                   year, month,
                                   job_time,
-                                  params='max_time_in_seconds:2.0', output_proto=None)
+                                  params='max_time_in_seconds:30.0', output_proto=None)
     return data
