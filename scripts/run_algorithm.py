@@ -14,6 +14,7 @@
 """Creates a shift scheduling problem and solves it."""
 
 import operator
+import sys
 from datetime import datetime
 
 from absl import flags
@@ -316,9 +317,6 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
 
     # Sorting employees in emp_info by their planned job time
     emp_info = sorted(emp_info, key=lambda e: e.job_time, reverse=True)
-
-    for e in emp_info:
-        print(e)
 
     ctx = Context(emp_info, shift_types, year, month, job_time)
 
@@ -896,7 +894,13 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
 def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workplaces, emp_preferences, emp_absences,
                    emp_assignments, job_time, work_for_workplace_closing):
     # Starting logger
-    logger.info("Logging started...")
+    logger.remove()
+    logger.level("ADDED", no=23, color="<blue><bold>", icon="\u2795")
+
+    logger.add("./scripts/logs/log_{time}.log", level="TRACE")
+    logger.add(sys.stdout, format="<level>{level} | {message}</level>", level="INFO")
+
+    logger.success("Logging started...")
 
     # Calendar data
     global num_days
@@ -912,19 +916,21 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
     shift_types.insert(0, shift_free)
 
     # Only consider employees with set job time
-    # emp = [e
-    #    if e.job_time in ['1', '1/2', '1/4', '3/4']
-    #    else logger.warning("Employee no. {} ({}) has invalid job time and won't be used in solving!".format(e.pk, e)) # ????????????????????
-    #    for e in emp]
+    new_emp = list()
+    for e in emp:
+        if e.job_time in ['1', '1/2', '1/4', '3/4']:
+            new_emp.append(e)
+        else:
+            logger.warning("Employee no. {} ({}) has invalid job time and won't be used in solving!".format(e.pk, e))
 
-    emp = [e for e in emp if e.job_time in ['1', '1/2', '1/4', '3/4']]
+    # emp = [e for e in emp if e.job_time in ['1', '1/2', '1/4', '3/4']]
 
     data = solve_shift_scheduling(emp_for_workplaces,
                                   emp_preferences,
                                   emp_absences,
                                   emp_assignments,
                                   schedule_dict,
-                                  emp,
+                                  new_emp,
                                   shift_types,
                                   work_for_workplace_closing,
                                   year, month,
