@@ -322,7 +322,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     ctx = Context(emp_info, shift_types, year, month, job_time)
 
     for ei in ctx.employees:
-        num_emp_absences[ei.get()] = sum(1 for x in ei.get_absent_days_in_month(month))
+        num_emp_absences[ei.get()] = sum(1 for x in ei.get_absent_days_in_month(month, year))
 
     # Sanitize employee list by absences
     ctx.employees = [ei for ei in ctx.employees if num_days > num_emp_absences[ei.get()]]
@@ -457,7 +457,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
             if shift not in [s.id for s in ei.allowed_shift_types]:
                 continue
 
-            absences = ei.get_absent_days_in_month(month)
+            absences = ei.get_absent_days_in_month(month, year)
             works = [work[ei.get().pk, shift, d] for d in range(1, num_days + 1) if d not in absences]
 
             variables, coeffs = add_soft_sequence_constraint(
@@ -579,7 +579,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
 
                 # Account for absences
                 if shift == 0:
-                    num_absences = sum(x in ei.get_absent_days_in_month(month) for x in [d[0] for d in week])
+                    num_absences = sum(x in ei.get_absent_days_in_month(month, year) for x in [d[0] for d in week])
                     if num_absences > 0:
                         if num_absences > soft_max:
                             hard_max = min(num_absences + 1, 7)

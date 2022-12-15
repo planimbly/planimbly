@@ -147,9 +147,9 @@ class EmployeeInfo:
                 logger.success("[ABSENCE] EMP: {:2d} | DAY: {:2d}".format(ab.employee.pk, inter_date.day))
         return ad, at
 
-    def get_absent_days_in_month(self, month: int):
+    def get_absent_days_in_month(self, month: int, year: int) -> list:
         """ Returns days on which given employee is absent """
-        return [d.day for d in self.absent_days if d.month == month]
+        return [d.day for d in self.absent_days if d.month == month and d.year == year]
 
     def get(self):
         return self.employee
@@ -457,7 +457,7 @@ class Context:
         mwt = 0
         for ei in self.employees:
             for week in get_month_by_billing_weeks(self.year, self.month):
-                num_absences = sum(x in ei.get_absent_days_in_month(self.month) for x in [d[0] for d in week])
+                num_absences = sum(x in ei.get_absent_days_in_month(self.month, self.year) for x in [d[0] for d in week])
                 max_week_work_time = 8 * len(week)
                 if num_absences > 1:
                     max_week_work_time -= num_absences * 8
@@ -506,7 +506,7 @@ class Context:
         fa = []
 
         for ei in self.employees:
-            for d in ei.get_absent_days_in_month(self.month):
+            for d in ei.get_absent_days_in_month(self.month, self.year):
                 fa.append((ei.employee.pk, 0, d))
 
         logger.trace("Preparing fixes assignments ended.")
