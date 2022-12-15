@@ -17,51 +17,75 @@
         <div class="col d-flex justify-content-start">
             <h3 class="content-title">Etaty i dni wolne</h3>
         </div>
-        <div class="content_box"> 
+        <div class="content_box">
             <div>
-                <select class="month_box form-select" style="max-width: -moz-available; margin-bottom: 15px" v-model="year_cal">
+                <select class="month_box form-select" style="max-width: -moz-available; margin-bottom: 15px"
+                        v-model="year_cal">
                     <option v-for="av_year in available_years" :value="av_year">
                         [[ av_year ]]
                     </option>
                 </select>
 
                 <form id="schedule_form" v-on:submit.prevent="put_jobtime_data()">
-                    
-                    <div class="month_box"><h5>Styczeń</h5><input type="number" class="w-50 form-control" v-model="year_object.january" required></div>
-                    <div class="month_box"><h5>Luty</h5><input type="number" class="w-50 form-control" v-model="year_object.february" required></div>
-                    <div class="month_box"><h5>Marzec</h5><input type="number" class="w-50 form-control" v-model="year_object.march" required></div>
-                    <div class="month_box"><h5>Kwiecień</h5><input type="number" class="w-50 form-control" v-model="year_object.april" required></div>
-                    <div class="month_box"><h5>Maj</h5><input type="number" class="w-50 form-control" v-model="year_object.may" required></div>
-                    <div class="month_box"><h5>Czerwiec</h5><input type="number" class="w-50 form-control" v-model="year_object.june" required></div>
-                    <div class="month_box"><h5>Lipiec</h5><input type="number" class="w-50 form-control" v-model="year_object.july" required></div>
-                    <div class="month_box"><h5>Sierpień</h5><input type="number" class="w-50 form-control" v-model="year_object.august" required></div>
-                    <div class="month_box"><h5>Wrzesień</h5><input type="number" class="w-50 form-control" v-model="year_object.september" required></div>
-                    <div class="month_box"><h5>Październik</h5><input type="number" class="w-50 form-control" v-model="year_object.october" required></div>
-                    <div class="month_box"><h5>Listopad</h5><input type="number" class="w-50 form-control" v-model="year_object.november" required></div>
-                    <div class="month_box"><h5>Grudzień</h5><input type="number" class="w-50 form-control" v-model="year_object.december" required></div>
 
-                    <input type="submit" value="Zapisz zmiany" class="btn btn-outline-success" style="margin-bottom: 50px">
+                    <div class="month_box"><h5>Styczeń</h5><input type="number" class="w-50 form-control"
+                                                                  v-model="year_object.january" required></div>
+                    <div class="month_box"><h5>Luty</h5><input type="number" class="w-50 form-control"
+                                                               v-model="year_object.february" required></div>
+                    <div class="month_box"><h5>Marzec</h5><input type="number" class="w-50 form-control"
+                                                                 v-model="year_object.march" required></div>
+                    <div class="month_box"><h5>Kwiecień</h5><input type="number" class="w-50 form-control"
+                                                                   v-model="year_object.april" required></div>
+                    <div class="month_box"><h5>Maj</h5><input type="number" class="w-50 form-control"
+                                                              v-model="year_object.may" required></div>
+                    <div class="month_box"><h5>Czerwiec</h5><input type="number" class="w-50 form-control"
+                                                                   v-model="year_object.june" required></div>
+                    <div class="month_box"><h5>Lipiec</h5><input type="number" class="w-50 form-control"
+                                                                 v-model="year_object.july" required></div>
+                    <div class="month_box"><h5>Sierpień</h5><input type="number" class="w-50 form-control"
+                                                                   v-model="year_object.august" required></div>
+                    <div class="month_box"><h5>Wrzesień</h5><input type="number" class="w-50 form-control"
+                                                                   v-model="year_object.september" required></div>
+                    <div class="month_box"><h5>Październik</h5><input type="number" class="w-50 form-control"
+                                                                      v-model="year_object.october" required></div>
+                    <div class="month_box"><h5>Listopad</h5><input type="number" class="w-50 form-control"
+                                                                   v-model="year_object.november" required></div>
+                    <div class="month_box"><h5>Grudzień</h5><input type="number" class="w-50 form-control"
+                                                                   v-model="year_object.december" required></div>
+
+                    <input type="submit" value="Zapisz zmiany" class="btn btn-outline-success"
+                           style="margin-bottom: 50px">
                 </form>
             </div>
 
             <div>
-                <form class="month_box" v-on:submit.prevent="create_freeday()">
-                    <div class="form-floating" style="margin-bottom: 10px; width: 300px">
-                        <input type="date" class="form-control" v-model="newday" id="inputDateStart" placeholder="Dodaj dzień wolny" required>
+                <form class="content_box" v-on:submit.prevent="create_freeday()">
+                    <div class="form-floating" style="margin-bottom: 10px; width: 250px">
+                        <input type="date" class="form-control" v-model="newday" id="inputDateStart"
+                               placeholder="Dodaj dzień wolny" required>
                         <label for="inputDateStart">Dodaj dzień wolny</label>
+                    </div>
+                    <div class="form-floating" style="margin-bottom: 10px; max-width: 200px">
+                        <input type="text" class="form-control" v-model="newname" id="inputName"
+                               placeholder="Dodaj dzień wolny" required>
+                        <label for="inputName">Nazwa</label>
                     </div>
                     <input type="submit" value="Dodaj" class="btn btn-outline-success" style="height: 72px">
                 </form>
-                
+
                 <div class="list-group" style="margin-left: 5px; margin-right: 5px">
-                    <div v-for="freeday in freeday_list_for_year" :key="freeday.id" class="list-group-item list-group-item-action position-static">
+                    <div v-for="freeday in freeday_list_for_year" :key="freeday.id"
+                         class="list-group-item list-group-item-action position-static">
                         <div class="freeday_table_box">
                             <div>[[ freeday.day ]]</div>
-                            <button v-on:click="remove_freeday(freeday.id)" 
-                                    class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
+                            <div>[[ freeday.name ]]</div>
+                            <button v-on:click="remove_freeday(freeday.id)"
+                                    class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0);">
+                                delete_outline
+                            </button>
                         </div>
-                    </div>  
-                </div> 
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -80,6 +104,7 @@
                     jobtime_list: null,
                     freeday_list: null,
                     newday: null,
+                    newname: null,
                     jobtime_manage_url: '{% url 'jobtime-list' %}',
                     freeday_url: '{% url 'freeday-list' %}',
                     year_cal: new Date().getFullYear(),
@@ -120,7 +145,7 @@
                             }
                         );
                 },
-                put_jobtime_data(){
+                put_jobtime_data() {
                     swal({
                         title: "Potwierdź zapisanie zmian",
                         icon: "info",
@@ -130,22 +155,26 @@
                             if (willAdd) {
                                 let flag = false;
                                 let put_jobtime_manage_url = this.jobtime_manage_url + this.year_object.id + '/';
-                                for (let year of this.jobtime_list){
-                                    if (Object.values(year)[1] == this.year_object.year){
+                                for (let year of this.jobtime_list) {
+                                    if (Object.values(year)[1] == this.year_object.year) {
                                         flag = true
                                         axios
                                             .put(put_jobtime_manage_url, this.year_object)
-                                            .then(response => {this.fetch_data()})
+                                            .then(response => {
+                                                this.fetch_data()
+                                            })
                                             .catch(error => {
                                                     this.response = error.response.data
                                                 }
                                             )
                                     }
                                 }
-                                if (!flag){
+                                if (!flag) {
                                     axios
                                         .post(this.jobtime_manage_url, this.year_object)
-                                        .then(response => {this.fetch_data()})
+                                        .then(response => {
+                                            this.fetch_data()
+                                        })
                                         .catch(error => {
                                                 this.response = error.response.data
                                             }
@@ -154,7 +183,7 @@
                             }
                         });
                 },
-                create_freeday(){
+                create_freeday() {
                     swal({
                         title: "Potwierdź dodanie dnia wolnego",
                         icon: "info",
@@ -165,8 +194,11 @@
                                 axios
                                     .post(this.freeday_url, {
                                         day: this.newday,
+                                        name: this.newname
                                     })
-                                    .then(response => {this.fetch_data()})
+                                    .then(response => {
+                                        this.fetch_data()
+                                    })
                                     .catch(error => {
                                             this.response = error.response.data
                                         }
@@ -174,7 +206,7 @@
                             }
                         });
                 },
-                remove_freeday(day_id){
+                remove_freeday(day_id) {
                     swal({
                         title: "Potwierdź usunięcie dnia wolnego",
                         icon: "warning",
@@ -187,7 +219,9 @@
                                     .delete(this.freeday_url + day_id, {
                                         id: day_id
                                     })
-                                    .then(response => {this.fetch_data()})
+                                    .then(response => {
+                                        this.fetch_data()
+                                    })
                                     .catch(error => {
                                             this.response = error.response.data
                                         }
@@ -197,59 +231,59 @@
                 },
             },
             computed: {
-                year_object(){
-                    if (this.jobtime_list != null){
-                        for (let year of this.jobtime_list){
-                            if (Object.values(year)[1] == this.year_cal){
+                year_object() {
+                    if (this.jobtime_list != null) {
+                        for (let year of this.jobtime_list) {
+                            if (Object.values(year)[1] == this.year_cal) {
                                 return year
                             }
                         }
                         return {
                             id: null,
-                            year: this.year_cal, 
-                            january: 0, 
-                            february: 0, 
-                            march: 0, 
-                            april: 0, 
-                            may: 0, 
-                            june: 0, 
-                            july: 0, 
-                            august: 0, 
-                            september: 0, 
-                            october: 0, 
-                            november: 0, 
-                            december: 0 
+                            year: this.year_cal,
+                            january: 0,
+                            february: 0,
+                            march: 0,
+                            april: 0,
+                            may: 0,
+                            june: 0,
+                            july: 0,
+                            august: 0,
+                            september: 0,
+                            october: 0,
+                            november: 0,
+                            december: 0
                         }
-                    }
-                    else{
+                    } else {
                         return {
                             id: null,
-                            year: null, 
-                            january: null, 
-                            february: null, 
-                            march: null, 
-                            april: null, 
-                            may: null, 
-                            june: null, 
-                            july: null, 
-                            august: null, 
-                            september: null, 
-                            october: null, 
-                            november: null, 
-                            december: null }
+                            year: null,
+                            january: null,
+                            february: null,
+                            march: null,
+                            april: null,
+                            may: null,
+                            june: null,
+                            july: null,
+                            august: null,
+                            september: null,
+                            october: null,
+                            november: null,
+                            december: null
+                        }
                     }
                 },
-                freeday_list_for_year(){
-                    if (this.freeday_list != null){
+                freeday_list_for_year() {
+                    if (this.freeday_list != null) {
                         let year_freeday_list = [];
-                        for (let day of this.freeday_list){
-                            if(day.day.slice(0,4) == this.year_cal){
+                        for (let day of this.freeday_list) {
+                            if (day.day.slice(0, 4) == this.year_cal) {
                                 year_freeday_list.push(day);
                             }
                         }
-                        return year_freeday_list; 
+                        return year_freeday_list;
                     } else {
-                        return [{ id: null, day: null }]
+                        return [{id: null, day: null}]
                     }
                 },
             },

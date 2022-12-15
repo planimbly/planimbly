@@ -13,12 +13,9 @@
                 {% csrf_token %}
                 <h3 class="mb-3 font-weight-normal">Utwórz nową organizację</h3>
 
-                {% render_field manager_create_form.email class+="form-control mb-1" placeholder="E-mail" %}
-                <!-- template variables can be used as attribute values -->
-                {% render_field manager_create_form.username class+="form-control mb-1" placeholder="Login" %}
-                {% render_field manager_create_form.first_name class+="form-control mb-1" placeholder="Imię" %}
-                {% render_field manager_create_form.last_name class+="form-control mb-4" placeholder="Nazwisko" %}
-
+                {% for field in manager_create_form%}
+                {% render_field field class+="form-control mb-1" placeholder=field.label   %}
+                {%endfor%}
                 {% render_field organization_create_form.name class+="form-control mb-1" placeholder="Nazwa organizacji" %}
 
                 <div class="mt-4"><input type="submit" value="Utwórz" class="btn btn-lg btn-outline-primary"></div>

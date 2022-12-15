@@ -60,11 +60,14 @@ class OrganizationCreateView(GroupRequiredMixin, TemplateView):
         organization_create_form = OrganizationCreateForm(self.request.POST)
         manager_create_form = ManagerCreateForm(self.request.POST)
         if organization_create_form.is_valid() and manager_create_form.is_valid():
-            data = manager_create_form.cleaned_data
+            v_data = manager_create_form.cleaned_data
             org = organization_create_form.save()
             password = Employee.objects.make_random_password()
-            manager = get_user_model().objects.create_user(data['email'], data['username'],
-                                                           data['first_name'], data['last_name'], password, org, True)
+            manager = get_user_model().objects.create_user(email=v_data.get('email'), username=v_data.get('username'),
+                                                           first_name=v_data.get('first_name'),
+                                                           last_name=v_data.get('last_name'),
+                                                           order_number=v_data.get('order_number'), password=password,
+                                                           user_org=org)
             send_user_activation_mail(manager, self.request)
             return HttpResponseRedirect(reverse('employees_manage'))
         else:
@@ -157,7 +160,7 @@ class EmployeesImportApiView(APIView):
     permission_classes = [Issupervisor]
 
     def post(self, request, *args, **kwargs):
-        file = request.FILES['employeesList']
+        file = request.FILES.get('employeeList')
         org = self.request.user.user_org
         # TODO Sprawdzać kodowanie pliku, jak?
         # TODO Zabezpieczyć dodawanie plików, sprawdzanie ich poprawności
@@ -169,8 +172,9 @@ class EmployeesImportApiView(APIView):
 
         for line in user_list:
             password = Employee.objects.make_random_password()
-            employee = get_user_model().objects.create_user(line[0], line[1],
-                                                            line[2], line[3], password, org, False)
+            employee = get_user_model().objects.create_user(email=line[0], username=line[1], first_name=line[2],
+                                                            last_name=line[3], order_number=line[4], job_time=line[5],
+                                                            password=password, user_org=org, is_supervisor=False)
             send_user_activation_mail(employee, self.request)
 
         return Response()
@@ -239,6 +243,11 @@ class WorkplaceClosingViewSet(viewsets.ModelViewSet):
     queryset = WorkplaceClosing.objects.all()
     serializer_class = WorkplaceClosingSerializer
     permission_classes = [Issupervisor]
+
+    def list(self, request, *args, **kwargs):
+        queryset = WorkplaceClosing.objects.filter(workplace__workplace_unit__unit_org_id=request.user.user_org_id)
+        serializer = self.serializer_class(queryset, many=True)
+        return Response(serializer.data)
 
 
 class WorkplaceClosingView(GroupRequiredMixin, TemplateView):

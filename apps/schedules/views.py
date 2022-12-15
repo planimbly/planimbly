@@ -11,8 +11,9 @@ from rest_framework.views import APIView
 
 import scripts.run_algorithm
 from apps.accounts.models import Employee
-from apps.organizations.models import Workplace, Unit, WorkplaceClosing
-from apps.schedules.models import ShiftType, Shift, Schedule, Preference, Absence, Assignment, JobTime, FreeDay
+from apps.organizations.models import Workplace, Unit, Organization, WorkplaceClosing
+from apps.schedules.models import ShiftType, Shift, Schedule, Preference, Absence, Assignment, JobTime, FreeDay, \
+    AlgorithmTask
 from apps.schedules.serializers import ShiftTypeSerializer, PreferenceSerializer, AbsenceSerializer, \
     AssignmentSerializer, JobTimeSerializer, FreeDaySerializer
 from planimbly.permissions import GroupRequiredMixin, Issupervisor
@@ -113,6 +114,7 @@ class ScheduleCreateApiView(APIView):
         month = self.request.data.get('month')
         workplace_list = self.request.data.get('workplace_list')
 
+        # comment odtąd
         if not year or not month or not workplace_list:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -178,6 +180,8 @@ class ScheduleCreateApiView(APIView):
 
         for shift in data:
             shift.save()
+        # To jest funkcja wywołująca taska, jeżeli chcemy jej używać to commentujemy góre
+        # run_algorithm(year, month, request.user.id, workplace_list)
         return Response()
 
 
@@ -209,6 +213,7 @@ class ScheduleReportGetApiView(APIView):
                             'shift_type_id': shift.shift_type.id,
                             'shift_type_color': shift.shift_type.color,
                             'shift_type_name': shift.shift_type.name,
+                            'shift_code': shift.shift_type.shift_code,
                             'workplace_id': shift.shift_type.workplace.id,
                             'workplace_name': shift.shift_type.workplace.name
                         }
@@ -292,6 +297,7 @@ class ScheduleGetApiView(APIView):
                         'id': shift.id,
                         'shift_type_id': shift.shift_type.id,
                         'shift_type_color': shift.shift_type.color,
+                        'shift_code': shift.shift_type.shift_code,
                         'time_start': shift.shift_type.hour_start,
                         'time_end': shift.shift_type.hour_end,
                         'name': shift.shift_type.name,
@@ -395,6 +401,7 @@ class ShiftTypeViewSet(viewsets.ModelViewSet):
         shiftType = ShiftType(hour_start=v_data['hour_start'],
                               hour_end=v_data['hour_end'],
                               name=v_data['name'],
+                              shift_code=v_data['shift_code'],
                               active_days=v_data['active_days'],
                               demand=v_data['demand'],
                               color=v_data['color'],
@@ -416,6 +423,7 @@ class AbsenceViewSet(viewsets.ModelViewSet):
             queryset = Absence.objects.filter(employee_id=request.query_params.get('employee'))
         else:
             queryset = Absence.objects.all()
+        queryset = queryset.filter(employee__user_org_id=request.user.user_org_id)
         serializer = AbsenceSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -443,6 +451,26 @@ class JobTimeViewSet(viewsets.ModelViewSet):
     serializer_class = JobTimeSerializer
     permission_classes = [Issupervisor]
 
+    def list(self, request, *args, **kwargs):
+        if request.query_params.get('year'):
+            queryset = JobTime.objects.filter(year=int(request.query_params.get('year'))).filter(
+                organization_id=request.user.user_org_id)
+        else:
+            queryset = JobTime.objects.filter(organization_id=request.user.user_org_id)
+        serializer = self.serializer_class(queryset, many=True)
+        return Response(serializer.data)
+
+    def perform_create(self, serializer):
+        v_data = serializer.validated_data
+        organization = Organization.objects.get(pk=self.request.user.user_org_id)
+        jobtime = JobTime(organization=organization, year=v_data.get('year'), january=v_data.get('january'),
+                          february=v_data.get('february'), march=v_data.get('march'),
+                          april=v_data.get('april'), may=v_data.get('may'), june=v_data.get('june'),
+                          july=v_data.get('july'), august=v_data.get('august'), september=v_data.get('september'),
+                          october=v_data.get('october'), november=v_data.get('november'),
+                          december=v_data.get('december'))
+        jobtime.save()
+
 
 class FreeDayViewSet(viewsets.ModelViewSet):
     queryset = FreeDay.objects.all()
@@ -451,8 +479,25 @@ class FreeDayViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         if request.query_params.get('year'):
-            queryset = FreeDay.objects.filter(day__year=int(request.query_params.get('year')))
+            queryset = FreeDay.objects.filter(day__year=int(request.query_params.get('year'))).filter(
+                organization_id=request.user.user_org_id)
         else:
-            queryset = FreeDay.objects.all()
-        serializer = FreeDaySerializer(queryset, many=True)
+            queryset = FreeDay.objects.filter(organization_id=request.user.user_org_id)
+        serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)
+
+    def perform_create(self, serializer):
+        v_data = serializer.validated_data
+        organization = Organization.objects.get(pk=self.request.user.user_org_id)
+        freeday = FreeDay(organization=organization, name=v_data.get('name'), day=v_data.get('day'))
+        freeday.save()
+
+
+class CheckAlgorithmView(APIView):
+
+    def get(self, request):
+        a_task = AlgorithmTask.objects.filter(organization_id=request.user.user_org_id).exists()
+        task_status = False
+        if a_task:
+            task_status = True
+        return Response(status=status.HTTP_200_OK, data={'task_status': task_status})

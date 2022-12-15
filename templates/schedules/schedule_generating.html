@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+
+{% block head %}
+    <link rel="stylesheet" href="{% static 'css/schedules/schedule_generating.css' %}">
+    <script type="application/javascript" src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script type="application/javascript" src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script>
+        axios.defaults.xsrfCookieName = 'csrftoken';
+        axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
+    </script>
+{% endblock head %}
+
+{% block content %}
+    <div id="vue-app">
+        Właśnie generujemy grafik dla twojej aplikacji.
+    </div>
+{% endblock %}
+
+{% block vue-content %}
+
+    <script type="module">
+        const {createApp} = Vue
+        createApp({
+            delimiters: ["[[", "]]"],
+            data() {
+            }
+        }).mount('#vue-app');
+
+    </script>
+{% endblock vue-content %}

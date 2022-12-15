@@ -13,15 +13,6 @@
 {% endblock head %}
 
 {% block content %}
-    {% comment %} <nav style aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'units_manage' %}"
-                                           class="breadcrumb-link">{{ user.user_org }}</a></li>
-            <li class="breadcrumb-item current-subpage">Pracownicy</li>
-        </ol>
-        <h2 class="breadcrumb-title">Zarządzanie pracownikami</h2>
-        <hr class="breadcrumb" style="opacity: 1">
-    </nav> {% endcomment %}
 
     <div id="vue-app" v-cloak>
         <div class="row d-flex justify-content-between align-items-center">
@@ -30,13 +21,37 @@
             </div>
 
             <div class="col d-flex justify-content-end">
-                <button type="button" class="btn btn-outline-success mx-2" href="#">
+                <button type="button" class="btn btn-outline-success mx-2" data-bs-toggle="modal"
+                        data-bs-target="#importEmployeeModal">
                     Importuj pracowników
                 </button>
                 <button type="button" class="btn btn-outline-success" data-bs-toggle="modal"
                         data-bs-target="#addEmployeeModal">
                     Dodaj pracownika
                 </button>
+            </div>
+        </div>
+
+        <div class="modal fade" id="importEmployeeModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form v-on:submit.prevent="import_employee" enctype="multipart/form-data">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Import pracowników</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Plik tekstowy powinien być w formacie: email, nazwa użytkownika, imię, nazwisko,
+                                liczba porządkowa, wymiar etatu</p>
+                            <p>Wybierz plik do zaimportowania:</p>
+                            <input type="file" name="employeesList" id="employeesList">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-outline-primary">Importuj</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -56,44 +71,48 @@
                                     <div class="form-floating">
                                         <input type="number" class="form-control" v-model="order_number"
                                                id="inpuorder_number"
-                                               placeholder="Liczba porządkowa">
+                                               placeholder="Liczba porządkowa" required>
                                         <label for="order_number">Liczba porządkowa</label>
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="form-floating">
                                         <input type="email" class="form-control" v-model="email" id="inputEmail"
-                                               placeholder="E-mail">
+                                               placeholder="E-mail" required>
                                         <label for="inputEmail">E-mail</label>
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="form-floating">
                                         <input type="text" class="form-control" v-model="username" id="inputLogin"
-                                               placeholder="Login">
+                                               placeholder="Login" required>
                                         <label for="inputLogin">Login</label>
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="form-floating">
                                         <input type="text" class="form-control" v-model="first_name" id="inputName"
-                                               placeholder="Imię">
+                                               placeholder="Imię" required>
                                         <label for="inputName">Imię</label>
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="form-floating">
                                         <input type="text" class="form-control" v-model="last_name" id="inputSurname"
-                                               placeholder="Nazwisko">
+                                               placeholder="Nazwisko" required>
                                         <label for="inputSurname">Nazwisko</label>
                                     </div>
                                 </div>
-                                {% comment %} <div class="col-6">
+                                <div class="col-6">
                                     <div class="form-floating">
-                                        <input type="checkbox" v-model="is_supervisor" id="inputSupervisor">
-                                        <label for="inputSupervisor">Kierownik</label>
+                                        <select id="jobtimeSelect" class="form-select" v-model="selected_jobtime" style="padding-top: .625rem" required>
+                                            <option :value="null" disabled hidden>Wybierz z listy</option>
+                                            <option v-for="jobtime in jobtime_list" :value="jobtime">
+                                                <div class="fw-bold">[[ jobtime.jobtime_fraction ]]</div>
+                                            </option>
+                                        </select>
                                     </div>
-                                </div> {% endcomment %}
+                                </div>
                             </div>
                         </div>
 
@@ -151,13 +170,10 @@
 {% endblock content %}
 
 {% block vue-content %}
-    {#    <script type="//application/javascript">#}
     <script type="module">
-        {#var app = new Vue({#}
         const {createApp} = Vue
         var vue_app = createApp({
             delimiters: ["[[", "]]"],
-            {#el: '#vue-app',#}
             data() {
                 return {
                     email: '',
@@ -169,8 +185,15 @@
                     employee_list: null,
                     response: null,
                     base_url: '{% url 'employee-list' %}',
+                    import_url: '{% url 'employees_import_api' %}',
                     reference_url: '{% url 'employee_option' 123456789 %}'.replace(/123456789/, 3),
-
+                    selected_jobtime: null,
+                    jobtime_list: [
+                        {jobtime_fraction: '1/4', jobtime_hours: 40, jobtime_name: 'Jedna czwarta etatu'},
+                        {jobtime_fraction: '1/2', jobtime_hours: 80, jobtime_name: 'Pół etatu'},
+                        {jobtime_fraction: '3/4', jobtime_hours: 120, jobtime_name: 'Trzy czwarte etatu'},
+                        {jobtime_fraction: '1', jobtime_hours: 160, jobtime_name: 'Cały etat'},
+                    ],
                 }
             },
             methods: {
@@ -181,6 +204,15 @@
                     axios
                         .get(this.base_url)
                         .then(response => (this.employee_list = response.data))
+                },
+                import_employee() {
+                    let formData = new FormData();
+                    let employeefile = document.querySelector('#employeesList');
+                    formData.append("employeeList", employeefile.files[0]);
+                    axios
+                        .post(this.import_url, formData, {
+                            headers: {'Content-Type': 'multipart/form-data'},
+                        })
                 },
                 add_employee() {
                     swal({
@@ -194,9 +226,12 @@
                                 axios
                                     .post(this.base_url,
                                         {
-                                            email: this.email, username: this.username,
-                                            first_name: this.first_name, last_name: this.last_name,
-                                            is_supervisor: this.is_supervisor, order_number: this.order_number
+                                            email: this.email,
+                                            username: this.username,
+                                            first_name: this.first_name,
+                                            last_name: this.last_name,
+                                            order_number: this.order_number,
+                                            job_time: this.selected_jobtime.jobtime_fraction,
                                         }
                                     )
                                     .then(
@@ -258,7 +293,6 @@
                                             username: this.employee_list[i].username,
                                             first_name: this.employee_list[i].first_name,
                                             last_name: this.employee_list[i].last_name,
-                                            is_supervisor: this.employee_list[i].is_supervisor,
                                             order_number: this.employee_list[i].order_number
                                         }
                                     )

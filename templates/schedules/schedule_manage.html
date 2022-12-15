@@ -96,22 +96,22 @@
 
             <table class="w-75 table">
                 <thead>
-                    <tr>
-                        <th scope="col">lp.</th>
-                        <th scope="col">Pracownik</th>
-                        <th scope="col">Godziny/Etat</th>
-                        <th scope="col">Bilans</th>
-                        <th v-for="shit in shifttype_name_list" scope="col">[[ shit ]]</th>
-                        <th scope="col">Godziny L4</th>
-                        <th scope="col">Godziny urlopu</th>
-                        <th scope="col">Inne nieobecości</th>
-                    </tr>
+                <tr>
+                    <th scope="col">lp.</th>
+                    <th scope="col">Pracownik</th>
+                    <th scope="col">Godziny/Etat</th>
+                    <th scope="col">Bilans</th>
+                    <th v-for="shift in shifttype_name_list" scope="col">[[ shift ]]</th>
+                    <th scope="col">Godziny L4</th>
+                    <th scope="col">Godziny urlopu</th>
+                    <th scope="col">Inne nieobecości</th>
+                </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="stat in statistics">
-                        <td>[[ stat.order_number ]]</td>
-                        <td>[[ stat.name ]]</td>
-                        <td>[[ stat.hours ]]/[[ stat.jobtime ]]h</td>
+                <tr v-for="stat in statistics">
+                    <td>[[ stat.order_number ]]</td>
+                    <td>[[ stat.name ]]</td>
+                    <td>[[ stat.hours ]]/[[ stat.jobtime ]]h</td>
                         <td v-if="calculate_diff(stat.hours, stat.jobtime) < 0" style="color: red;">[[ calculate_diff(stat.hours, stat.jobtime) ]]</td>
                         <td v-if="calculate_diff(stat.hours, stat.jobtime) == 0">[[ calculate_diff(stat.hours, stat.jobtime) ]]</td>
                         <td v-if="calculate_diff(stat.hours, stat.jobtime) > 0" style="color: green;">[[ calculate_diff(stat.hours, stat.jobtime) ]]</td>
@@ -459,6 +459,8 @@
                     }
                 },
                 create_schedule() {
+                    console.log("checked_workpalce below");
+                    console.log(this.checked_workplace);
                     this.loading = true
                     axios
                         .post(this.create_schedule_url,
@@ -480,6 +482,7 @@
                         )
                 },
                 fetch_data() {
+                    this.checked_workplace = [];
                     axios
                         .get(this.base_url, {params: {'year': this.year_cal, 'month': this.month_cal}})
                         .then(response => {

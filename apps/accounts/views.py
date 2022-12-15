@@ -20,10 +20,12 @@ class EmployeeViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         v_data = serializer.validated_data
         password = Employee.objects.make_random_password()
-        employee = get_user_model().objects.create_user(v_data.get('email'), v_data.get('username'),
-                                                        v_data.get('first_name'), v_data.get('last_name'),
-                                                        v_data.get('order_number'), password,
-                                                        self.request.user.user_org, False)
+        employee = get_user_model().objects.create_user(email=v_data.get('email'), username=v_data.get('username'),
+                                                        first_name=v_data.get('first_name'),
+                                                        last_name=v_data.get('last_name'),
+                                                        order_number=v_data.get('order_number'), password=password,
+                                                        job_time=v_data.get('job_time'),
+                                                        user_org=self.request.user.user_org)
         send_user_activation_mail(employee, self.request)
 
 

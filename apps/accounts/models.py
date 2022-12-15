@@ -6,7 +6,8 @@ from apps.organizations.models import Organization, Workplace, Unit
 
 
 class MyAccountManager(BaseUserManager):
-    def create_user(self, email, username, first_name, last_name, password=None, user_org=None, is_supervisor=False):
+    def create_user(self, email, username, first_name, last_name, order_number, job_time=None, password=None,
+                    user_org=None, is_supervisor=False):
         if not email:
             raise ValueError("Users must have email")
         if not username:
@@ -16,18 +17,22 @@ class MyAccountManager(BaseUserManager):
         if not last_name:
             raise ValueError("Users must have a surname")
         # TODO automatyczne tworzenie username
-        user = self.model(email=self.normalize_email(email), username=username, first_name=first_name,
-                          last_name=last_name, user_org=user_org, is_supervisor=is_supervisor)
+        if job_time is None:
+            job_time = '1'
+        user = self.model(email=self.normalize_email(email), username=username, first_name=first_name, last_name=last_name,
+                          order_number=order_number, user_org=user_org, is_supervisor=is_supervisor, job_time=job_time)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
+    # TODO DO PRZEMYŚLENIA
     def create_superuser(self, email, username, password):
         user = self.create_user(email=self.normalize_email(email),
                                 username=username,
                                 password=password,
                                 first_name="admin",
-                                last_name="admin")
+                                last_name="admin",
+                                order_number="0")
         user.is_staff = True
         user.is_superuser = True
         user.save(using=self._db)
