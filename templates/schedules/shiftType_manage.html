@@ -26,6 +26,7 @@
         </h2>
         <hr class="breadcrumb" style="opacity: 1">
     </nav> {% endcomment %}
+
     {% if is_any_workplace %}
     <div id="vue-app" v-cloak>
         [[ calculate_daylist ]]
@@ -102,6 +103,13 @@
                                         <input type="text" class="form-control" v-model="name" id="shiftName"
                                                required>
                                     </div>
+                                    <div class="col-4">
+                                        <label for="shiftName" class="form-label modal-style" required>Skrót</label>
+                                    </div>
+                                    <div class="col-8">
+                                        <input type="text" class="form-control" v-model="shift_code" id="shiftName"
+                                               required>
+                                    </div>
 
 
                                     <div class="col-4">
@@ -162,6 +170,7 @@
                     <th scope="col">Start zmiany</th>
                     <th scope="col">Koniec zmiany</th>
                     <th scope="col">Nazwa</th>
+                    <th scope="col">Skrót</th>
                     <th scope="col">Zapotrzebowanie</th>
                     <th scope="col">Aktywne dni</th>
                     <th scope="col">Kolor</th>
@@ -176,6 +185,7 @@
                     <td><input type="time" class="form-control" v-model="shiftType.hour_start"></td>
                     <td><input type="time" class="form-control" v-model="shiftType.hour_end"></td>
                     <td><input type="text" class="form-control" v-model="shiftType.name"></td>
+                    <td><input type="text" class="form-control" v-model="shiftType.shift_code"></td>
                     <td><input type="number" class="form-control" v-model="shiftType.demand"></td>
 
                     {% comment %} <td><input type="text" class="form-control" v-model="shiftType.active_days"></td> {% endcomment %}
@@ -216,6 +226,7 @@
                 </tbody>
             </table>
         </div>
+    </div>
     {% else %}
         <span>Brak działów</span>
     {% endif %}
@@ -236,6 +247,7 @@
                         demand: '',
                         color: '',
                         is_used: true,
+                        shift_code: null,
                         shiftType_list: null,
                         response: null,
                         selected_unit: {{ default_unit }},
@@ -293,7 +305,10 @@
                     fetch_data() {
                         axios
                             .get(this.base_url)
-                            .then(response => (this.shiftType_list = response.data))
+                            .then(response => {
+                                this.shiftType_list = response.data
+                                //console.log(this.shiftType_list)
+                            })
                             .catch(error => {
                                     this.response = error.response.data
                                 }
@@ -315,6 +330,7 @@
                                                 hour_start: this.hour_start,
                                                 hour_end: this.hour_end,
                                                 name: this.name,
+                                                shift_code: this.shift_code,
                                                 color: this.color,
                                                 demand: this.demand,
                                                 workplace: this.selected_workplace,
@@ -383,6 +399,7 @@
                                                 hour_start: this.shiftType_list[i].hour_start,
                                                 hour_end: this.shiftType_list[i].hour_end,
                                                 name: this.shiftType_list[i].name,
+                                                shift_code: this.shiftType_list[i].shift_code,
                                                 color: this.shiftType_list[i].color,
                                                 demand: this.shiftType_list[i].demand,
                                                 workplace: this.selected_workplace,
