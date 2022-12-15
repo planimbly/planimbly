@@ -60,13 +60,13 @@ class ShiftTypeInfo:
         """
         return self.duration
 
-    def get_duration_in_hours(self) -> int | float:
+    def get_duration_in_hours(self) -> int:
         """ Calculates shift duration in hours.
 
         Returns:
-            int or float number of hours representing shift duration.
+            int number of hours representing shift duration.
         """
-        return self.duration / 60
+        return self.duration // 60
 
     def prepare_closing_days(self) -> list:
         """ Turns WorkplaceClosing objects into the list of days when shift is unused.
