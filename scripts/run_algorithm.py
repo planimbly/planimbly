@@ -911,5 +911,5 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
                                   work_for_workplace_closing,
                                   year, month,
                                   job_time,
-                                  params='max_time_in_seconds:2.0', output_proto=None)
+                                  params='max_time_in_seconds:120.0', output_proto=None)
     return data
