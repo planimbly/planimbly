@@ -751,7 +751,8 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                                 key=lambda x: work_time[x[0].get().pk] - x[0].job_time)
 
             for c in candidates:
-                logger.info("employee {:d} job time {:d} work time {:d} diff {:d}".format(c[0].get().pk, c[0].job_time, work_time[c[0].get().pk], work_time[c[0].get().pk] - c[0].job_time))
+                logger.info("employee {:d} job time {:d} work time {:d} diff {:d}".format(
+                    c[0].get().pk, c[0].job_time, work_time[c[0].get().pk], work_time[c[0].get().pk] - c[0].job_time))
 
             # Step 1
             # See if there are employees who fulfilled their job time
@@ -846,7 +847,8 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                 ei.get().pk, sched, ei.job_time, work_time[ei.get().pk], work_time[ei.get().pk] / ei.job_time))
 
         logger.success("\n{}TOTALS | JT: {:4d} | WT: {:4d} | JT RATIO: {:.3f} \n{} | OT RATIO: {:.3f}".format(
-            ' ' * (17 + num_days * 3 + len(ctx.month_by_billing_weeks) * 3), ctx.total_work_time, ctx.total_job_time, ctx.job_time_multiplier, ' ' * 153, ctx.overtime_multiplier))
+            ' ' * (17 + num_days * 3 + len(ctx.month_by_billing_weeks) * 3), ctx.total_work_time, ctx.total_job_time, ctx.job_time_multiplier,
+            ' ' * 153, ctx.overtime_multiplier))
 
     # We only return a list of shift objects
     def output_inflate():
