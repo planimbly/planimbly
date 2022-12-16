@@ -884,7 +884,7 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
 
     # Starting logger
     logger.remove()
-    logger.level("ADDED", no=23, color="<blue><bold>", icon="\u2795")
+    # logger.level("ADDED", no=23, color="<blue><bold>", icon="\u2795")
 
     logger.add("./scripts/logs/log_{time}.log", level="TRACE")
     logger.add(sys.stdout, format="<level>{level} | {message}</level>", level="INFO")
