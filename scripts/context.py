@@ -196,7 +196,8 @@ class EmployeeInfo:
                     nia.append(a.shift_type)
                 else:
                     pia.append(a.shift_type)
-                logger.log("SUCCESS", "[ASSIGNMENT] EMP: {:2d} | ST: {:d} | TYPE: {}".format(a.employee.pk, a.shift_type.id, "neg" if a.negative_flag else "pos"))
+                logger.log("SUCCESS", "[ASSIGNMENT] EMP: {:2d} | ST: {:d} | TYPE: {}".format(
+                    a.employee.pk, a.shift_type.id, "neg" if a.negative_flag else "pos"))
 
         return ta, nia, pia
 
