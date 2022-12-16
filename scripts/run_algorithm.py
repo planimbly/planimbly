@@ -437,11 +437,8 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                 model.AddExactlyOne(work[ei.get().pk, s.id, d] for s in ei.allowed_shift_types)
             else:
                 # Allow only assigned shift for this day
-                model.AddExactlyOne(work[ei.get().pk, s.id, d] for s in [term_assignments[d],
-                                                                         ctx.get_shift_info_by_id(
-                                                                             0).get()])  # Don't forget about the free shift!
-                print("[ASSIGNMENTS] added shift %i as term assignment for employee %i" %
-                      (term_assignments[d].id, ei.get().pk))
+                model.AddExactlyOne(work[ei.get().pk, s.id, d] for s in [term_assignments[d], ctx.get_shift_info_by_id(0).get()])  # Remember abt free shift!
+                logger.success("[ASSIGNMENTS] added shift {:d} as term assignment for employee {:d}".format(term_assignments[d].id, ei.get().pk))
 
     # Deny shifts with negative term assignments
     for ei in ctx.employees:
@@ -695,11 +692,8 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                     obj_int_coeffs.append(over_penalty)
 
     # Objective
-    model.Minimize(
-        sum(obj_bool_vars[i] * obj_bool_coeffs[i]
-            for i in range(len(obj_bool_vars))) +
-        sum(obj_int_vars[i] * obj_int_coeffs[i]
-            for i in range(len(obj_int_vars))))
+    model.Minimize(sum(obj_bool_vars[i] * obj_bool_coeffs[i] for i in range(len(obj_bool_vars))) +
+                   sum(obj_int_vars[i] * obj_int_coeffs[i] for i in range(len(obj_int_vars))))
 
     if output_proto:
         print('Writing proto to %s' % output_proto)
