@@ -42,6 +42,18 @@ export default {
         // TO BE DEPRECATED
         return '#000000';
       },
+
+      best_text_color(hexColorString){
+        // convert hex color to RGB
+        let r = parseInt(hexColorString.substr(1, 2), 16);
+        let g = parseInt(hexColorString.substr(3, 2), 16);
+        let b = parseInt(hexColorString.substr(5, 2), 16);
+
+        let relativeLuminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+        // if luminance is higher than 128, it's better to use black as text color
+        return (relativeLuminance > 128) ? "black" : "white";
+      },
       
       /* MAIN METHODS */
       /*
@@ -129,6 +141,7 @@ export default {
                 if (!(workplace_schedule.days[day][shift].shift_type_id in included_shiftTypes)){
                   included_shiftTypes[workplace_schedule.days[day][shift].shift_type_id] = {
                     shiftType_name: workplace_schedule.days[day][shift].name,
+                    shiftType_code: workplace_schedule.days[day][shift].shift_code,
                     time_start: workplace_schedule.days[day][shift].time_start,
                     time_end: workplace_schedule.days[day][shift].time_end,
                     label:  workplace_schedule.days[day][shift].time_start.toString().slice(0, 5) + 
@@ -160,6 +173,7 @@ export default {
          [
           [null/*(=shiftType_id)*/, {
             shiftType_name: null,
+            shiftType_code: null,
             time_start: null,
             time_end: null,
             shift_type_color: null
@@ -286,8 +300,10 @@ export default {
           <div class="PN-schedule-column"><div class="PN-schedule-column-label">&nbsp</div>
             <div v-for="shift_type in workplace_included_shiftTypes(workpl_sch.schedule)" class="PN-schedule-column-content" :style="{ 'background-color': shift_type[1].shift_type_color }">
               <div class="flex-column ms-1 me-1">
-                <div class="fw-bold">[[shift_type[1].shiftType_name]]</div>  
-                <div>[[shift_type[1].label]]</div> 
+                <div class="fw-bold" :style="{ 'color': best_text_color(shift_type[1].shift_type_color) }" >
+                [[shift_type[1].shiftType_name]]  ( [[ shift_type[1].shiftType_code ]] ) 
+                </div>  
+                <div :style="{ 'color': best_text_color(shift_type[1].shift_type_color) }">[[shift_type[1].label]]</div> 
               </div>
             </div>
           </div>
@@ -352,7 +368,7 @@ export default {
                   <div class="material-icons md-14">person_off</div>
                 </div>
                 <div v-else-if="workday.length > 0">
-                  [[workday[0].shift_type_name]]
+                  [[workday[0].shift_code]]
                 </div>
                 <div v-else>
                   &nbsp

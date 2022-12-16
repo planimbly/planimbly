@@ -646,6 +646,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         variables, coeffs = add_monthly_soft_sum_constraint(
             model, works_saturday, min_free_shifts, min_free_shifts, 0, len(works_saturday),
             len(works_saturday), 0, 'weekend_constraint(employee %i, min_free_saturdays %i)' % (ei.get().pk, min_free_shifts))
+
         obj_int_vars.extend(variables)
         obj_int_coeffs.extend(coeffs)
 
