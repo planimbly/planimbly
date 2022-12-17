@@ -52,3 +52,6 @@ frontend_tests/unit/templates/
 
 
 /scripts/logs/
+scripts/logs/
+
+backup.sql
