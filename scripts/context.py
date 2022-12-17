@@ -163,7 +163,6 @@ class EmployeeInfo:
         # Logging data
         self.log_employeeinfo_data()
 
-
     def calculate_job_time(self, jt) -> int:
         match self.employee.job_time:
             case '1':
