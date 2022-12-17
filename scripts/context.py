@@ -50,7 +50,7 @@ class ShiftTypeInfo:
         self.id = index
         self.duration = (dt.combine(date.min, self.shift_type.hour_end) - dt.combine(date.min, self.shift_type.hour_start)).seconds // 60
 
-        logger.log("SUCCESS", self)
+        logger.log("ADDED", self)
 
     def get_duration_in_minutes(self) -> int:
         """ Returns shift duration in minutes.
@@ -83,7 +83,7 @@ class ShiftTypeInfo:
             for i in range((cl.end - cl.start).days + 1):
                 inter_date = cl.start + timedelta(days=i)
                 cd.append(inter_date)
-                logger.log("SUCCESS", "[CLOSING] WORKPLACE: {:2d} | DAY: {:2d}".format(cl.workplace.pk, inter_date.day))
+                logger.log("ADDED", "[CLOSING] WORKPLACE: {:2d} | DAY: {:2d}".format(cl.workplace.pk, inter_date.day))
 
         logger.trace("Preparing closing days ended.")
 
@@ -188,7 +188,7 @@ class EmployeeInfo:
                 for i in range((a.end - a.start).days + 1):
                     inter_date = a.start + timedelta(days=i)
                     ta.append((a.shift_type, a.negative_flag, inter_date))
-                    logger.log("SUCCESS", "[ASSIGNMENT] EMP: {:2d} | DAY: {:2d} | ST: {:d} | TYPE: {}".format(
+                    logger.log("ADDED", "[ASSIGNMENT] EMP: {:2d} | DAY: {:2d} | ST: {:d} | TYPE: {}".format(
                         a.employee.pk, inter_date.day, a.shift_type.id, "neg" if a.negative_flag else "pos"))
             else:
                 # indefinite_assignments
@@ -196,7 +196,7 @@ class EmployeeInfo:
                     nia.append(a.shift_type)
                 else:
                     pia.append(a.shift_type)
-                logger.log("SUCCESS", "[ASSIGNMENT] EMP: {:2d} | ST: {:d} | TYPE: {}".format(
+                logger.log("ADDED", "[ASSIGNMENT] EMP: {:2d} | ST: {:d} | TYPE: {}".format(
                     a.employee.pk, a.shift_type.id, "neg" if a.negative_flag else "pos"))
 
         return ta, nia, pia
@@ -210,7 +210,7 @@ class EmployeeInfo:
             for i in range((ab.end - ab.start).days + 1):
                 inter_date = ab.start + timedelta(days=i)
                 ad.append(inter_date)
-                logger.log("SUCCESS", "[ABSENCE] EMP: {:2d} | DAY: {:2d}".format(ab.employee.pk, inter_date.day))
+                logger.log("ADDED", "[ABSENCE] EMP: {:2d} | DAY: {:2d}".format(ab.employee.pk, inter_date.day))
 
         return ad, at
 
@@ -225,7 +225,7 @@ class EmployeeInfo:
         return "[EMPLOYEE] ID: {:2d} | JT: {:3d} | {} {}".format(self.employee.pk, self.job_time, self.employee.first_name, self.employee.last_name)
 
     def log_employeeinfo_data(self) -> None:
-        logger.log("SUCCESS", self)
+        logger.log("ADDED", self)
         logger.debug("Employee: {}".format(self.employee))
         logger.debug("Workplaces: {}".format(self.workplaces))
 
@@ -538,7 +538,7 @@ class Context:
                     for d in week:
                         if pref.active_days[d[1]] == "1":
                             req.append((ei.employee.pk, next(st.get().id for st in self.shift_types if pref.shift_type == st.get()), d[0], -1))
-                            logger.log("SUCCESS", "[PREFERENCE] EMP: {:2d} | SHIFT: {} | DAY: {:2d} ({}) | WEIGHT: {:d}".format(
+                            logger.log("ADDED", "[PREFERENCE] EMP: {:2d} | SHIFT: {} | DAY: {:2d} ({}) | WEIGHT: {:d}".format(
                                 ei.employee.pk, next(st.get().name for st in self.shift_types if pref.shift_type == st.get()),
                                 d[0], get_letter_for_weekday(d[1]), -1))
 
