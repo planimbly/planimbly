@@ -260,6 +260,8 @@ class Context:
         The list of list. Primary lists represents month. Sub-lists represent weeks. Elements are tuples (day number, weekday number).
     month_by_billing_weeks : list
         The same stuff as month_by_weeks, however weeks are days 1-7, 8-14, etc..
+    weekends : list
+        The list containing lists of all adjacent Saturdays and Sundays for given month.
     job_time : int
         The amount of hours for full time employees to fulfil their minimum hours number.
     fixed_assignments : list
@@ -299,6 +301,8 @@ class Context:
         Fetches employees requests and prepares them to be used later.
     prepare_fixed_assignments
         Prepares absent days for each employee to be added to fixed assignments.
+    get_employee_by_id
+        Returns EmployeeInfo object of given id.
     get_full_time_employees
         Filters employees and gets a list of full time employees.
     """
@@ -313,6 +317,7 @@ class Context:
     year = 0
     month_by_weeks = []
     month_by_billing_weeks = []
+    weekends = []
 
     job_time = int
 
@@ -356,6 +361,7 @@ class Context:
         self.year = year
         self.month_by_weeks = get_month_by_weeks(year, month)
         self.month_by_billing_weeks = get_month_by_billing_weeks(year, month)
+        self.weekends = [x[-2:] for x in self.month_by_weeks if len(x) == 7]
         self.job_time = jt
 
         # Preparing requests and absences
@@ -450,8 +456,8 @@ class Context:
                 # Between 2 and 3 consecutive days of night shifts, 1 and 4 are possible but penalized.
                 sc.append((i.get().id, 1, 2, 20, 3, 4, 5))
                 # At least 1 night shift per week (penalized). At most 4 (hard).
-                # TODO: Maybe consider term assignments here ???
-                wsc.append((i.get().id, 0, 1, 2, 3, 4, 0))
+                # nahh
+                # wsc.append((i.get().id, 0, 1, 2, 3, 4, 0))
 
         logger.trace("Looking for overnight shifts ended.")
 
@@ -467,6 +473,17 @@ class Context:
         """
 
         return next(x for x in self.shift_types if x.id == index)
+
+    def get_employee_by_id(self, index: int) -> EmployeeInfo:
+        """ Simple function to quickly get EmployeeInfo object from shift id.
+
+        Args:
+            index: given employee id
+        Returns:
+            wanted EmployeeInfo object
+        """
+
+        return next(x for x in self.employees if x.get().pk == index)
 
     def calculate_total_work_time(self) -> int:
         """ Calculates total work time during month (IN HOURS!), based on cover demands.
