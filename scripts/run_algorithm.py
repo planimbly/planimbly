@@ -15,7 +15,7 @@
 
 import operator
 import sys
-from datetime import date, datetime as dt, timedelta
+from datetime import datetime as dt
 
 from absl import flags
 from google.protobuf import text_format
@@ -26,7 +26,7 @@ from apps.accounts.models import Employee
 from apps.organizations.models import Workplace
 from apps.schedules.models import Shift, ShiftType
 from scripts.context import Context, EmployeeInfo
-from scripts.helpers import get_month_by_weeks, get_letter_for_weekday, floor_to_multiple, ceil_to_multiple, flatten
+from scripts.helpers import get_month_by_weeks, get_letter_for_weekday, floor_to_multiple, ceil_to_multiple
 
 global num_days
 
@@ -402,21 +402,37 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
 
         # Allow shifts from term assignments
         for ta in ei.term_assignments:
-            if ta[1] is False:
+            if ta[1] is False:  # if assignment is positive
                 if ta[0] not in allowed_shift_types.keys():
-                    print(allowed_shift_types)
-                    print(ta[0])
                     allowed_shift_types[ta[0]] = []
                     logger.warning("[ASSIGNMENTS] Assigned shift {:d} to employee {:d} on day {:d} [positive term assignment]".format(
                         ta[0].id, ei.get().pk, ta[2].day))
-                allowed_shift_types[ta[0]].append(ta[2].day)
+                allowed_shift_types[ta[0]].append(ta[2].day)  # TODO: check if makes problems
                 logger.success("[ASSIGNMENTS] Assigned shift {:d} to employee {:d} on day {:d} [positive term assignment]".format(
-                ta[0].id, ei.get().pk, ta[2].day))
-        
+                    ta[0].id, ei.get().pk, ta[2].day))
+
+                for ast in allowed_shift_types:
+                    if ast.id != ta[0].id:
+                        for d in allowed_shift_types[ast]:
+                            if d == ta[2].day:
+                                allowed_shift_types[ast].remove(d)
+
+        # Handle workplace closings
+        for ast in allowed_shift_types:
+            for st in ctx.shift_types[1:]:
+                print("Names:", ast.workplace, st.get().workplace)
+                if ast.workplace.id == st.get().workplace.id:
+                    for d in allowed_shift_types[ast]:
+                        print(d, st.get_closing_days_in_month(month, year))
+                        if d in st.get_closing_days_in_month(month, year):
+                            allowed_shift_types[ast].remove(d)
+        print(allowed_shift_types)
+
         for x in allowed_shift_types:
             allowed_shift_types[x] = set(allowed_shift_types[x])
         ei.allowed_shift_types = allowed_shift_types
 
+        logger.debug("EMP: {} Allowed ST: {}".format(ei.get().pk, ei.allowed_shift_types))
 
     # Create model variables
     work = {}
@@ -449,12 +465,15 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                 model.AddExactlyOne(work[ei.get().pk, s.id, d] for s in ei.allowed_shift_types.keys() if (ei.get().pk, s.id, d) in work.keys())
             else:
                 # Allow only assigned shift for this day
+                # TODO: check later if it makes sense? we check it earlier! it should never occur!
                 if term_assignments[d] not in ei.allowed_shift_types.keys():
                     logger.warning("[ASSIGNMENTS] Term assignment for shift {:d} \
                                     is overlapping with indefinite assignments for employee {:d}".format(term_assignments[d].id, ei.get().pk))
                     model.AddExactlyOne(work[ei.get().pk, 0, d])
                     continue
+
                 model.AddExactlyOne(work[ei.get().pk, term_assignments[d].id, d])
+                # TODO: decide whether it's worth increasing feasibility - maybe consult with client?
                 # model.AddExactlyOne(work[ei.get().pk, s.id, d] for s in [term_assignments[d], ctx.get_shift_info_by_id(0).get()])  # Remember abt free shift!
                 logger.success("[ASSIGNMENTS] added shift {:d} as term assignment for employee {:d}".format(term_assignments[d].id, ei.get().pk))
 
@@ -772,12 +791,6 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                     obj_int_vars.append(excess)
                     obj_int_coeffs.append(over_penalty)
 
-    for ei in ctx.employees:
-        for s in ei.allowed_shift_types:
-            print(ei.get().pk, s, len(ei.allowed_shift_types[s]), ei.allowed_shift_types[s])
-            if len(ei.allowed_shift_types[s]) > num_days:
-                print('LOL %i' % ei.get().pk)
-
     # Objective
     model.Minimize(sum(obj_bool_vars[i] * obj_bool_coeffs[i] for i in range(len(obj_bool_vars))) +
                    sum(obj_int_vars[i] * obj_int_coeffs[i] for i in range(len(obj_int_vars))))
@@ -938,8 +951,8 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         output_shifts = []
         if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
             for ei in ctx.employees:
-                for d in range(1, num_days + 1):
-                    for s in ei.allowed_shift_types.keys():
+                for s in ei.allowed_shift_types.keys():
+                    for d in ei.allowed_shift_types[s]:
                         if s.id == 0:
                             continue
                         if solver.BooleanValue(work[ei.get().pk, s.id, d]):
@@ -962,8 +975,6 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     logger.info("  - branches         : {:d}".format(solver.NumBranches()))
     logger.info("  - wall time (sec.) : {:.3f}".format(solver.WallTime()))
     logger.info("")
-
-
 
     return output_inflate()
     # return {'data': output_inflate(), 'status': True if (status == cp_model.OPTIMAL or status == cp_model.FEASIBLE) else False}
