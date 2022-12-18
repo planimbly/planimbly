@@ -374,7 +374,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     logger.info("Job time: {}".format(ctx.job_time))
 
     # Prepare list of allowed shift types for employees
-    for ei in ctx.employees:   
+    for ei in ctx.employees:
         allowed_shift_types = dict()
 
         allowed_shift_types[ctx.shift_types[0].get()] = [d for d in range(1, num_days + 1)]
@@ -644,7 +644,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
 
                 if len(week) <= 3:  # TODO: this is a temporary fix...
                     continue
-                
+
                 works = [work[ei.get().pk, shift, d[0]] for d in week if (ei.get().pk, shift, d[0]) in work.keys()]
 
                 # Account for absences
@@ -740,7 +740,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     #                     transitions.append((work[ei.get().pk, i.get().id, d[0]],
     #                                         work[ei.get().pk, j.get().id, d[0] + 1],
     #                                         work[ei.get().pk, 0, d[0] + 2]))
-                
+
     #             model.AddForbiddenAssignments(work[ei.get().pk], transitions)
     #             # for t in transitions:
     #             #     model.AddBoolOr(t)
@@ -758,11 +758,11 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     # Penalized transitions
     for previous_shift, next_shift, cost in penalized_transitions:
         for ei in ctx.employees:
-            for d in range(1, num_days):       
+            for d in range(1, num_days):
                 if (ei.get().pk, previous_shift, d) not in work.keys() \
                         or (ei.get().pk, next_shift, d + 1) not in work.keys():
                     continue
-                
+
                 transition = [work[ei.get().pk, previous_shift, d].Not(), work[ei.get().pk, next_shift, d + 1].Not()]
                 if cost == 0:
                     model.AddBoolOr(transition)
