@@ -4,7 +4,7 @@ from loguru import logger
 
 from apps.accounts.models import Employee
 from apps.schedules.models import ShiftType
-from scripts.helpers import get_month_by_weeks, get_month_by_billing_weeks, flatten, get_letter_for_weekday
+from scripts.helpers import get_month_by_weeks, get_month_by_billing_weeks, get_letter_for_weekday
 
 
 class ShiftTypeInfo:
@@ -83,7 +83,7 @@ class ShiftTypeInfo:
             for i in range((cl.end - cl.start).days + 1):
                 inter_date = cl.start + timedelta(days=i)
                 cd.append(inter_date)
-                logger.log("ADDED", "[CLOSING] WORKPLACE: {:2d} | DAY: {:2d}".format(cl.workplace.pk, inter_date.day))
+                logger.log("ADDED", "[CLOSING] SHIFT: {:2d} | DAY: {:2d}".format(self.id, inter_date.day))
 
         logger.trace("Preparing closing days ended.")
 
@@ -250,8 +250,6 @@ class Context:
         The list containing EmployeeInfo objects with all considered employees
     shift_types : list[ShiftType]
         The list containing ShiftType objects with all considered shifts
-    weekly_cover_demands : list
-        The list containing information about cover demands for shifts
     month : int
         The month we generate schedule for.
     year : int
@@ -310,7 +308,6 @@ class Context:
     # Bases: shifts and employees
     employees = []
     shift_types = []
-    weekly_cover_demands = []
 
     # Timing and billing variables
     month = 0
@@ -341,7 +338,7 @@ class Context:
     overtime_for_full_timers = bool
     overtime_above_full_time = int
 
-    def __init__(self, emp: list[EmployeeInfo], st: list[ShiftType], year: int, month: int, jt: int) -> None:
+    def __init__(self, emp: list[EmployeeInfo], st: list[ShiftType], year: int, month: int, jt: int, work_for_workplace_closing: dict) -> None:
         """
         Args:
             emp: list of EmployeeInfo objects containing information about employees,
@@ -354,7 +351,6 @@ class Context:
         # Preparing bases: shifts and employees
         self.employees = emp
         self.shift_types = [ShiftTypeInfo(s, s.pk) for s in st]
-        self.weekly_cover_demands = [tuple(s.get().demand for s in self.shift_types[1:]) for _ in range(7)]
 
         # Preparing timing and billing stuff
         self.month = month
@@ -371,6 +367,14 @@ class Context:
         # Searching for illegal transitions and overnight shifts
         self.illegal_transitions = self.find_illegal_transitions()
         self.overnight_shifts = self.find_overnight_shifts()
+
+        for s in self.shift_types:
+            if s.get().workplace.id not in work_for_workplace_closing:
+                s.closings = []
+            else:
+                s.closings = work_for_workplace_closing[s.get().workplace.id]
+                s.closing_days = s.prepare_closing_days()
+                s.get_closing_days_in_month(month, year)
 
         # Calculating worktime and job time stuff
         self.total_work_time = self.calculate_total_work_time()
@@ -495,16 +499,13 @@ class Context:
         logger.trace("Calculating total work time started...")
 
         total_minutes = 0
-        num_month_weekdays = []
 
-        for d in range(len(self.weekly_cover_demands)):
-            num_month_weekdays.append(sum([x[1] == d for x in flatten(self.month_by_billing_weeks)]))
-
-        for d in range(len(self.weekly_cover_demands)):
-            for s in range(len(self.weekly_cover_demands[d])):  # s for num_month_weekdays, s+1 for shift_types
-                if self.shift_types[s + 1] == "-":
-                    continue
-                total_minutes += num_month_weekdays[d] * self.shift_types[s + 1].duration
+        for s in self.shift_types[1:]:
+            for week in self.month_by_billing_weeks:
+                for d in week:
+                    if d[0] in s.get_closing_days_in_month(self.month, self.year):
+                        continue
+                    total_minutes += s.duration * s.get().demand
 
         logger.trace("Calculating total work time ended.")
 
@@ -602,8 +603,6 @@ class Context:
             logger.critical("NO SHIFTS!")
         else:
             logger.debug("Shifts: {}".format(self.shift_types))
-
-        logger.debug("Weekly cover demands: {}".format(self.weekly_cover_demands))
 
         logger.debug("Given month: {}".format(self.month))
         logger.debug("Given year: {}".format(self.year))

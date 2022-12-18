@@ -323,21 +323,13 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     # TODO: move this sorting to backend
     emp_info = sorted(emp_info, key=lambda e: e.job_time, reverse=True)
 
-    ctx = Context(emp_info, shift_types, year, month, job_time)
+    ctx = Context(emp_info, shift_types, year, month, job_time, work_for_workplace_closing)
 
     for ei in ctx.employees:
-        num_emp_absences[ei.get()] = sum(1 for x in ei.get_absent_days_in_month(month, year))
+        num_emp_absences[ei.get()] = sum(1 for _ in ei.get_absent_days_in_month(month, year))
 
     # Sanitize employee list by absences
     ctx.employees = [ei for ei in ctx.employees if num_days > num_emp_absences[ei.get()]]
-
-    for st in ctx.shift_types:
-        if st.id not in work_for_workplace_closing:
-            st.closings = []
-        else:
-            st.closings = work_for_workplace_closing[st.id]
-            st.closing_days = st.prepare_closing_days()
-            st.get_closing_days_in_month(month, year)
 
     # Shift constraints on continuous sequence :
     #     (shift, hard_min, soft_min, min_penalty, soft_max, hard_max, max_penalty)
@@ -350,7 +342,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     #     (shift, hard_min, soft_min, min_penalty, soft_max, hard_max, max_penalty)
     weekly_sum_constraints = [
         # Constraints on rests per week.
-        (0, 1, 2, 7, 2, 3, 4)
+        (0, 1, 2, 7, 2, 5, 4)
     ]
 
     # Overnight shift constraints
@@ -361,9 +353,6 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     # Penalized transitions:
     #     (previous_shift, next_shift, penalty (0 means forbidden))
     penalized_transitions = ctx.illegal_transitions
-
-    # Penalty for exceeding the cover constraint per shift type.
-    excess_cover_penalties = tuple(30 for x in range(len(ctx.shift_types) - 1))
 
     model = cp_model.CpModel()
 
@@ -417,16 +406,15 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                             if d == ta[2].day:
                                 allowed_shift_types[ast].remove(d)
 
+        for x in allowed_shift_types:
+            allowed_shift_types[x] = set(allowed_shift_types[x])
+            allowed_shift_types[x] = list(allowed_shift_types[x])
+
         # Handle workplace closings
-        for ast in allowed_shift_types:
-            for st in ctx.shift_types[1:]:
-                print("Names:", ast.workplace, st.get().workplace)
-                if ast.workplace.id == st.get().workplace.id:
-                    for d in allowed_shift_types[ast]:
-                        print(d, st.get_closing_days_in_month(month, year))
-                        if d in st.get_closing_days_in_month(month, year):
-                            allowed_shift_types[ast].remove(d)
-        print(allowed_shift_types)
+        for ast in allowed_shift_types.keys():
+            if ast.id == 0:
+                continue
+            allowed_shift_types[ast] = [d for d in allowed_shift_types[ast] if d not in ctx.get_shift_info_by_id(ast.id).get_closing_days_in_month(month, year)]
 
         for x in allowed_shift_types:
             allowed_shift_types[x] = set(allowed_shift_types[x])
@@ -704,56 +692,58 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     #     obj_int_vars.extend(variables)
     #     obj_int_coeffs.extend(coeffs)
 
-    # Weekend transition constraints
+    # # Weekend transition constraints
     # for d in [x for x in flatten(ctx.month_by_billing_weeks) if x[1] in [4, 5]]:
     #     if d[1] == 4 and d[0] + 3 <= num_days:
     #         # Night shift on Friday, free weekend -> shift on Monday should start at least at 11:00
+    #         transitions = []
     #         forbidden_shifts = []
     #         midnight = dt.min
     #         for i in ctx.shift_types[1:]:
     #             hr_start = dt.combine(dt.min, i.get().hour_start)
-    #             delta = midnight - hr_start
+    #             delta = hr_start - midnight
     #             delta = int(delta.total_seconds() // 60)
     #             if delta < (11 * 60):
     #                 forbidden_shifts.append(i.id)
     #         for os in ctx.overnight_shifts[0]:
     #             for ei in ctx.employees:
-    #                 transitions = [[work[ei.get().pk, os[0], d[0]].Not(),
-    #                                 work[ei.get().pk, 0, d[0] + 1].Not(),
-    #                                 work[ei.get().pk, 0, d[0] + 2].Not(),
-    #                                 work[ei.get().pk, fs, d[0] + 3].Not()]
-    #                                 for fs in forbidden_shifts]
+    #                 if (ei.get().pk, os[0], d[0]) not in work.keys():
+    #                     continue
+    #                 for fs in forbidden_shifts:
+    #                     if (ei.get().pk, fs, d[0] + 3) not in work.keys():
+    #                         continue
+    #                     transitions.append([work[ei.get().pk, os[0], d[0]].Not(),
+    #                                         work[ei.get().pk, 0, d[0] + 1].Not(),
+    #                                         work[ei.get().pk, 0, d[0] + 2].Not(),
+    #                                         work[ei.get().pk, fs, d[0] + 3].Not()])
+
     #                 for t in transitions:
     #                     model.AddBoolOr(t)
+
     #     elif d[1] == 5 and d[0] + 2 <= num_days:
     #         # Working on the weekend -> free Monday
     #         for ei in ctx.employees:
-    #             # transitions = [[work[ei.get().pk, s.get().id, d[0]].Not()] for s in ctx.shift_types[1:]]
-    #             # for t in transitions:
-    #             #     for s in ctx.shift_types[1:]:
-    #             #         t.append(work[ei.get().pk, s.get().id, d[0] + 1].Not())
-    #             #     for s in ctx.shift_types[1:]:
-    #             #         t.append(work[ei.get().pk, s.get().id, d[0] + 2].Not())
     #             transitions = []
-    #             for i in ei.allowed_shift_types[1:]:
-    #                 for j in ei.allowed_shift_types[1:]:
-    #                     transitions.append((work[ei.get().pk, i.get().id, d[0]],
-    #                                         work[ei.get().pk, j.get().id, d[0] + 1],
-    #                                         work[ei.get().pk, 0, d[0] + 2]))
+    #             for i in list(ei.allowed_shift_types.keys())[1:]:
+    #                 for j in list(ei.allowed_shift_types.keys())[1:]:
+    #                     transitions.append([work[ei.get().pk, i.id, d[0]].Not(),
+    #                                         work[ei.get().pk, j.id, d[0] + 1].Not(),
+    #                                         work[ei.get().pk, 0, d[0] + 2]])
 
-    #             model.AddForbiddenAssignments(work[ei.get().pk], transitions)
-    #             # for t in transitions:
-    #             #     model.AddBoolOr(t)
+    #             for t in transitions:
+    #                 model.AddBoolOr(t)
 
-    # Minimum one free weekend per employee
+    # # Minimum one free weekend per employee
     # for ei in ctx.employees:
     #     works = []
-    #     for w in ctx.weekends:
-    #         print(w[0][0], w[1][0])
-    #         works.append([work[ei.get().pk, 0, w[0][0]], work[ei.get().pk, 0, w[1][0]]]) # może zrobić z tego bool vary i potem ich sumę wrzucić jako OR?
-    #     print(works)
-    #     sum_var = model.NewIntVar(1, 5, 'weekend_count')
-    #     model.Add(sum(works) == sum_var)
+    #     for w, wk in enumerate(ctx.weekends):
+    #         print(wk[0][0], wk[1][0])
+    #         works.append([work[ei.get().pk, 0, wk[0][0]], work[ei.get().pk, 0, wk[1][0]]]) # może zrobić z tego bool vary i potem ich sumę wrzucić jako OR?
+    #         model.NewBoolVar("weekend_%i" % w)
+    #     # print(works)
+    #     # sum_var = model.NewIntVar(1, 5, 'weekend_count')
+    #     # model.Add(sum(works) == sum_var)
+    #     # model.AddBoolOr(works)
 
     # Penalized transitions
     for previous_shift, next_shift, cost in penalized_transitions:
@@ -777,13 +767,15 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     for s in ctx.shift_types[1:]:
         for w, week in enumerate(ctx.month_by_billing_weeks):
             for d in week:
+                if d[0] in s.get_closing_days_in_month(month, year):
+                    continue
                 works = [work[ei.get().pk, s.id, d[0]] for ei in
                          [e for e in ctx.employees] if (ei.get().pk, s.id, d[0]) in work.keys()]
                 # Ignore Off shift.
-                demand = ctx.weekly_cover_demands[d[1]][s.id - 1]
+                demand = s.get().demand
                 worked = model.NewIntVar(demand, len(ctx.employees), '')
                 model.Add(worked == sum(works))
-                over_penalty = excess_cover_penalties[s.id - 1]
+                over_penalty = 100
                 if over_penalty > 0:
                     name = 'excess_demand(shift=%i, week=%i, day=%i)' % (s.id, w, d[0])
                     excess = model.NewIntVar(0, len(ctx.employees) - demand, name)
