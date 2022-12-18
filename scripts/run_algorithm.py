@@ -26,7 +26,7 @@ from apps.accounts.models import Employee
 from apps.organizations.models import Workplace
 from apps.schedules.models import Shift, ShiftType
 from scripts.context import Context, EmployeeInfo
-from scripts.helpers import get_month_by_weeks, get_letter_for_weekday, floor_to_multiple, ceil_to_multiple
+from scripts.helpers import get_month_by_weeks, get_letter_for_weekday, flatten, floor_to_multiple, ceil_to_multiple
 
 global num_days
 
@@ -335,7 +335,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     #     (shift, hard_min, soft_min, min_penalty, soft_max, hard_max, max_penalty)
     shift_constraints = [
         # One or two consecutive days of rest, this is a hard constraint.
-        (0, 1, 1, 0, 2, 2, 0),
+        (0, 1, 1, 0, 3, 3, 0),
     ]
 
     # Weekly sum constraints on shifts days:
@@ -651,99 +651,92 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                 obj_int_coeffs.extend(coeffs)
 
     # Weekend constraints
-    # for ei in ctx.employees:
-    #     hard_max_hours = ei.work_time_constraint[4]
-    #     min_free_shifts = 0
-    #     # No overtime over job time
-    #     if hard_max_hours == ei.calculate_job_time(ctx.job_time):
-    #         match ei.get().job_time:
-    #             case '1':
-    #                 min_free_shifts = 1
-    #             case '3/4':
-    #                 min_free_shifts = 2
-    #             case '1/2':
-    #                 min_free_shifts = 3
-    #     # Overtime, but not over full job time
-    #     elif ei.calculate_job_time(ctx.job_time) < hard_max_hours <= ctx.job_time:
-    #         if hard_max_hours == ctx.job_time:
-    #             min_free_shifts = 1
-    #         elif hard_max_hours >= ctx.job_time * 3 // 4:
-    #             min_free_shifts = 2
-    #         else:
-    #             min_free_shifts = 3
-    #     # There probably is overtime over full job time, ignore these constraints in this case
-    #     else:
-    #         continue
+    for ei in ctx.employees:
+        hard_max_hours = ei.work_time_constraint[4]
+        min_free_shifts = 1
 
-    #     works_saturday = [work[ei.get().pk, 0, d[0]] for d in flatten(get_month_by_weeks(year, month)) if d[1] == 5 and (ei.get().pk, 0, d[0]) in work.keys()]
-    #     works_sunday = [work[ei.get().pk, 0, d[0]] for d in flatten(get_month_by_weeks(year, month)) if d[1] == 6 and (ei.get().pk, 0, d[0]) in work.keys()]
-    #     print(ei.get().pk, hard_max_hours, min_free_shifts)
+        # No overtime over job time
+        if hard_max_hours == ei.calculate_job_time(ctx.job_time):
+            match ei.get().job_time:
+                case '1':
+                    min_free_shifts = 1
+                case '3/4':
+                    min_free_shifts = 2
+                case '1/2':
+                    min_free_shifts = 3
+        # Overtime, but not over full job time
+        elif ei.calculate_job_time(ctx.job_time) < hard_max_hours <= ctx.job_time:
+            if hard_max_hours == ctx.job_time:
+                min_free_shifts = 1
+            elif hard_max_hours >= ctx.job_time * 3 // 4:
+                min_free_shifts = 2
+            else:
+                min_free_shifts = 3
 
-    #     variables, coeffs = add_monthly_soft_sum_constraint(
-    #         model, works_saturday, min_free_shifts, min_free_shifts, 0, len(works_saturday),
-    #         len(works_saturday), 0, 'weekend_constraint(employee %i, min_free_saturdays %i)' % (ei.get().pk, min_free_shifts))
+        works_sunday = [work[ei.get().pk, 0, d[0]] for d in flatten(get_month_by_weeks(year, month)) if d[1] == 6 and (ei.get().pk, 0, d[0]) in work.keys()]
+        # print(ei.get().pk, hard_max_hours, min_free_shifts, len(works_sunday))
+        logger.info("Min number of free sundays for employee {:d}: {:d}".format(ei.get().pk, min_free_shifts))
 
-    #     obj_int_vars.extend(variables)
-    #     obj_int_coeffs.extend(coeffs)
+        hard_min = model.NewIntVar(min_free_shifts, len(works_sunday), '')
+        model.Add(sum(works_sunday) == hard_min)
 
-    #     variables, coeffs = add_monthly_soft_sum_constraint(
-    #         model, works_sunday, min_free_shifts, min_free_shifts, 0, len(works_sunday),
-    #         len(works_sunday), 0, 'weekend_constraint(employee %i, min_free_sundays %i)' % (ei.get().pk, min_free_shifts))
-    #     obj_int_vars.extend(variables)
-    #     obj_int_coeffs.extend(coeffs)
+    # Weekend transition constraints
+    for d in [x for x in flatten(ctx.month_by_billing_weeks) if x[1] in [4, 5]]:
+        if d[1] == 4 and d[0] + 3 <= num_days:
+            # Night shift on Friday, free weekend -> shift on Monday should start at least at 11:00
+            transitions = []
+            forbidden_shifts = []
+            midnight = dt.min
+            for i in ctx.shift_types[1:]:
+                hr_start = dt.combine(dt.min, i.get().hour_start)
+                delta = hr_start - midnight
+                delta = int(delta.total_seconds() // 60)
+                if delta < (11 * 60):
+                    forbidden_shifts.append(i.id)
+            for os in ctx.overnight_shifts[0]:
+                for ei in ctx.employees:
+                    if (ei.get().pk, os[0], d[0]) not in work.keys():
+                        continue
+                    for fs in forbidden_shifts:
+                        if (ei.get().pk, 0, d[0] + 1) not in work.keys() \
+                            or (ei.get().pk, 0, d[0] + 2) not in work.keys() \
+                                or (ei.get().pk, fs, d[0] + 3) not in work.keys():
+                            continue
 
-    # # Weekend transition constraints
-    # for d in [x for x in flatten(ctx.month_by_billing_weeks) if x[1] in [4, 5]]:
-    #     if d[1] == 4 and d[0] + 3 <= num_days:
-    #         # Night shift on Friday, free weekend -> shift on Monday should start at least at 11:00
-    #         transitions = []
-    #         forbidden_shifts = []
-    #         midnight = dt.min
-    #         for i in ctx.shift_types[1:]:
-    #             hr_start = dt.combine(dt.min, i.get().hour_start)
-    #             delta = hr_start - midnight
-    #             delta = int(delta.total_seconds() // 60)
-    #             if delta < (11 * 60):
-    #                 forbidden_shifts.append(i.id)
-    #         for os in ctx.overnight_shifts[0]:
-    #             for ei in ctx.employees:
-    #                 if (ei.get().pk, os[0], d[0]) not in work.keys():
-    #                     continue
-    #                 for fs in forbidden_shifts:
-    #                     if (ei.get().pk, fs, d[0] + 3) not in work.keys():
-    #                         continue
-    #                     transitions.append([work[ei.get().pk, os[0], d[0]].Not(),
-    #                                         work[ei.get().pk, 0, d[0] + 1].Not(),
-    #                                         work[ei.get().pk, 0, d[0] + 2].Not(),
-    #                                         work[ei.get().pk, fs, d[0] + 3].Not()])
+                        transitions.append([work[ei.get().pk, os[0], d[0]].Not(),
+                                            work[ei.get().pk, 0, d[0] + 1].Not(),
+                                            work[ei.get().pk, 0, d[0] + 2].Not(),
+                                            work[ei.get().pk, fs, d[0] + 3].Not()])
 
-    #                 for t in transitions:
-    #                     model.AddBoolOr(t)
+                    for t in transitions:
+                        model.AddBoolOr(t)
 
-    #     elif d[1] == 5 and d[0] + 2 <= num_days:
-    #         # Working on the weekend -> free Monday
-    #         for ei in ctx.employees:
-    #             transitions = []
-    #             for i in list(ei.allowed_shift_types.keys())[1:]:
-    #                 for j in list(ei.allowed_shift_types.keys())[1:]:
-    #                     transitions.append([work[ei.get().pk, i.id, d[0]].Not(),
-    #                                         work[ei.get().pk, j.id, d[0] + 1].Not(),
-    #                                         work[ei.get().pk, 0, d[0] + 2]])
+        elif d[1] == 5 and d[0] + 2 <= num_days:
+            pass
+            # Working on the weekend -> free Monday
+            # for ei in ctx.employees:
+            #     if (ei.get().pk, 0, d[0]) not in work.keys() \
+            #         or (ei.get().pk, 0, d[0] + 1) not in work.keys() \
+            #         or (ei.get().pk, 0, d[0] + 2) not in work.keys():
+            #             continue
+            #     transitions = []
+            #     # for i in list(ei.allowed_shift_types.keys())[1:]:
+            #     #     for j in list(ei.allowed_shift_types.keys())[1:]:
+            #     #         transitions.append([work[ei.get().pk, i.id, d[0]].Not(),
+            #     #                             work[ei.get().pk, j.id, d[0] + 1].Not(),
+            #     #                             work[ei.get().pk, 0, d[0] + 2]])
+            #     transitions = [[work[ei.get().pk, 0, d[0]].Not(), work[ei.get().pk, 0, d[0] + 1].Not()]]
 
-    #             for t in transitions:
-    #                 model.AddBoolOr(t)
+            #     for t in transitions:
+            #         model.AddBoolAnd(work[ei.get().pk, 0, d[0] + 2]).OnlyEnforceIf(t)
 
-    # # Minimum one free weekend per employee
-    # for ei in ctx.employees:
-    #     works = []
-    #     for w, wk in enumerate(ctx.weekends):
-    #         print(wk[0][0], wk[1][0])
-    #         works.append([work[ei.get().pk, 0, wk[0][0]], work[ei.get().pk, 0, wk[1][0]]]) # może zrobić z tego bool vary i potem ich sumę wrzucić jako OR?
-    #         model.NewBoolVar("weekend_%i" % w)
-    #     # print(works)
-    #     # sum_var = model.NewIntVar(1, 5, 'weekend_count')
-    #     # model.Add(sum(works) == sum_var)
-    #     # model.AddBoolOr(works)
+    # Minimum one free weekend per employee
+    for ei in ctx.employees:
+        works = [[work[ei.get().pk, 0, d[0]], work[ei.get().pk, 0, d[0] + 1]] for d in flatten(get_month_by_weeks(year, month))
+                 if d[1] == 5 and ((ei.get().pk, 0, d[0]) in work.keys() and (ei.get().pk, 0, d[0] + 1) in work.keys())]
+
+        for w in works:
+            model.AddBoolAnd(w[0]).OnlyEnforceIf(w[1])
 
     # Penalized transitions
     for previous_shift, next_shift, cost in penalized_transitions:
@@ -953,11 +946,11 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                                       schedule=schedule_dict[s.workplace.id],
                                       employee=ei.get(),
                                       shift_type=s))
-        else:
-            for el in obj_int_vars:
-                logger.trace(el)
-            for el in obj_bool_vars:
-                logger.trace(el)
+        # else:
+        #     for el in obj_int_vars:
+        #         logger.trace(el)
+        #     for el in obj_bool_vars:
+        #         logger.trace(el)
 
         return output_shifts
 
