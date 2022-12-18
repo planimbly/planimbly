@@ -163,7 +163,6 @@ class EmployeeInfo:
         # Logging data
         self.log_employeeinfo_data()
 
-
     def calculate_job_time(self, jt) -> int:
         match self.employee.job_time:
             case '1':
@@ -197,7 +196,8 @@ class EmployeeInfo:
                     nia.append(a.shift_type)
                 else:
                     pia.append(a.shift_type)
-                logger.log("ADDED", "[ASSIGNMENT] EMP: {:2d} | ST: {:d} | TYPE: {}".format(a.employee.pk, a.shift_type.id, "neg" if a.negative_flag else "pos"))
+                logger.log("ADDED", "[ASSIGNMENT] EMP: {:2d} | ST: {:d} | TYPE: {}".format(
+                    a.employee.pk, a.shift_type.id, "neg" if a.negative_flag else "pos"))
 
         return ta, nia, pia
 

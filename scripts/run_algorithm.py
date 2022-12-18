@@ -974,7 +974,11 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
 
     # Starting logger
     logger.remove()
-    logger.level("ADDED", no=23, color="<blue><bold>", icon="\u2795")
+
+    try:
+        logger.level("ADDED")
+    except (Exception,):
+        logger.level("ADDED", no=23, color="<blue><bold>", icon="\u2795")
 
     logger.add("./scripts/logs/log_{time}.log", level="TRACE")
     logger.add(sys.stdout, format="<level>{level} | {message}</level>", level="INFO")
@@ -1000,9 +1004,7 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
         if e.job_time in ['1', '1/2', '1/4', '3/4']:
             new_emp.append(e)
         else:
-            logger.warning("Employee no. {} ({}) has invalid job time and won't be used in solving!".format(e.pk, e))
-
-    # emp = [e for e in emp if e.job_time in ['1', '1/2', '1/4', '3/4']]
+            logger.warning("Employee no. {} has invalid job time ({}) and won't be used in solving!".format(e.pk, e.job_time))
 
     data = solve_shift_scheduling(emp_for_workplaces,
                                   emp_preferences,
@@ -1015,4 +1017,7 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
                                   year, month,
                                   job_time,
                                   params='max_time_in_seconds:120.0', output_proto=None)
+
+    logger.remove()
+
     return data
