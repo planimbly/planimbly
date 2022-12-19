@@ -28,4 +28,4 @@ RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 RUN python manage.py migrate --no-input
 
-CMD [ "gunicorn", "--timeout=300", "-b :$PORT", "planimbly.wsgi" ]
+CMD [ "gunicorn", "--timeout=300", "-b :8080", "planimbly.wsgi" ]
