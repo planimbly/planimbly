@@ -4,7 +4,7 @@ from loguru import logger
 
 from apps.accounts.models import Employee
 from apps.schedules.models import ShiftType
-from scripts.helpers import get_month_by_weeks, get_month_by_billing_weeks, flatten, get_letter_for_weekday
+from scripts.helpers import get_month_by_weeks, get_month_by_billing_weeks, get_letter_for_weekday
 
 
 class ShiftTypeInfo:
@@ -50,7 +50,7 @@ class ShiftTypeInfo:
         self.id = index
         self.duration = (dt.combine(date.min, self.shift_type.hour_end) - dt.combine(date.min, self.shift_type.hour_start)).seconds // 60
 
-        logger.log("SUCCESS", self)
+        logger.log("ADDED", self)
 
     def get_duration_in_minutes(self) -> int:
         """ Returns shift duration in minutes.
@@ -83,7 +83,7 @@ class ShiftTypeInfo:
             for i in range((cl.end - cl.start).days + 1):
                 inter_date = cl.start + timedelta(days=i)
                 cd.append(inter_date)
-                logger.log("SUCCESS", "[CLOSING] WORKPLACE: {:2d} | DAY: {:2d}".format(cl.workplace.pk, inter_date.day))
+                logger.log("ADDED", "[CLOSING] SHIFT: {:2d} | DAY: {:2d}".format(self.id, inter_date.day))
 
         logger.trace("Preparing closing days ended.")
 
@@ -188,7 +188,7 @@ class EmployeeInfo:
                 for i in range((a.end - a.start).days + 1):
                     inter_date = a.start + timedelta(days=i)
                     ta.append((a.shift_type, a.negative_flag, inter_date))
-                    logger.log("SUCCESS", "[ASSIGNMENT] EMP: {:2d} | DAY: {:2d} | ST: {:d} | TYPE: {}".format(
+                    logger.log("ADDED", "[ASSIGNMENT] EMP: {:2d} | DAY: {:2d} | ST: {:d} | TYPE: {}".format(
                         a.employee.pk, inter_date.day, a.shift_type.id, "neg" if a.negative_flag else "pos"))
             else:
                 # indefinite_assignments
@@ -196,7 +196,7 @@ class EmployeeInfo:
                     nia.append(a.shift_type)
                 else:
                     pia.append(a.shift_type)
-                logger.log("SUCCESS", "[ASSIGNMENT] EMP: {:2d} | ST: {:d} | TYPE: {}".format(
+                logger.log("ADDED", "[ASSIGNMENT] EMP: {:2d} | ST: {:d} | TYPE: {}".format(
                     a.employee.pk, a.shift_type.id, "neg" if a.negative_flag else "pos"))
 
         return ta, nia, pia
@@ -210,7 +210,7 @@ class EmployeeInfo:
             for i in range((ab.end - ab.start).days + 1):
                 inter_date = ab.start + timedelta(days=i)
                 ad.append(inter_date)
-                logger.log("SUCCESS", "[ABSENCE] EMP: {:2d} | DAY: {:2d}".format(ab.employee.pk, inter_date.day))
+                logger.log("ADDED", "[ABSENCE] EMP: {:2d} | DAY: {:2d}".format(ab.employee.pk, inter_date.day))
 
         return ad, at
 
@@ -225,7 +225,7 @@ class EmployeeInfo:
         return "[EMPLOYEE] ID: {:2d} | JT: {:3d} | {} {}".format(self.employee.pk, self.job_time, self.employee.first_name, self.employee.last_name)
 
     def log_employeeinfo_data(self) -> None:
-        logger.log("SUCCESS", self)
+        logger.log("ADDED", self)
         logger.debug("Employee: {}".format(self.employee))
         logger.debug("Workplaces: {}".format(self.workplaces))
 
@@ -250,8 +250,6 @@ class Context:
         The list containing EmployeeInfo objects with all considered employees
     shift_types : list[ShiftType]
         The list containing ShiftType objects with all considered shifts
-    weekly_cover_demands : list
-        The list containing information about cover demands for shifts
     month : int
         The month we generate schedule for.
     year : int
@@ -260,6 +258,8 @@ class Context:
         The list of list. Primary lists represents month. Sub-lists represent weeks. Elements are tuples (day number, weekday number).
     month_by_billing_weeks : list
         The same stuff as month_by_weeks, however weeks are days 1-7, 8-14, etc..
+    weekends : list
+        The list containing lists of all adjacent Saturdays and Sundays for given month.
     job_time : int
         The amount of hours for full time employees to fulfil their minimum hours number.
     fixed_assignments : list
@@ -299,6 +299,8 @@ class Context:
         Fetches employees requests and prepares them to be used later.
     prepare_fixed_assignments
         Prepares absent days for each employee to be added to fixed assignments.
+    get_employee_by_id
+        Returns EmployeeInfo object of given id.
     get_full_time_employees
         Filters employees and gets a list of full time employees.
     """
@@ -306,13 +308,13 @@ class Context:
     # Bases: shifts and employees
     employees = []
     shift_types = []
-    weekly_cover_demands = []
 
     # Timing and billing variables
     month = 0
     year = 0
     month_by_weeks = []
     month_by_billing_weeks = []
+    weekends = []
 
     job_time = int
 
@@ -336,7 +338,7 @@ class Context:
     overtime_for_full_timers = bool
     overtime_above_full_time = int
 
-    def __init__(self, emp: list[EmployeeInfo], st: list[ShiftType], year: int, month: int, jt: int) -> None:
+    def __init__(self, emp: list[EmployeeInfo], st: list[ShiftType], year: int, month: int, jt: int, work_for_workplace_closing: dict) -> None:
         """
         Args:
             emp: list of EmployeeInfo objects containing information about employees,
@@ -349,13 +351,13 @@ class Context:
         # Preparing bases: shifts and employees
         self.employees = emp
         self.shift_types = [ShiftTypeInfo(s, s.pk) for s in st]
-        self.weekly_cover_demands = [tuple(s.get().demand for s in self.shift_types[1:]) for _ in range(7)]
 
         # Preparing timing and billing stuff
         self.month = month
         self.year = year
         self.month_by_weeks = get_month_by_weeks(year, month)
         self.month_by_billing_weeks = get_month_by_billing_weeks(year, month)
+        self.weekends = [x[-2:] for x in self.month_by_weeks if len(x) == 7]
         self.job_time = jt
 
         # Preparing requests and absences
@@ -365,6 +367,14 @@ class Context:
         # Searching for illegal transitions and overnight shifts
         self.illegal_transitions = self.find_illegal_transitions()
         self.overnight_shifts = self.find_overnight_shifts()
+
+        for s in self.shift_types:
+            if s.get().workplace.id not in work_for_workplace_closing:
+                s.closings = []
+            else:
+                s.closings = work_for_workplace_closing[s.get().workplace.id]
+                s.closing_days = s.prepare_closing_days()
+                s.get_closing_days_in_month(month, year)
 
         # Calculating worktime and job time stuff
         self.total_work_time = self.calculate_total_work_time()
@@ -450,8 +460,8 @@ class Context:
                 # Between 2 and 3 consecutive days of night shifts, 1 and 4 are possible but penalized.
                 sc.append((i.get().id, 1, 2, 20, 3, 4, 5))
                 # At least 1 night shift per week (penalized). At most 4 (hard).
-                # TODO: Maybe consider term assignments here ???
-                wsc.append((i.get().id, 0, 1, 2, 3, 4, 0))
+                # nahh
+                # wsc.append((i.get().id, 0, 1, 2, 3, 4, 0))
 
         logger.trace("Looking for overnight shifts ended.")
 
@@ -468,6 +478,17 @@ class Context:
 
         return next(x for x in self.shift_types if x.id == index)
 
+    def get_employee_by_id(self, index: int) -> EmployeeInfo:
+        """ Simple function to quickly get EmployeeInfo object from shift id.
+
+        Args:
+            index: given employee id
+        Returns:
+            wanted EmployeeInfo object
+        """
+
+        return next(x for x in self.employees if x.get().pk == index)
+
     def calculate_total_work_time(self) -> int:
         """ Calculates total work time during month (IN HOURS!), based on cover demands.
 
@@ -478,16 +499,13 @@ class Context:
         logger.trace("Calculating total work time started...")
 
         total_minutes = 0
-        num_month_weekdays = []
 
-        for d in range(len(self.weekly_cover_demands)):
-            num_month_weekdays.append(sum([x[1] == d for x in flatten(self.month_by_billing_weeks)]))
-
-        for d in range(len(self.weekly_cover_demands)):
-            for s in range(len(self.weekly_cover_demands[d])):  # s for num_month_weekdays, s+1 for shift_types
-                if self.shift_types[s + 1] == "-":
-                    continue
-                total_minutes += num_month_weekdays[d] * self.shift_types[s + 1].duration
+        for s in self.shift_types[1:]:
+            for week in self.month_by_billing_weeks:
+                for d in week:
+                    if d[0] in s.get_closing_days_in_month(self.month, self.year):
+                        continue
+                    total_minutes += s.duration * s.get().demand
 
         logger.trace("Calculating total work time ended.")
 
@@ -538,7 +556,7 @@ class Context:
                     for d in week:
                         if pref.active_days[d[1]] == "1":
                             req.append((ei.employee.pk, next(st.get().id for st in self.shift_types if pref.shift_type == st.get()), d[0], -1))
-                            logger.log("SUCCESS", "[PREFERENCE] EMP: {:2d} | SHIFT: {} | DAY: {:2d} ({}) | WEIGHT: {:d}".format(
+                            logger.log("ADDED", "[PREFERENCE] EMP: {:2d} | SHIFT: {} | DAY: {:2d} ({}) | WEIGHT: {:d}".format(
                                 ei.employee.pk, next(st.get().name for st in self.shift_types if pref.shift_type == st.get()),
                                 d[0], get_letter_for_weekday(d[1]), -1))
 
@@ -585,8 +603,6 @@ class Context:
             logger.critical("NO SHIFTS!")
         else:
             logger.debug("Shifts: {}".format(self.shift_types))
-
-        logger.debug("Weekly cover demands: {}".format(self.weekly_cover_demands))
 
         logger.debug("Given month: {}".format(self.month))
         logger.debug("Given year: {}".format(self.year))
