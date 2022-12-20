@@ -12,17 +12,15 @@ jobs:
       - name: Install OpenVPN
         run: |
           sudo apt-get update
-          sudo apt-get --assume-yes --no-install-recommends install openvpn          
+          sudo apt-get --assume-yes --no-install-recommends install openvpn  
+          sudo apt-get install tree        
 
       - name: Setup VPN config
         run: |
           echo "${{ secrets.CA_CRT }}" > ca.crt
           echo "${{ secrets.SECRET_USERNAME_PASSWORD }}" > secret.txt
           echo "${{ secrets.TLS_KEY }}" > tls.key
-          ls -a .github
-          ls -a ./.github/
-          ls -a .github/vpn/
-          ls -a  
+          tree .
 
 
       - name: Connect VPN
