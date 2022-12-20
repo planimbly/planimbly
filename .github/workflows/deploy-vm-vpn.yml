@@ -21,7 +21,7 @@ jobs:
           echo "${{ secrets.TLS_KEY }}" > tls.key       
 
       - name: Connect VPN
-        run: sudo openvpn --config "/home/runner/work/planimbly/planimbly/.github/vpn/wmi.ovpn" --log "vpn.log" --daemon
+        run: sudo openvpn --config .github/vpn/wmi.ovpn --log "vpn.log" --daemon
 
       - name: Wait for a VPN connection
         timeout-minutes: 1
