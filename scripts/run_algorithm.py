@@ -548,8 +548,8 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
             # hard_max = min(ei.max_work_time, min(hard_max,
             #                ctx.job_time + ceil_to_multiple(ctx.overtime_above_full_time // len(ctx.employees), 8)))
             hard_min = min(ctx.job_time, ei.max_work_time - 8)
-            soft_min = min(ei.max_work_time, max(floor_to_multiple(ctx.total_work_time // len(ctx.employees), 8), ctx.job_time))
-            soft_max = min(ei.max_work_time, max(ceil_to_multiple(ctx.total_work_time // len(ctx.employees), 8), ctx.job_time))
+            soft_min = min(ei.max_work_time, max(floor_to_multiple(ctx.total_work_time / len(ctx.employees), 8), ctx.job_time))
+            soft_max = min(ei.max_work_time, max(ceil_to_multiple(ctx.total_work_time / len(ctx.employees), 8), ctx.job_time))
             hard_max = ei.max_work_time
 
         ei.work_time_constraint = [hard_min, soft_min, min_cost, soft_max, hard_max, max_cost]
@@ -602,11 +602,16 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                             ei.work_time_constraint[4] = hard_max
                     else:
                         # hard_min, soft_min, soft_max, hard_max
-                        ei.work_time_constraint[0] = min(ctx.job_time - 8, ei.max_work_time - 8)
-                        ei.work_time_constraint[1] = min(floor_to_multiple(ctx.total_work_time // len(ctx.employees), 8), ei.max_work_time)
-                        ei.work_time_constraint[3] = min(ceil_to_multiple(ctx.total_work_time // len(ctx.employees), 8), ei.max_work_time)
+                        if ei.job_time == ctx.job_time:
+                            ei.work_time_constraint[0] = min(ctx.job_time, ei.max_work_time - 8)
+                        else:
+                            ei.work_time_constraint[0] = min(ctx.job_time - 8, ei.max_work_time - 8)
+                        ei.work_time_constraint[1] = min(ei.max_work_time, max(floor_to_multiple(ctx.total_work_time / len(ctx.employees), 8), ctx.job_time))
+                        ei.work_time_constraint[3] = min(ei.max_work_time, max(ceil_to_multiple(ctx.total_work_time / len(ctx.employees), 8), ctx.job_time))
                         ei.work_time_constraint[4] = ei.max_work_time
             work_time_diff = sum(x.work_time_constraint[4] for x in ctx.employees) - ctx.total_work_time
+            if sum(x.work_time_constraint[0] for x in ctx.employees) > ctx.total_work_time:
+                logger.critical("Overestimated hard_min constraints!")
             logger.info("Worktime diff after corrections: {}".format(work_time_diff))
 
         # Add work time constraints to the model
