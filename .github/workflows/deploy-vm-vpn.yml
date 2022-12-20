@@ -17,6 +17,7 @@ jobs:
       - name: Setup VPN config
         run: |
           echo "${{ secrets.CA_CRT }}" > ca.crt
+          echo "ca.crt below"
           cat ca.crt
           echo "${{ secrets.SECRET_USERNAME_PASSWORD }}" > secret.txt
           echo "${{ secrets.TLS_KEY }}" > tls.key          
