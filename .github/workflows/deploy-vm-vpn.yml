@@ -13,13 +13,17 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get --assume-yes --no-install-recommends install openvpn          
-          cat .github/vpn/wmi.ovpn
-          
+
       - name: Setup VPN config
         run: |
           echo "${{ secrets.CA_CRT }}" > ca.crt
           echo "${{ secrets.SECRET_USERNAME_PASSWORD }}" > secret.txt
-          echo "${{ secrets.TLS_KEY }}" > tls.key       
+          echo "${{ secrets.TLS_KEY }}" > tls.key
+          la .github
+          la ./.github/
+          la .github/vpn/
+          la  
+
 
       - name: Connect VPN
         run: sudo openvpn --config ".github/vpn/wmi.ovpn" --log "vpn.log" --daemon
