@@ -19,10 +19,10 @@ jobs:
           echo "${{ secrets.CA_CRT }}" > ca.crt
           echo "${{ secrets.SECRET_USERNAME_PASSWORD }}" > secret.txt
           echo "${{ secrets.TLS_KEY }}" > tls.key
-          la .github
-          la ./.github/
-          la .github/vpn/
-          la  
+          ls -a .github
+          ls -a ./.github/
+          ls -a .github/vpn/
+          ls -a  
 
 
       - name: Connect VPN
