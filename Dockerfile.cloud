@@ -27,5 +27,6 @@ RUN apt-get update && apt-get install -y \
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 RUN python manage.py migrate --no-input
+RUN python manage.py collectstatic --no-input
 
 CMD [ "gunicorn", "--timeout=300", "-b :8080", "planimbly.wsgi" ]
