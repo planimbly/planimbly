@@ -1,0 +1,55 @@
+name: deploy-vm-vpn
+
+on:
+  workflow_run:
+    workflows: [tag-release]
+    types: [completed]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Install OpenVPN
+        run: |
+          sudo apt-get update
+          sudo apt-get --assume-yes --no-install-recommends install openvpn          
+
+      - name: Setup VPN config
+        run: |
+          echo "${{ secrets.CA_CRT }}" > ca.crt
+          cat ca.crt
+          echo "${{ secrets.SECRET_USERNAME_PASSWORD }}" > secret.txt
+          echo "${{ secrets.TLS_KEY }}" > tls.key          
+
+      - name: Connect VPN
+        run: sudo openvpn --config ".github/vpn/wmi.ovpn" --log "vpn.log" --daemon
+
+      - name: Wait for a VPN connection
+        timeout-minutes: 1
+        run: until nc -vz 150.254.78.163 22; do sleep 2; done
+
+      - name: Say hello
+        run: echo "hello"
+      #- name: Deploy to WMI
+      #  uses: appleboy/ssh-action@v0.1.6
+      #  with:
+      #    host: ${{ secrets.HOST }}
+      #    username: ${{ secrets.USERNAME }}
+      #    key: ${{ secrets.KEY }}
+      #    port: ${{ secrets.PORT }}
+      #    script: |
+      #      whoami
+      #      ls -al
+  
+      - name: Kill VPN connection
+        if: always()
+        run: |
+          sudo chmod 777 vpn.log
+          sudo killall openvpn          
+
+      - name: Upload VPN logs
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: VPN logs
+          path: vpn.log
