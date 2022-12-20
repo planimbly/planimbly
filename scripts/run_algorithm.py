@@ -514,10 +514,10 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     for ei in ctx.employees:
         hard_min = 0
         soft_min = 0
-        min_cost = 50
+        min_cost = 75
         soft_max = 0
         hard_max = 0
-        max_cost = 50
+        max_cost = 25
 
         if ctx.job_time_multiplier < 1:
             hard_min = min(ei.max_work_time, floor_to_multiple(ei.job_time * ctx.job_time_multiplier, 8) - 8)
@@ -530,10 +530,13 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
             soft_max = min(ei.max_work_time, ceil_to_multiple(ei.job_time * ctx.overtime_multiplier, 8))
             hard_max = min(ei.max_work_time, soft_max + 8)
             if ei.job_time == ctx.job_time:
-                soft_min = soft_max
-                min_cost += 25
+                hard_min = soft_min = soft_max = hard_max = min(ei.max_work_time, ctx.job_time)
+                min_cost = 0
+                max_cost = 0
 
-        soft_min = min(ctx.job_time - 8, soft_min) if ei.job_time != ctx.job_time else min(ctx.job_time, soft_min)
+        # Why?
+        if ei.job_time < ctx.job_time:
+            soft_min = min(ctx.job_time - 8, soft_min)
 
         if not ctx.overtime_for_full_timers:
             soft_max = min(ei.max_work_time, min(ctx.job_time, soft_max))
@@ -544,9 +547,9 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
             #                ctx.job_time + floor_to_multiple(ctx.overtime_above_full_time // len(ctx.employees), 8)))
             # hard_max = min(ei.max_work_time, min(hard_max,
             #                ctx.job_time + ceil_to_multiple(ctx.overtime_above_full_time // len(ctx.employees), 8)))
-            hard_min = min(ctx.job_time - 8, ei.max_work_time - 8)
-            soft_min = min(floor_to_multiple(ctx.total_work_time // len(ctx.employees), 8), ei.max_work_time)
-            soft_max = min(ceil_to_multiple(ctx.total_work_time // len(ctx.employees), 8), ei.max_work_time)
+            hard_min = min(ctx.job_time, ei.max_work_time - 8)
+            soft_min = min(ei.max_work_time, max(floor_to_multiple(ctx.total_work_time // len(ctx.employees), 8), ctx.job_time))
+            soft_max = min(ei.max_work_time, max(ceil_to_multiple(ctx.total_work_time // len(ctx.employees), 8), ctx.job_time))
             hard_max = ei.max_work_time
 
         ei.work_time_constraint = [hard_min, soft_min, min_cost, soft_max, hard_max, max_cost]
@@ -583,7 +586,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                     if hard_max >= ei.max_work_time or hard_max >= ctx.job_time:
                         i += 1
 
-                for ei in ctx.employees:
+                for ei in sorted(ctx.employees, key=lambda e: e.work_time_constraint[4], reverse=True):
                     if not ctx.overtime_for_full_timers:
                         hard_max = ei.work_time_constraint[4]
                         if hard_max >= ctx.job_time:
@@ -610,8 +613,8 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         for ei in ctx.employees:
             works = [work[ei.get().pk, s.id, d] for s in ei.allowed_shift_types.keys() for d in ei.allowed_shift_types[s] if s.id != 0]
             hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = ei.work_time_constraint
-            logger.info("emp {:2d}, jt {:3d}, hard_min {:3d}, soft_min {:3d}, soft_max {:3d}, hard_max {:3d}, overtime: {:2d}".format(
-                ei.get().pk, ei.job_time, hard_min, soft_min, soft_max, hard_max, hard_max - ei.job_time))
+            logger.info("emp {:2d}, jt {:3d}h, hard_min {:3d}h, soft_min {:3d}h, soft_max {:3d}h, hard_max {:3d}h, overtime: {:3d}h, max_wt: {:3d}h".format(
+                ei.get().pk, ei.job_time, hard_min, soft_min, soft_max, hard_max, hard_max - ei.job_time, ei.max_work_time))
             variables, coeffs = add_monthly_soft_sum_constraint(
                 model, works, hard_min // 8, soft_min // 8, min_cost, soft_max // 8,
                 hard_max // 8, max_cost, 'work_time_constraint(employee %i, job_time %i)' % (ei.get().pk, ei.job_time))
@@ -1001,6 +1004,9 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
             new_emp.append(e)
         else:
             logger.warning("Employee no. {} has invalid job time ({}) and won't be used in solving!".format(e.pk, e.job_time))
+
+    if type(job_time) is not int or job_time == 0:
+        logger.critical("Job time is not set!!!")
 
     data = solve_shift_scheduling(emp_for_workplaces,
                                   emp_preferences,
