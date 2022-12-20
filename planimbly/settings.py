@@ -185,6 +185,7 @@ VUE2_CDN = 'https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js'
 VUE3_CDN = 'https://unpkg.com/vue@3.2.37/dist/vue.global.prod.js'
 ENV_STAGE = env.str("ENV_STAGE", default='').upper()
 
+# Static browser handling & Vue cdn paths for development
 if DEBUG:
     import mimetypes
 
@@ -195,3 +196,6 @@ if DEBUG:
 # HUEY config
 pool = ConnectionPool(host='localhost', port=6379, max_connections=20)
 HUEY = RedisHuey('planimbly', connection_pool=pool)
+
+# Log 500 Error
+DEBUG_PROPAGATE_EXCEPTIONS = True
