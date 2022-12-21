@@ -29,6 +29,7 @@ jobs:
         run: sudo openvpn --config ".github/vpn/wmi.ovpn" --log "vpn.log" --daemon
 
       - name: Wait for a VPN connection
+        id: wait-for-vpn
         timeout-minutes: 1
         run: until nc -vz 150.254.78.163 22; do sleep 2 && echo "waiting for connection.."; done
 
@@ -44,7 +45,10 @@ jobs:
       #    script: |
       #      whoami
       #      ls -al
-  
+      - name: Print VPN wait output
+        if: always()
+        run: echo ${{ steps.wait-for-vpn.outputs.stdout }}
+        
       - name: Kill VPN connection
         if: always()
         run: |
