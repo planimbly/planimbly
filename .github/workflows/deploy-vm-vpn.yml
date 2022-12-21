@@ -24,11 +24,6 @@ jobs:
       - name: Connect VPN
         run: sudo openvpn --config ".github/vpn/wmi.ovpn" --log "vpn.log" --daemon
 
-      #- name: Wait for a VPN connection
-      #  id: wait-for-vpn
-      #  timeout-minutes: 1
-      #  run: until nc -vz 150.254.78.163 22; do sleep 2 && echo "waiting for connection.."; done
-
       - name: Deploy to WMI
         uses: appleboy/ssh-action@v0.1.6
         with:
@@ -37,8 +32,17 @@ jobs:
           password: ${{ secrets.SSH_PASS }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            whoami
-            ls -al
+            cd ~/repos/planimbly-prod/planimbly
+            git checkout release
+            git status
+            git pull
+            source venv/bin/activate
+            python -m pip install -r requirements.txt
+            python manage.py migrate --no-input
+            sudo /bin/systemctl restart planimbly.service
+            systemctl status planimbly.service
+            sudo /bin/systemctl restart nginx.service
+            systemctl status nginx.service
 
       - name: Kill VPN connection
         if: always()
