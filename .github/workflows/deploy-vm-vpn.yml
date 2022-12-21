@@ -1,9 +1,8 @@
 name: deploy-vm-vpn
 
 on:
-  workflow_run:
-    workflows: [tag-release]
-    types: [completed]
+  release:
+    types: [published]
 
 jobs:
   deploy:
