@@ -17,6 +17,8 @@ from apps.schedules.models import ShiftType, Shift, Schedule, Preference, Absenc
 from apps.schedules.serializers import ShiftTypeSerializer, PreferenceSerializer, AbsenceSerializer, \
     AssignmentSerializer, JobTimeSerializer, FreeDaySerializer
 from planimbly.permissions import GroupRequiredMixin, Issupervisor
+from django.conf import settings
+from apps.schedules.tasks import run_algorithm
 
 
 def free_days(year, month):
@@ -114,74 +116,75 @@ class ScheduleCreateApiView(APIView):
         month = self.request.data.get('month')
         workplace_list = self.request.data.get('workplace_list')
 
-        # comment odtąd
-        if not year or not month or not workplace_list:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        if settings.USE_HUEY:
+            run_algorithm(year, month, request.user.id, workplace_list)
 
-        workplace_query = Workplace.objects.filter(id__in=workplace_list)
-        schedule_dict = dict()
+        else:
+            if not year or not month or not workplace_list:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        # Sprawdzamy czy istnieją już jakieś grafiki, jeżeli tak usuwamy wszystkie
-        for workplace in workplace_query:
-            old_schedule = Schedule.objects.filter(year=year).filter(month=month).filter(workplace=workplace).first()
-            if old_schedule is not None:
-                old_schedule.delete()
-            schedule = Schedule(year=year, month=month,
-                                workplace=workplace)
-            schedule.save()
-            schedule_dict.setdefault(workplace.id, schedule)
+            workplace_query = Workplace.objects.filter(id__in=workplace_list)
+            schedule_dict = dict()
 
-        shiftType_list = list(ShiftType.objects.filter(workplace_id__in=workplace_list).filter(is_used=True))
+            # Sprawdzamy czy istnieją już jakieś grafiki, jeżeli tak usuwamy wszystkie
+            for workplace in workplace_query:
+                old_schedule = Schedule.objects.filter(year=year).filter(month=month).filter(workplace=workplace).first()
+                if old_schedule is not None:
+                    old_schedule.delete()
+                schedule = Schedule(year=year, month=month,
+                                    workplace=workplace)
+                schedule.save()
+                schedule_dict.setdefault(workplace.id, schedule)
 
-        emp_for_workplaces = {}
+            shiftType_list = list(ShiftType.objects.filter(workplace_id__in=workplace_list).filter(is_used=True))
 
-        for work_id in workplace_list:
-            emp_for_workplaces[work_id] = Employee.objects.filter(
-                user_workplace__in=Workplace.objects.filter(id__in=[work_id])).distinct().order_by('id')
+            emp_for_workplaces = {}
 
-        employee_list = Employee.objects.filter(user_workplace__in=workplace_query).distinct().order_by('id')
-        preferences = Preference.objects.filter(employee__in=employee_list)
+            for work_id in workplace_list:
+                emp_for_workplaces[work_id] = Employee.objects.filter(
+                    user_workplace__in=Workplace.objects.filter(id__in=[work_id])).distinct().order_by('id')
 
-        # Sprawdzamy pierwszą datę w miesiącu i ostatnią
-        first_day = datetime.date(int(year), int(month), 1)
-        last_day = datetime.date(int(year), int(month), calendar.monthrange(int(year), int(month))[1])
+            employee_list = Employee.objects.filter(user_workplace__in=workplace_query).distinct().order_by('id')
+            preferences = Preference.objects.filter(employee__in=employee_list)
 
-        absences = Absence.objects.filter(employee__in=employee_list).filter(start__lte=last_day).filter(
-            end__gte=first_day)
-        emp_preferences = {}
-        for preference in preferences:
-            emp_preferences.setdefault(preference.employee.id, []).append(preference)
+            # Sprawdzamy pierwszą datę w miesiącu i ostatnią
+            first_day = datetime.date(int(year), int(month), 1)
+            last_day = datetime.date(int(year), int(month), calendar.monthrange(int(year), int(month))[1])
 
-        emp_absences = {}
-        for absence in absences:
-            emp_absences.setdefault(absence.employee.id, []).append(absence)
+            absences = Absence.objects.filter(employee__in=employee_list).filter(start__lte=last_day).filter(
+                end__gte=first_day)
+            emp_preferences = {}
+            for preference in preferences:
+                emp_preferences.setdefault(preference.employee.id, []).append(preference)
 
-        term_assignments = Assignment.objects.filter(employee__in=employee_list).filter(start__lte=last_day).filter(
-            end__gte=first_day)
-        general_assignments = Assignment.objects.filter(employee__in=employee_list).filter(start=None).filter(end=None)
+            emp_absences = {}
+            for absence in absences:
+                emp_absences.setdefault(absence.employee.id, []).append(absence)
 
-        emp_assignments = {}
-        for assignment in term_assignments:
-            emp_assignments.setdefault(assignment.employee.id, []).append(assignment)
+            term_assignments = Assignment.objects.filter(employee__in=employee_list).filter(start__lte=last_day).filter(
+                end__gte=first_day)
+            general_assignments = Assignment.objects.filter(employee__in=employee_list).filter(start=None).filter(end=None)
 
-        for assignment in general_assignments:
-            emp_assignments.setdefault(assignment.employee.id, []).append(assignment)
+            emp_assignments = {}
+            for assignment in term_assignments:
+                emp_assignments.setdefault(assignment.employee.id, []).append(assignment)
 
-        work_for_workplace_closing = {}
-        for work_id in workplace_list:
-            work_for_workplace_closing[work_id] = WorkplaceClosing.objects.filter(start__lte=last_day).filter(
-                end__gte=first_day).filter(workplace_id=work_id)
-        jobtime = JobTime.objects.filter(year=int(year)).values_list(calendar.month_name[month].lower(),
-                                                                     flat=True).first()
+            for assignment in general_assignments:
+                emp_assignments.setdefault(assignment.employee.id, []).append(assignment)
 
-        data = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month,
-                                                    emp_for_workplaces, emp_preferences, emp_absences, emp_assignments,
-                                                    jobtime, work_for_workplace_closing)
+            work_for_workplace_closing = {}
+            for work_id in workplace_list:
+                work_for_workplace_closing[work_id] = WorkplaceClosing.objects.filter(start__lte=last_day).filter(
+                    end__gte=first_day).filter(workplace_id=work_id)
+            jobtime = JobTime.objects.filter(year=int(year)).values_list(calendar.month_name[month].lower(), flat=True).first()
 
-        for shift in data:
-            shift.save()
-        # To jest funkcja wywołująca taska, jeżeli chcemy jej używać to commentujemy góre
-        # run_algorithm(year, month, request.user.id, workplace_list)
+            data = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month,
+                                                        emp_for_workplaces, emp_preferences, emp_absences, emp_assignments,
+                                                        jobtime, work_for_workplace_closing)
+
+            for shift in data:
+                shift.save()
+
         return Response()
 
 

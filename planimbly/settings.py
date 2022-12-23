@@ -194,6 +194,7 @@ if DEBUG:
     VUE3_CDN = 'https://unpkg.com/vue@3'
 
 # HUEY config
+USE_HUEY = env.bool("USE_HUEY", default=False)
 pool = ConnectionPool(host='localhost', port=6379, max_connections=20)
 HUEY = RedisHuey('planimbly', connection_pool=pool)
 
