@@ -243,7 +243,7 @@
                         </div>
 
                         <div class="list-group" style="margin-top: 15px">
-                            <div v-for="shiftType in shiftType_list" v-on:click="add_assignment(shiftType.id, false)" 
+                            <div v-for="shiftType in shiftType_list" v-on:click="add_assignment(shiftType.id, false, 'Potwierdź dodanie przypisania')" 
                                  class="list-group-item list-group-item-action" style="cursor: pointer">
                                 <div class="fw-bold"> [[ shiftType.name ]]: [[ shiftType.hour_start.toString().slice(0, 5) ]] - [[ shiftType.hour_end.toString().slice(0, 5) ]] </div>
                             </div>
@@ -283,7 +283,7 @@
                         </div>
 
                         <div class="list-group" style="margin-top: 15px">
-                            <div v-for="shiftType in shiftType_list" v-on:click="add_assignment(shiftType.id, true)" 
+                            <div v-for="shiftType in shiftType_list" v-on:click="add_assignment(shiftType.id, true, 'Potwierdź dodanie wykluczenia')" 
                                  class="list-group-item list-group-item-action" style="cursor: pointer">
                                 <div class="fw-bold"> [[ shiftType.name ]]: [[ shiftType.hour_start.toString().slice(0, 5) ]] - [[ shiftType.hour_end.toString().slice(0, 5) ]] </div>
                             </div>
@@ -684,9 +684,9 @@
                             }
                         });
                 },
-                add_assignment(shifttype, flag){
+                add_assignment(shifttype, flag, mssg){
                     swal({
-                        title: "Potwierdź dodanie przypisania",
+                        title: mssg,
                         icon: "info",
                         buttons: true,
                         dangerMode: false,
