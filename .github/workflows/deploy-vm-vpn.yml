@@ -39,6 +39,7 @@ jobs:
             source venv/bin/activate
             python -m pip install -r requirements.txt
             python manage.py migrate --no-input
+            python manage.py collectstatic --no-input
             sudo /bin/systemctl restart planimbly.service
             systemctl status planimbly.service
             sudo /bin/systemctl restart nginx.service
