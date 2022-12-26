@@ -1,0 +1,9 @@
+[Unit]
+Description=Planimbly huey service
+
+[Service]
+User=server
+Group=server
+WorkingDirectory=/home/server/repos/planimbly-prod/planimbly
+EnvironmentFile=/home/server/repos/planimbly-prod/planimbly/.env
+ExecStart=/home/server/repos/planimbly-prod/planimbly/venv/bin/python3.10 manage.py run_huey
