@@ -1,0 +1,194 @@
+* {
+    margin: 0;
+}
+
+html{
+    font-size: 20px;
+    font-family: 'Nunito Sans', sans-serif;
+}
+
+.stat_table{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    border: gray;
+    border-width: 2px;
+}
+
+.stat_box_name{
+    width: 250px;
+}
+
+.stat_box{
+    width: 140px;
+}
+
+.calendar-big{
+    margin: 0 auto;
+    background-color: #F7F8FA;
+    padding: 1rem;
+    padding-top: 0;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+
+}
+
+.calendar-tile{
+    padding: 0.1rem;
+    /* height: 5rem; */
+    height: 7vh;
+    min-height: 6.4rem;
+    background-color: #F7F8FA;
+    /* background-color: inherit; */
+
+}
+
+
+.tile-content{
+    width: 100%;
+    height: 100%;
+    /*/background-color: #E8F3FF;*/
+    background-color: white;
+    border-color: rgba(0,0,0,0.1);
+    border-width:  thin;
+    border-style: solid;
+    border-radius: 2px;
+    overflow: scroll;
+    scroll-behavior: smooth;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+.tile-content:hover{
+    overflow: auto;
+}
+
+.cal-day-label-holder{
+    position: static;
+    /* margin: 2px; */
+    font-size: 18px;
+    text-align: center;
+}
+
+.tile-transparent{
+    background-color: inherit;
+}
+
+.shift-tile-container{
+    padding: 6px;
+    font-size: 0.66rem;
+}
+
+.shift-tile{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start; 
+    align-items: baseline;
+    background-color: #002e696c;
+    padding: 1px;
+    padding-bottom: 4px;
+    margin: 1px;
+    margin-bottom: 3px;
+    border-radius: 2px;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.tile-content::-webkit-scrollbar {
+  display: none;
+}
+
+.calendar-weekday-label{
+    margin: 0 auto;
+    background-color: #F7F8FA;
+    padding: 1rem;
+    padding-bottom: 0;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.weekday-label-tile{
+    padding: 0.1rem;
+    height: 2rem;
+    /* height: 16vh; */
+
+    background-color: #E8F3FF;
+
+}
+
+.weekday-label{
+    width: 100%;
+    height: inherit;
+    background-color: #002d69;
+    color:rgb(255, 255, 255);
+    border-radius: 2px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.weekday-in-tile-lowres{
+    display: none;
+}
+
+
+.filter-calendar-container{
+    margin: 0 auto;
+    background-color: rgb(255, 255, 255);
+    display: flex;
+    padding: 0.86rem;
+    gap: 1vw;
+    flex-wrap: wrap;
+}
+
+
+@media screen and (max-width: 1450px){
+    .calendar-big{
+        display: flex;
+        flex-direction: column;
+
+        padding: 1rem;
+        margin: 0 auto;
+    }
+
+    .tile-transparent{
+        display: none;
+    }
+
+    .calendar-weekday-label{
+        display: none;
+    }
+
+    .weekday-in-tile-lowres{
+        font-size: 0.9rem;
+        display: block;
+        margin: 8px;
+    }
+
+    .cal-day-label-holder{
+        margin: 2px;
+        font-size: 28px;
+        margin-left: 10px;
+    }
+    .tile-content-title{
+        display: flex;
+    }
+
+    .shift-tile-container{
+        display: flex;
+        padding: 6px;
+        font-size: 0.66rem;
+        flex-grow: 1;
+        flex-wrap: wrap;
+    }
+
+    .shift-tile{
+    background-color: #BEDAFF;
+    padding: 1px;
+    margin: 1px;
+    margin-bottom: 3px;
+    border-radius: 2px;
+        flex: 1;
+    }
+}

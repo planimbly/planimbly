@@ -2,6 +2,7 @@
     justify-content: space-between; 
     column-gap: 10px;
     margin: 5px;
+    align-items: baseline;
 }
 
 .emp_option_big_box {

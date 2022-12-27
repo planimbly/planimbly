@@ -368,10 +368,10 @@ export default {
           <div class="shift-tile-container">
             <div v-for="shift in day.shifts" class="shift-tile">
               <div>
-                <span class="badge bg-light text-dark mt-1 ms-1 fw-bold">[[shift.label]]</span>
+                <span class="badge bg-light text-dark ms-1 fw-bold">[[shift.label]]</span>
               </div>
               <div v-for="employee in shift.workers" class="employee-tile d-inline-flex">
-                <span class="badge bg-secondary mt-1 ms-1">[[employee.worker.first_name]] [[employee.worker.last_name]]</span>           
+                <span class="badge bg-secondary ms-1">[[employee.worker.first_name.toString().slice(0, 1)]]. [[employee.worker.last_name]]</span>           
               </div>
             </div>
           </div>
