@@ -3,7 +3,7 @@
 {% load static %}
 
 {% block head %}
-    <link rel="stylesheet" href="{% static 'css/schedules/schedule.css' %}">
+    <link rel="stylesheet" href="{% static 'css/schedules/uam-schedule.css' %}">
     <link rel="stylesheet" href="{% static 'css/schedules/report.css' %}">
     <script type="application/javascript" src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script type="application/javascript" src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
@@ -62,16 +62,17 @@
                 </select>
             </div>
 
-            <div class="col d-flex justify-content-end">
-                <button type="button" class="btn btn-outline-primary me-2" data-bs-toggle="modal"
+            <div class="col d-flex justify-content-end" style="padding-right: 0px">
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal"
                         data-bs-target="#generateReportModal" v-if="available_workplace_report.length > 0">
                     Wygeneruj raport
                 </button>
-                <button type="button" class="btn btn-outline-primary me-2 position-relative" disabled v-else
+                <button type="button" class="btn btn-outline-primary" disabled v-else
                         data-bs-toggle="tooltip" data-bs-placement="top" title="Nie wykryto grafiku dla danego miesiąca..." style="z-index: -1;">
                     Wygeneruj raport
                 </button>
-
+            </div>
+            <div class="col d-flex justify-content-end" style="padding-left: 0px">
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal"
                         data-bs-target="#generateScheduleModal">
                     Wygeneruj grafik
