@@ -1,0 +1,135 @@
+*{
+    font-size: 98%;
+}
+h5{
+    font-size: 110%;
+}
+h2{
+    font-size: 190%;
+}
+/* .form-control{
+    font-size: 99%;
+} */
+.large--logo--center {
+    width: 50%;
+    height: auto;
+    display: block;
+    max-width: 500px;
+    min-width: 200px;
+    margin: 5% auto 3%;
+}
+
+.form--input--style {
+    max-width: 480px;
+    margin: auto;
+}
+
+
+label.form-label.modal-style{
+    margin: 0px;
+}
+
+/*breadcrumb styling*/
+ol.breadcrumb{
+    margin: 0px;
+}
+
+a.breadcrumb-link {
+  color: inherit;
+  text-decoration: none;
+ }
+
+/*breadcrumb-link a:hover, */
+/*breadcrumb-link a:visited,*/
+/*breadcrumb-link a:active, */
+/*breadcrumb-link a:link*/
+
+li.breadcrumb-item.current-subpage{
+    font-weight: 600;
+}
+
+h2.breadcrumb-title{
+    margin: 5px 0px 15px;
+}
+
+i.breadcrumb-go-back-icon{
+    text-align: center;
+    font-size:24px;
+    color: #000000;
+}
+
+hr.breadcrumb {
+    height: 2px;
+    color: #000000;
+    margin: 15px 0px;
+}
+
+/*title after breadcrumb, before content*/
+h3.content-title{
+    margin: 10px 5px;
+    padding: 10px 5px;
+    /*text-align: center;*/
+    vertical-align: middle;
+}
+
+/*table styling*/
+.styled-table {
+    border-collapse: collapse;
+    /*margin: 25px 0; !*space top and bottom*!*/
+    font-size: 0.9em;
+    min-width: 400px; /*whole table*/
+    border-radius: 5px;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+}
+
+.styled-table thead tr{  /*header*/
+    background-color: #002d69;
+    color: #ffffff;
+    text-align: left;
+    font-weight: bold;
+}
+
+.styled-table th,
+.styled-table td {  /*table cells*/
+    text-align: center;
+    vertical-align: middle;
+    padding: 12px 15px;
+}
+
+/*table rows*/
+.styled-table tbody tr {
+    border-bottom: thin solid #F3F3F3;
+}
+
+.styled-table tbody tr:nth-of-type(even) {
+    background-color: #f3f3f3;
+}
+
+.styled-table tbody tr:last-of-type {
+    border-bottom: 2px solid #002d69;
+}
+
+/*buttons in rows*/
+.table-buttons{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: auto;
+    width: 48px;
+    height: 44px;
+}
+
+select {
+    background-color: white;
+    outline: none;
+    border: 1.8px solid #002d69;
+    border-radius: 3px;
+    min-width: 200px;
+    padding: 3px;
+    font-size: 24px;
+}
+
+[v-cloak] > * {
+    display: none;
+}
