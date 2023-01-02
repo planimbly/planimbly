@@ -342,7 +342,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     #     (shift, hard_min, soft_min, min_penalty, soft_max, hard_max, max_penalty)
     weekly_sum_constraints = [
         # Constraints on rests per week.
-        # (0, 1, 2, 7, 2, 7, 4)
+        (0, 1, 2, 7, 2, 7, 4)
     ]
 
     # Overnight shift constraints
@@ -394,13 +394,11 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
             if ta[1] is False:  # if assignment is positive
                 if ta[0] not in allowed_shift_types.keys():
                     allowed_shift_types[ta[0]] = []
-                    # logger.warning("[ASSIGNMENTS] Assigned shift {:d} to employee {:d} on day {:d} [positive term assignment]".format(
-                    #     ta[0].id, ei.get().pk, ta[2].day))
                 allowed_shift_types[ta[0]].append(ta[2].day)  # TODO: check if makes problems
-                # logger.success("[ASSIGNMENTS] Assigned shift {:d} to employee {:d} on day {:d} [positive term assignment]".format(
-                # ta[0].id, ei.get().pk, ta[2].day))
 
                 for ast in allowed_shift_types:
+                    if ast.id == 0:
+                        continue
                     if ast.id != ta[0].id:
                         for d in allowed_shift_types[ast]:
                             if d == ta[2].day:
@@ -420,8 +418,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
             allowed_shift_types[x] = set(allowed_shift_types[x])
         ei.allowed_shift_types = allowed_shift_types
 
-        logger.debug("EMP: {} Allowed ST: {}".format(ei.get().pk, ei.allowed_shift_types))
-        print("EMP: {} Allowed ST: {}".format(ei.get().pk, ei.allowed_shift_types))
+        # logger.debug("EMP: {} Allowed ST: {}".format(ei.get().pk, ei.allowed_shift_types))
 
     # Create model variables
     work = {}
@@ -456,25 +453,16 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                 model.AddExactlyOne(work[ei.get().pk, s.id, d] for s in ei.allowed_shift_types.keys() if (ei.get().pk, s.id, d) in work.keys())
             else:
                 # Allow only assigned shift for this day
-                # TODO: check later if it makes sense? we check it earlier! it should never occur!
-                # if term_assignments[d] not in ei.allowed_shift_types.keys():
-                #     logger.warning("[ASSIGNMENTS] Term assignment for shift {:d} \
-                #                     is overlapping with indefinite assignments for employee {:d}".format(term_assignments[d].id, ei.get().pk))
-                #     model.AddExactlyOne(work[ei.get().pk, 0, d])
-                #     continue
-                #
-                # if d not in ei.allowed_shift_types[term_assignments[d]]:
-                #     model.AddExactlyOne(work[ei.get().pk, 0, d])
-                #     continue
 
                 if (ei.get().pk, term_assignments[d].id, d) not in work.keys():
-                    logger.debug("Alert")
+                    logger.debug("Alerta de macacas")
+                    model.AddExactlyOne(work[ei.get().pk, s.id, d] for s in ei.allowed_shift_types.keys() if (ei.get().pk, s.id, d) in work.keys())
                     continue
 
-                model.AddExactlyOne(work[ei.get().pk, term_assignments[d].id, d])
+                # model.AddExactlyOne(work[ei.get().pk, term_assignments[d].id, d])
                 # TODO: decide whether it's worth increasing feasibility - maybe consult with client?
-                # model.AddExactlyOne(work[ei.get().pk, s.id, d] for s in [term_assignments[d], ctx.get_shift_info_by_id(0).get()])  # Remember abt free shift!
-                logger.success("[ASSIGNMENTS] added shift {:d} as term assignment for employee {:d}".format(term_assignments[d].id, ei.get().pk))
+                model.AddExactlyOne(work[ei.get().pk, s, d] for s in [term_assignments[d].id, 0])
+                logger.success("[ASSIGNMENTS] added shift {:d} as term assignment for employee {:d} on day {:d}".format(term_assignments[d].id, ei.get().pk, d))
 
     # Deny shifts with negative term assignments
     for ei in ctx.employees:
@@ -546,19 +534,20 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                     hard_min = 0  # min(ei.max_work_time, floor_to_multiple(ei.job_time * ctx.overtime_multiplier, 8) - 8)
                     soft_min = min(ei.max_work_time, floor_to_multiple(ei.job_time * ctx.overtime_multiplier, 8))
                     soft_max = min(ei.max_work_time, ceil_to_multiple(ei.job_time * ctx.overtime_multiplier, 8))
-                    hard_max = min(ei.max_work_time, ceil_to_multiple(ei.job_time * ctx.overtime_multiplier, 8) )
+                    hard_max = min(ei.max_work_time, ceil_to_multiple(ei.job_time * ctx.overtime_multiplier, 8))
                     # hard_max = min(ei.max_work_time, floor_to_multiple(ei.job_time, 8))
             else:  # case 5 and 6
                 if ei in ctx.get_full_time_employees():  # we give full-timers full job time
-                    hard_min = min(ei.max_work_time, floor_to_multiple(ei.job_time, 8), floor_to_multiple(ctx.ft_job_time // len(ctx.get_full_time_employees()), 8))
-                    soft_min = min(ei.max_work_time, floor_to_multiple(ei.job_time, 8))
+                    hard_min = min(ei.max_work_time, floor_to_multiple(ei.job_time, 8), floor_to_multiple(ctx.total_work_time // len(ctx.get_full_time_employees()), 8))
+                    soft_min = min(ei.max_work_time, floor_to_multiple(ei.job_time, 8), floor_to_multiple(ctx.total_work_time // len(ctx.get_full_time_employees()), 8))
                     soft_max = min(ei.max_work_time, ei.job_time, ceil_to_multiple(ei.job_time, 8))
                     hard_max = min(ei.max_work_time, ei.job_time)
                 else:
-                    hard_min = 0  # min(ei.max_work_time, floor_to_multiple(ei.job_time * ctx.overtime_multiplier, 8) - 8)
-                    soft_min = 0  # min(ei.max_work_time, floor_to_multiple(ei.job_time * ctx.overtime_multiplier, 8))
-                    soft_max = 0  # min(ei.max_work_time, ceil_to_multiple(ei.job_time * ctx.overtime_multiplier, 8))
-                    hard_max = 8  # min(ei.max_work_time, ceil_to_multiple(ei.job_time * ctx.overtime_multiplier, 8) + 8)
+                    hard_min = 0
+                    soft_min = 0
+                    soft_max = 0
+                    hard_max = 8
+                    min_cost = 0
                     max_cost = 250
                     # hard_max = min(ei.max_work_time, floor_to_multiple(ei.job_time, 8))
 
