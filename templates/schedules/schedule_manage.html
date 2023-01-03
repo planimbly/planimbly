@@ -516,6 +516,7 @@
                     axios
                         .get(this.base_url, {params: {'year': this.year_cal, 'month': this.month_cal}})
                         .then(response => {
+                                this.shifttype_name_list = []
                                 this.fetched_schedule = response.data;
                                 this.statistics = response.data['statistics'];
                                 console.log(this.fetched_schedule);
