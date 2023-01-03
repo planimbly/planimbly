@@ -441,13 +441,13 @@ class ShiftTypeViewSet(viewsets.ModelViewSet):
         shiftType.save()
 
     def perform_update(self, serializer):
-        v_data = serializer.vaildated_data
+        '''v_data = serializer.vaildated_data
         og_shift_Type = ShiftType.objects.get(pk=v_data['id'])
         if og_shift_Type.hour_start != v_data['hour_start'] or og_shift_Type.hour_end != v_data['hour_end']:
             print('aaa')
         else:
-            # obj = serializer(instance, data=v)
-            pass
+            # obj = serializer(instance, data=v)'''
+        pass
 
 
 class AbsenceViewSet(viewsets.ModelViewSet):
