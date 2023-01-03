@@ -417,11 +417,13 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     # Create model variables
     work = {}
 
-    friday_before = 999
+    friday_before = saturday_before =  999
     for i, sb in enumerate(shifts_before):
         d_shifts = shifts_before[sb]
         if sb.weekday() == 4:
             friday_before = -6 + i
+        elif sb.weekday() == 5:
+            saturday_before = -6 + i
         for s in d_shifts:
             work[s.employee.pk, s.shift_type.id, -6 + i] = model.NewBoolVar('work%i_%i_%i' % (s.employee.pk, s.shift_type.id, -6 + i))
             model.Add(work[s.employee.pk, s.shift_type.id, -6 + i] == 1)
@@ -726,7 +728,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         model.Add(sum(works_sunday) == hard_min)
 
     # Weekend transition constraints
-    for d in flatten([[(friday_before, 4)], [x for x in flatten(ctx.month_by_billing_weeks) if x[1] in [4, 5]]]):
+    for d in flatten([[(friday_before, 4), (saturday_before, 5)], [x for x in flatten(ctx.month_by_billing_weeks) if x[1] in [4, 5]]]):
         if d[1] == 4 and d[0] + 3 <= num_days:
             # Night shift on Friday, free weekend -> shift on Monday should start at least at 11:00
             transitions = []
