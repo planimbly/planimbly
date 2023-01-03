@@ -10,6 +10,7 @@ export default {
       workdays_for_each_employee: Object,
       chosen_workplaces: Array,
       margin_top_for_statistics: Number,
+      shifttype_name_list: Array
     },
 
     data () {
@@ -39,6 +40,25 @@ export default {
     },
 
     methods:{
+      /* COPIED FROM SCHEDULE_MANAGE.HTML*/
+      calculate_diff(hours, job_time) {
+        return hours - job_time
+      },
+      return_sick_or_vac(data){
+        if (data == null){
+            return 'brak'
+        }else{
+            return data
+        }
+      },
+      return_shift_count(shift_list, shift) {
+        for (let in_shift in shift_list) {
+            if (in_shift == shift){
+                return shift_list[in_shift]
+            }
+        }
+        return 0
+    },
       /* HELPER METHODS */
       get_nonwhite_random_color(){
         // TO BE DEPRECATED
@@ -398,29 +418,40 @@ export default {
 
       </div>
 
-      <div v-if="attach_statistics_employees_report" :style="{ 'margin-top': margin_top_for_statistics + 'px' }">
-        STATISTICS
-        [[ margin_top_for_statistics ]]
-      </div>
+      <div v-if="attach_statistics_employees_report && schedule_for_each_workplace[0] != null" :style="{ 'margin-top': margin_top_for_statistics + 'px' }">
+        
+        <h5 style="margin-top: 25px; margin-top: 20px;">Statystyki dla jednostki</h5>
 
-      <!--
-      <div v-for="workpl_sch in schedule_for_each_workplace">
-        [[workplace_included_shiftTypes(workpl_sch.schedule)]]  
+        <table class="w-100 table">
+            <thead>
+            <tr>
+                <th scope="col">lp.</th>
+                <th scope="col">Pracownik</th>
+                <th scope="col">Godziny/Etat</th>
+                <th scope="col">Bilans</th>
+                <th v-for="shift in shifttype_name_list" scope="col">[[ shift ]]</th>
+                <th scope="col">Godziny L4</th>
+                <th scope="col">Godziny urlopu</th>
+                <th scope="col">Inne nieobecości</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(stat, worker_id) in schedule_for_each_workplace[0].schedule.statistics">
+                <td>[[ stat.order_number ]]</td>
+                <td>[[ stat.name ]]</td>
+                <td>[[ stat.hours ]]/[[ stat.jobtime ]]h</td>
+                    <td v-if="calculate_diff(stat.hours, stat.jobtime) < 0" style="color: red;">[[ calculate_diff(stat.hours, stat.jobtime) ]]</td>
+                    <td v-if="calculate_diff(stat.hours, stat.jobtime) == 0">[[ calculate_diff(stat.hours, stat.jobtime) ]]</td>
+                    <td v-if="calculate_diff(stat.hours, stat.jobtime) > 0" style="color: green;">[[ calculate_diff(stat.hours, stat.jobtime) ]]</td>
+                    <td v-for="shift in shifttype_name_list">[[ return_shift_count(stat.shift_type, shift) ]]</td>
+                    <td>[[ return_sick_or_vac(stat.SICK) ]]</td>
+                    <td>[[ return_sick_or_vac(stat.VAC) ]]</td>
+                    <td>[[ return_sick_or_vac(stat.OTHER) ]]</td>
+                </tr>
+            </tbody>
+        </table>
+
       </div>
-      <br>
-      <div v-for="workpl_sch in schedule_for_each_workplace">
-        [[sorted_employees_per_day(workpl_sch.schedule.days, workplace_included_shiftTypes(workpl_sch.schedule))]]  
-      </div>
-      <br>
-      <br>
-      <div v-for="workpl_sch in schedule_for_each_workplace">
-        
-        <div v-for="(day_props, day) in workpl_sch.schedule.days">
-          [[day]] :: [[day_props]]
-        </div>
-        
-      </div>
-      -->
     </div>
   `
 }

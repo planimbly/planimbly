@@ -234,7 +234,8 @@
                         :schedule_for_each_workplace="schedule_for_chosen_workplace"
                         :workdays_for_each_employee="workdays_for_each_employee"
                         :chosen_workplaces="checked_workplace_report"
-                        :margin_top_for_statistics="margin_top_for_statistics_report">
+                        :margin_top_for_statistics="margin_top_for_statistics_report"
+                        :shifttype_name_list="shifttype_name_list">
                     </schedule-report>
                   </div>
                 </div>
@@ -473,7 +474,10 @@
                         html2canvas: { scale: 2 },
                         jsPDF: {format: 'a4', orientation: 'landscape'}
                     };
-                    html2pdf().set(pdf_options).from(document.getElementById('report')).save();
+                    html2pdf().set(pdf_options).from(document.getElementById('report')).save().then(() => {
+                        this.margin_top_for_statistics_report = 0;
+                    }
+                    );
                 },
                 return_shift_count(shift_list, shift) {
                     for (let in_shift in shift_list) {
