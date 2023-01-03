@@ -1,3 +1,5 @@
+import datetime
+
 from rest_framework import serializers
 
 from .models import ShiftType, Preference, Absence, Assignment, JobTime, FreeDay
@@ -29,6 +31,15 @@ class ShiftTypeSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'id': {'read_only': True}
         }
+
+    def validate(self, data):
+        """Check if shift take 8 hours"""
+        shift_len = datetime.datetime.combine(datetime.date.min, data['hour_end']) - datetime.datetime.combine(
+            datetime.date.min, data['hour_start'])
+        shift_len = shift_len.seconds / 3600
+        if shift_len != 8.0 and data['is_used'] is True:
+            raise serializers.ValidationError("Zmiana nie może być aktywna oraz nie trwać 8 godzin")
+        return data
 
 
 class PreferenceSerializer(serializers.ModelSerializer):
