@@ -8,11 +8,12 @@ from huey.contrib.djhuey import db_task
 import scripts.run_algorithm
 from apps.accounts.models import Employee
 from apps.organizations.models import Workplace, WorkplaceClosing
-from apps.schedules.models import ShiftType, Schedule, Preference, Absence, Assignment, JobTime, AlgorithmTask
+from apps.schedules.models import ShiftType, Schedule, Preference, Absence, Assignment, JobTime, AlgorithmTask, Shift
 
 
 @db_task()
 def run_algorithm(year, month, user_id, workplace_list):
+
     workplace_query = Workplace.objects.filter(id__in=workplace_list)
     schedule_dict = dict()
     # Sprawdzamy czy istnieją już jakieś grafiki, jeżeli tak usuwamy wszystkie
@@ -65,11 +66,20 @@ def run_algorithm(year, month, user_id, workplace_list):
     for work_id in workplace_list:
         work_for_workplace_closing[work_id] = WorkplaceClosing.objects.filter(start__lte=last_day).filter(
             end__gte=first_day).filter(workplace_id=work_id)
-    jobtime = JobTime.objects.filter(year=int(year)).values_list(calendar.month_name[month].lower(),
-                                                                 flat=True).first()
+    jobtime = JobTime.objects.filter(year=int(year)).values_list(calendar.month_name[month].lower(), flat=True).first()
+
+    seven_before = first_day - datetime.timedelta(days=7)
+    seven_after = last_day + datetime.timedelta(days=7)
+
+    shifts_before = Shift.objects.filter(date__gte=seven_before).filter(date__lt=first_day).filter(
+        schedule__workplace_id__in=workplace_list).order_by('date')
+    shifts_after = Shift.objects.filter(date__gt=last_day).filter(date__lte=seven_after).filter(
+        schedule__workplace_id__in=workplace_list).order_by('date')
+
     data = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month,
-                                                emp_for_workplaces, emp_preferences, emp_absences, emp_assignments,
-                                                jobtime, work_for_workplace_closing)
+                                                emp_for_workplaces, emp_preferences, emp_absences,
+                                                emp_assignments, jobtime, work_for_workplace_closing,
+                                                shifts_before, shifts_after)
     for shift in data:
         shift.save()
     return
