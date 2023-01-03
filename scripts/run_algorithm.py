@@ -417,7 +417,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     # Create model variables
     work = {}
 
-    friday_before = saturday_before =  999
+    friday_before = saturday_before = 999
     for i, sb in enumerate(shifts_before):
         d_shifts = shifts_before[sb]
         if sb.weekday() == 4:
