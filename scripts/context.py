@@ -128,9 +128,11 @@ class EmployeeInfo:
     # Absences (objects, separated days, time)
     absences = []
     absent_days = []
+    num_absent_days = 0
     absent_time = 0
 
     # Job time and maximum work time
+    desired_job_time = 0
     job_time = 0
     max_work_time = 0
 
@@ -142,7 +144,6 @@ class EmployeeInfo:
     def __init__(self, emp: Employee, wp: list, pref: list, ab: list, ass: list, jt: int):
         # Preparing bases - employee and workplaces
         self.employee = emp
-        logger.debug("Employee: {} {} ({})".format(self.employee.first_name, self.employee.last_name, self.employee))
         self.workplaces = wp
 
         # Preparing preferences and assignments
@@ -157,8 +158,8 @@ class EmployeeInfo:
         self.absent_days, self.absent_time = self.prepare_absent_days()
 
         # Calculating and correcting job time
-        self.job_time = self.calculate_job_time(jt)
-        self.job_time -= self.absent_time
+        self.desired_job_time = self.calculate_job_time(jt)
+        self.job_time = max(0, self.desired_job_time - self.absent_time)
 
         # Logging data
         self.log_employeeinfo_data()
@@ -226,18 +227,32 @@ class EmployeeInfo:
 
     def log_employeeinfo_data(self) -> None:
         logger.log("ADDED", self)
-        logger.debug("Employee: {}".format(self.employee))
         logger.debug("Workplaces: {}".format(self.workplaces))
 
-        logger.debug("Preferences: {}".format(self.preferences))
-        logger.debug("Term assignments: {}".format(self.term_assignments))
-        logger.debug("Neg indefinite assignments: {}".format(self.negative_indefinite_assignments))
-        logger.debug("Pos indefinite assignments: {}".format(self.positive_indefinite_assignments))
+        if len(self.preferences) > 0:
+            logger.debug("Preferences: {}".format(self.preferences))
+        else:
+            logger.debug("No preferences!")
 
-        logger.debug("Absences: {}".format(self.absences))
-        logger.debug("Absent days: {}".format(self.absent_days))
+        if len(self.term_assignments) > 0:
+            logger.debug("Term assignments: {}".format(self.term_assignments))
+        else:
+            logger.debug("No term assignments")
 
-        logger.debug("Job time: {}".format(self.job_time))
+        if len(self.positive_indefinite_assignments) > 0:
+            logger.debug("Positive indefinite assignments: {}".format(self.positive_indefinite_assignments))
+        else:
+            logger.debug("No positive indefinite assignments")
+
+        if len(self.negative_indefinite_assignments) > 0:
+            logger.debug("Negative indefinite assignments: {}".format(self.negative_indefinite_assignments))
+        else:
+            logger.debug("No negative indefinite assignments")
+
+        if len(self.absences) > 0:
+            logger.debug("Absences: {}".format(["{} - {}".format(str(e.start), str(e.end)) for e in self.absences]))
+        else:
+            logger.debug("No absences")
 
 
 class Context:
@@ -331,6 +346,8 @@ class Context:
     total_work_time = int
     total_job_time = int
     max_work_time = int
+    ft_job_time = int
+    rest_job_time = int
 
     # Multipliers
     job_time_multiplier = float
@@ -360,10 +377,6 @@ class Context:
         self.weekends = [x[-2:] for x in self.month_by_weeks if len(x) == 7]
         self.job_time = jt
 
-        # Preparing requests and absences
-        self.requests = self.prepare_requests()
-        self.fixed_assignments = self.prepare_fixed_assignments()
-
         # Searching for illegal transitions and overnight shifts
         self.illegal_transitions = self.find_illegal_transitions()
         self.overnight_shifts = self.find_overnight_shifts()
@@ -378,12 +391,18 @@ class Context:
 
         # Calculating worktime and job time stuff
         self.total_work_time = self.calculate_total_work_time()
+        self.ft_job_time = sum(ei.job_time for ei in self.get_full_time_employees())
+
+        # if self.total_work_time < self.ft_job_time:
+        #     self.employees = [ei for ei in self.employees if self.job_time == ei.desired_job_time]
+
         self.total_job_time = sum(ei.job_time for ei in self.employees)
         self.max_work_time = self.calculate_max_work_time()
 
+        self.rest_job_time = self.total_job_time - self.ft_job_time
+
         # Calculating multipliers
         self.employees = sorted(self.employees, key=lambda e: e.max_work_time)
-
         self.job_time_multiplier = self.total_work_time / self.total_job_time
 
         if len(self.get_full_time_employees()) == 0:
@@ -399,6 +418,10 @@ class Context:
 
         # Calculate total overtime above monthly job time
         self.overtime_above_full_time = self.total_work_time - sum(min(self.job_time, ei.max_work_time) for ei in self.employees)
+
+        # Preparing requests and absences
+        self.requests = self.prepare_requests()
+        self.fixed_assignments = self.prepare_fixed_assignments()
 
         self.log_context_data()
 
@@ -546,8 +569,6 @@ class Context:
             list of employees requests prepared to be added to model in run_algorithm.py.
         """
 
-        logger.trace("Preparing requests started...")
-
         req = []
 
         for ei in self.employees:
@@ -560,8 +581,6 @@ class Context:
                                 ei.employee.pk, next(st.get().name for st in self.shift_types if pref.shift_type == st.get()),
                                 d[0], get_letter_for_weekday(d[1]), -1))
 
-        logger.trace("Preparing requests ended.")
-
         return req
 
     def prepare_fixed_assignments(self) -> list:
@@ -571,15 +590,11 @@ class Context:
             list of absences prepared to be added to fixed assignments.
         """
 
-        logger.trace("Preparing fixes assignments started.")
-
         fa = []
 
         for ei in self.employees:
             for d in ei.get_absent_days_in_month(self.month, self.year):
                 fa.append((ei.employee.pk, 0, d))
-
-        logger.trace("Preparing fixes assignments ended.")
 
         return fa
 
@@ -589,9 +604,8 @@ class Context:
         Returns:
             list of full time employees or empty list if there are no full time employees.
         """
-        logger.trace("Getting full-time employees...")
 
-        return [ei for ei in self.employees if ei.job_time == self.job_time]
+        return [ei for ei in self.employees if ei.desired_job_time == self.job_time]
 
     def log_context_data(self):
         if not self.employees:
