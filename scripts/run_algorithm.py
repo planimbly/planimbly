@@ -289,11 +289,6 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         Key: emp.pk\n
         Value: work time assigned to each employee
     """
-    num_emp_absences = dict()
-    """
-            Key: emp.pk\n
-            Value: number of absent days for each employee
-    """
 
     # TODO: check if below filtering can be done while creating emp_info
 
@@ -306,7 +301,6 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         if e.pk not in emp_assignments:
             emp_assignments[e.pk] = []
         work_time[e.pk] = 0
-        num_emp_absences[e] = 0
 
     emp_info = [EmployeeInfo(e,
                              [wp for wp in emp_for_workplaces if e in emp_for_workplaces[wp]],
@@ -325,11 +319,10 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
 
     ctx = Context(emp_info, shift_types, year, month, job_time, work_for_workplace_closing)
 
-    for ei in ctx.employees:
-        num_emp_absences[ei.get()] = sum(1 for _ in ei.get_absent_days_in_month(month, year))
-
     # Sanitize employee list by absences
-    ctx.employees = [ei for ei in ctx.employees if num_days > num_emp_absences[ei.get()]]
+    for ei in ctx.employees:
+        ei.num_absent_days = sum(1 for _ in ei.get_absent_days_in_month(month, year))
+    ctx.employees = [ei for ei in ctx.employees if num_days > ei.num_absent_days]
 
     # Shift constraints on continuous sequence :
     #     (shift, hard_min, soft_min, min_penalty, soft_max, hard_max, max_penalty)

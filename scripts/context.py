@@ -128,6 +128,7 @@ class EmployeeInfo:
     # Absences (objects, separated days, time)
     absences = []
     absent_days = []
+    num_absent_days = 0
     absent_time = 0
 
     # Job time and maximum work time
@@ -158,7 +159,7 @@ class EmployeeInfo:
 
         # Calculating and correcting job time
         self.desired_job_time = self.calculate_job_time(jt)
-        self.job_time = self.desired_job_time - self.absent_time
+        self.job_time = max(0, self.desired_job_time - self.absent_time)
 
         # Logging data
         self.log_employeeinfo_data()
