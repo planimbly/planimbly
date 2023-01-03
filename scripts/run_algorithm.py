@@ -773,9 +773,9 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
 
             for ei in ctx.employees:
                 if (ei.get().pk, 0, d[0]) not in work.keys() \
-                    or (ei.get().pk, 0, d[0] + 1) not in work.keys() \
-                    or (ei.get().pk, 0, d[0] + 2) not in work.keys():
-                        continue
+                        or (ei.get().pk, 0, d[0] + 1) not in work.keys() \
+                        or (ei.get().pk, 0, d[0] + 2) not in work.keys():
+                    continue
                 transitions = []
                 for i in list(ei.allowed_shift_types.keys())[1:]:
                     for j in list(ei.allowed_shift_types.keys())[1:]:
