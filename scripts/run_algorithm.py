@@ -538,8 +538,10 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                     # hard_max = min(ei.max_work_time, floor_to_multiple(ei.job_time, 8))
             else:  # case 5 and 6
                 if ei in ctx.get_full_time_employees():  # we give full-timers full job time
-                    hard_min = min(ei.max_work_time, floor_to_multiple(ei.job_time, 8), floor_to_multiple(ctx.total_work_time // len(ctx.get_full_time_employees()), 8))
-                    soft_min = min(ei.max_work_time, floor_to_multiple(ei.job_time, 8), floor_to_multiple(ctx.total_work_time // len(ctx.get_full_time_employees()), 8))
+                    hard_min = min(ei.max_work_time, floor_to_multiple(ei.job_time, 8),
+                                   floor_to_multiple(ctx.total_work_time // len(ctx.get_full_time_employees()), 8))
+                    soft_min = min(ei.max_work_time, floor_to_multiple(ei.job_time, 8),
+                                   floor_to_multiple(ctx.total_work_time // len(ctx.get_full_time_employees()), 8))
                     soft_max = min(ei.max_work_time, ei.job_time, ceil_to_multiple(ei.job_time, 8))
                     hard_max = min(ei.max_work_time, ei.job_time)
                 else:
