@@ -256,7 +256,7 @@ def add_monthly_soft_sum_constraint(model, works, hard_min, soft_min, min_cost,
 
 def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, emp_assignments, schedule_dict,
                            employees: list[Employee], shift_types: list[ShiftType], work_for_workplace_closing,
-                           year: int, month: int, job_time, params, output_proto):
+                           shifts_before, year: int, month: int, job_time, params, output_proto):
     """Main algorithm function. It solves the whole problem.
 
     Steps:
@@ -276,6 +276,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         year: we create schedule for particular year...
         month: ...and month (date)
         job_time: number of hours for full-time job
+        shifts_before: ...
         params: parameters for CP-Sat solver
         output_proto: output for CP-Sat solver (?)
 
@@ -415,6 +416,17 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
 
     # Create model variables
     work = {}
+
+    friday_before = 999
+    for i, sb in enumerate(shifts_before):
+        d_shifts = shifts_before[sb]
+        if sb.weekday() == 4:
+            friday_before = -6 + i
+        for s in d_shifts:
+            work[s.employee.pk, s.shift_type.id, -6 + i] = model.NewBoolVar('work%i_%i_%i' % (s.employee.pk, s.shift_type.id, -6 + i))
+            model.Add(work[s.employee.pk, s.shift_type.id, -6 + i] == 1)
+            # print(s.employee.pk, s.shift_type.id, -6 + i)
+
     for ei in ctx.employees:
         for s in ei.allowed_shift_types.keys():
             for d in ei.allowed_shift_types[s]:
@@ -494,6 +506,9 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
             absences = ei.get_absent_days_in_month(month, year)
 
             works = [work[ei.get().pk, shift, d] for d in ei.allowed_shift_types[ctx.get_shift_info_by_id(shift).get()] if d not in absences]
+
+            pre_works = [work[ei.get().pk, shift, d] for d in range(-6, 0) if (ei.get().pk, shift, d) in work.keys()]
+            works.extend(pre_works)
 
             variables, coeffs = add_soft_sequence_constraint(
                 model, works, hard_min, soft_min, min_cost, soft_max, hard_max,
@@ -633,7 +648,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                         ei.work_time_constraint[4] = ei.max_work_time
             work_time_diff = sum(x.work_time_constraint[4] for x in ctx.employees) - ctx.total_work_time
             if sum(x.work_time_constraint[0] for x in ctx.employees) > ctx.total_work_time:
-                logger.critical("Overestimated hard_min constraints!")
+                logger.critical("Overestimated hard_min constraint by {:d}".format(sum(x.work_time_constraint[0] for x in ctx.employees) - ctx.total_work_time))
             logger.info("Worktime diff after corrections: {}".format(work_time_diff))
 
         # Add work time constraints to the model
@@ -711,7 +726,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         model.Add(sum(works_sunday) == hard_min)
 
     # Weekend transition constraints
-    for d in [x for x in flatten(ctx.month_by_billing_weeks) if x[1] in [4, 5]]:
+    for d in flatten([[(friday_before, 4)], [x for x in flatten(ctx.month_by_billing_weeks) if x[1] in [4, 5]]]):
         if d[1] == 4 and d[0] + 3 <= num_days:
             # Night shift on Friday, free weekend -> shift on Monday should start at least at 11:00
             transitions = []
@@ -771,7 +786,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     # Penalized transitions
     for previous_shift, next_shift, cost in penalized_transitions:
         for ei in ctx.employees:
-            for d in range(1, num_days):
+            for d in range(0, num_days):
                 if (ei.get().pk, previous_shift, d) not in work.keys() \
                         or (ei.get().pk, next_shift, d + 1) not in work.keys():
                     continue
@@ -1061,6 +1076,7 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
                                   new_emp,
                                   shift_types,
                                   work_for_workplace_closing,
+                                  shifts_before,
                                   year, month,
                                   job_time,
                                   params='max_time_in_seconds:120.0', output_proto=None)
