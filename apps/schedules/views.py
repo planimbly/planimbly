@@ -446,7 +446,8 @@ class ShiftTypeViewSet(viewsets.ModelViewSet):
         if og_shift_Type.hour_start != v_data['hour_start'] or og_shift_Type.hour_end != v_data['hour_end']:
             print('aaa')
         else:
-            obj = serializer(instance, data=v)
+            # obj = serializer(instance, data=v)
+            pass
 
 
 class AbsenceViewSet(viewsets.ModelViewSet):

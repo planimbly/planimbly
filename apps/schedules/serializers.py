@@ -34,8 +34,8 @@ class ShiftTypeSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         """Check if shift take 8 hours"""
-        shift_len = datetime.datetime.combine(datetime.date.min, data['hour_end']) - \
-                    datetime.datetime.combine(datetime.date.min, data['hour_start'])
+        shift_len = datetime.datetime.combine(datetime.date.min, data['hour_end']) - datetime.datetime.combine(
+            datetime.date.min, data['hour_start'])
         shift_len = shift_len.seconds / 3600
         if shift_len != 8.0 and data['is_used'] is True:
             raise serializers.ValidationError("Zmiana nie może być aktywna oraz nie trwać 8 godzin")
