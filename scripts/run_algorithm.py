@@ -15,7 +15,7 @@
 
 import operator
 import sys
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta
 
 from absl import flags
 from google.protobuf import text_format
@@ -757,23 +757,38 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                         model.AddBoolOr(t)
 
         elif d[1] == 5 and d[0] + 2 <= num_days:
-            pass
-            # Working on the weekend -> free Monday
-            # for ei in ctx.employees:
-            #     if (ei.get().pk, 0, d[0]) not in work.keys() \
-            #         or (ei.get().pk, 0, d[0] + 1) not in work.keys() \
-            #         or (ei.get().pk, 0, d[0] + 2) not in work.keys():
-            #             continue
-            #     transitions = []
-            #     # for i in list(ei.allowed_shift_types.keys())[1:]:
-            #     #     for j in list(ei.allowed_shift_types.keys())[1:]:
-            #     #         transitions.append([work[ei.get().pk, i.id, d[0]].Not(),
-            #     #                             work[ei.get().pk, j.id, d[0] + 1].Not(),
-            #     #                             work[ei.get().pk, 0, d[0] + 2]])
-            #     transitions = [[work[ei.get().pk, 0, d[0]].Not(), work[ei.get().pk, 0, d[0] + 1].Not()]]
+            # Working on the weekend -> 24hrs of rest
+            transitions = []
+            illegal_transitions = []
+            for i in ctx.shift_types[1:]:
+                hr_end = dt.combine(dt.min, i.get().hour_end)
+                for j in ctx.shift_types[1:]:
+                    hr_start = dt.combine(dt.min + timedelta(days=1), j.get().hour_start)
+                    delta = hr_start - hr_end
+                    delta = int(delta.total_seconds() // 60)
+                    if delta < (24 * 60):
+                        illegal_transitions.append((i.id, j.id))
 
-            #     for t in transitions:
-            #         model.AddBoolAnd(work[ei.get().pk, 0, d[0] + 2]).OnlyEnforceIf(t)
+            for ei in ctx.employees:
+                if (ei.get().pk, 0, d[0]) not in work.keys() \
+                    or (ei.get().pk, 0, d[0] + 1) not in work.keys() \
+                    or (ei.get().pk, 0, d[0] + 2) not in work.keys():
+                        continue
+                transitions = []
+                for i in list(ei.allowed_shift_types.keys())[1:]:
+                    for j in list(ei.allowed_shift_types.keys())[1:]:
+                        if d[0] not in ei.allowed_shift_types[i] \
+                           or d[0] + 1 not in ei.allowed_shift_types[j]:
+                            continue
+                        t = [work[ei.get().pk, i.id, d[0]], work[ei.get().pk, j.id, d[0] + 1]]
+                        for it in illegal_transitions:
+                            if j.id == it[0]:
+                                transitions.append([work[ei.get().pk, i.id, d[0]].Not(),
+                                                    work[ei.get().pk, j.id, d[0] + 1].Not(),
+                                                    work[ei.get().pk, it[1], d[0] + 2].Not()])
+
+                for t in transitions:
+                    model.AddBoolOr(t)
 
     # Minimum one free weekend per employee
     for ei in ctx.employees:
