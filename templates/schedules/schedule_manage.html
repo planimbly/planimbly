@@ -174,13 +174,21 @@
                             </select>
                         </div>
                         
-                        <div class="col6">
-                            <input class="form-check-input" type="checkbox" v-model="attach_days_employees_report" id="attachDaysEmployeesReport">
-                            <label class="form-check-label ms-2 mb-4" for="attachDaysEmployeesReport">
-                                Dołącz zestawienie dni pracy per pracownik
-                            </label>
+                        <div class="col6 d-flex flex-column">
+                            <div>
+                                <input class="form-check-input" type="checkbox" v-model="attach_days_employees_report" id="attachDaysEmployeesReport">
+                                <label class="form-check-label ms-2 mb-4" for="attachDaysEmployeesReport">
+                                    Dołącz zestawienie dni pracy per pracownik
+                                </label>
+                            </div>
+                            <div>
+                                <input class="form-check-input" type="checkbox" v-model="attach_statistics_employees_report" id="attachStatisticsEmployeesReport">
+                                <label class="form-check-label ms-2 mb-4" for="attachStatisticsEmployeesReport">
+                                    Dołącz statystyki dla pracowników
+                                </label>
+                            </div>
                         </div>
-                        </div>
+                    </div>
                         
                         <label class="form-label">Działy uwzględnione w raporcie:</label>
                             <div class="list-group">
@@ -218,18 +226,21 @@
                 </div>
                 <div class="modal-body">
                   <div id="report">
-                    <schedule-report
+                    <schedule-report ref="report"
                         :year="year_report"
                         :month="month_report"
                         :attach_days_employees_report="attach_days_employees_report"
+                        :attach_statistics_employees_report="attach_statistics_employees_report"
                         :schedule_for_each_workplace="schedule_for_chosen_workplace"
                         :workdays_for_each_employee="workdays_for_each_employee"
-                        :chosen_workplaces="checked_workplace_report">
+                        :chosen_workplaces="checked_workplace_report"
+                        :margin_top_for_statistics="margin_top_for_statistics_report">
                     </schedule-report>
                   </div>
                 </div>
                 <div class="modal-footer">
-                  <button type="button" class="btn btn-primary" v-on:click="printToPdf">Zapisz do PDF</button>
+                  <button type="button" class="btn btn-primary" v-on:click="set_margin_top_for_report_statistics(); 
+                                                                            printToPdf();">Zapisz do PDF</button>
                 </div>
               </div>
             </div>
@@ -365,7 +376,9 @@
                     schedule_for_chosen_workplace: [],
                     workdays_for_each_employee: null,
                     attach_days_employees_report: true,
+                    attach_statistics_employees_report: true,
                     shifttype_name_list: [],
+                    margin_top_for_statistics_report: 0,
                     month_labels: [
                         {id: 1, name: 'Styczeń'},
                         {id: 2, name: 'Luty'},
@@ -393,6 +406,20 @@
                 }
             },
             methods: {
+                // set margin, so statistics are always on another page
+                set_margin_top_for_report_statistics() {
+                    const PDF_PAGE_LANDSCAPE_PX_HEIGHT_CHROMIUM = 803;
+                    const REPORT_MARGINS_PX = 28; // margins set in report.css .PN-pdf-container
+                    const report_elemets_without_statistics_px_height = document.getElementById('report_element_to_measure').clientHeight;
+                    const additional_margin_for_statistics = 18;
+
+                    this.margin_top_for_statistics_report = PDF_PAGE_LANDSCAPE_PX_HEIGHT_CHROMIUM -
+                                                            (( report_elemets_without_statistics_px_height + ( 2 * REPORT_MARGINS_PX ) ) % 
+                                                            PDF_PAGE_LANDSCAPE_PX_HEIGHT_CHROMIUM) +
+                                                            REPORT_MARGINS_PX +
+                                                            additional_margin_for_statistics;
+                },
+
                 sort_object_of_objects(data, attr) {
                     var arr = [];
                     for (var prop in data) {
@@ -442,6 +469,8 @@
                 printToPdf(){
                     var pdf_options = {
                         filename: 'raport.pdf',
+                        image: { type: 'png', quality: 1 },
+                        html2canvas: { scale: 2 },
                         jsPDF: {format: 'a4', orientation: 'landscape'}
                     };
                     html2pdf().set(pdf_options).from(document.getElementById('report')).save();
