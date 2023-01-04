@@ -419,6 +419,8 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
 
     friday_before = saturday_before = 999
     for i, sb in enumerate(shifts_before):
+        if len(shifts_before.keys()) < 1:
+            break
         d_shifts = shifts_before[sb]
         if sb.weekday() == 4:
             friday_before = -6 + i
@@ -510,7 +512,9 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
             works = [work[ei.get().pk, shift, d] for d in ei.allowed_shift_types[ctx.get_shift_info_by_id(shift).get()] if d not in absences]
 
             pre_works = [work[ei.get().pk, shift, d] for d in range(-6, 0) if (ei.get().pk, shift, d) in work.keys()]
-            works.extend(pre_works)
+            pre_works.extend(works)
+
+            works = pre_works
 
             variables, coeffs = add_soft_sequence_constraint(
                 model, works, hard_min, soft_min, min_cost, soft_max, hard_max,
@@ -715,9 +719,9 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         elif ei.calculate_job_time(ctx.job_time) < hard_max_hours <= ctx.job_time:
             if hard_max_hours == ctx.job_time:
                 min_free_shifts = 1
-            elif hard_max_hours >= ctx.job_time * 3 // 4:
+            elif ctx.job_time // 2 < hard_max_hours < ctx.job_time * 3 // 4:
                 min_free_shifts = 2
-            else:
+            elif hard_max_hours <= ctx.job_time // 2:
                 min_free_shifts = 3
 
         works_sunday = [work[ei.get().pk, 0, d[0]] for d in flatten(get_month_by_weeks(year, month)) if d[1] == 6 and (ei.get().pk, 0, d[0]) in work.keys()]
@@ -729,7 +733,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
 
     # Weekend transition constraints
     for d in flatten([[(friday_before, 4), (saturday_before, 5)], [x for x in flatten(ctx.month_by_billing_weeks) if x[1] in [4, 5]]]):
-        if d[1] == 4 and d[0] + 3 <= num_days:
+        if d[1] == 4 and 0 < d[0] + 3 <= num_days:
             # Night shift on Friday, free weekend -> shift on Monday should start at least at 11:00
             transitions = []
             forbidden_shifts = []
@@ -758,12 +762,14 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                     for t in transitions:
                         model.AddBoolOr(t)
 
-        elif d[1] == 5 and d[0] + 2 <= num_days:
+        elif d[1] == 5 and 0 < d[0] + 2 <= num_days:
             # Working on the weekend -> 24hrs of rest
             transitions = []
             illegal_transitions = []
             for i in ctx.shift_types[1:]:
                 hr_end = dt.combine(dt.min, i.get().hour_end)
+                if i.id in [x[0] for x in ctx.overnight_shifts[0]]:
+                    hr_end = hr_end + timedelta(days=1)
                 for j in ctx.shift_types[1:]:
                     hr_start = dt.combine(dt.min + timedelta(days=1), j.get().hour_start)
                     delta = hr_start - hr_end
@@ -1037,8 +1043,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     logger.info("")
     # logger.info("{}".format(solver.SufficientAssumptionsForInfeasibility()))
 
-    return output_inflate()
-    # return {'data': output_inflate(), 'status': True if (status == cp_model.OPTIMAL or status == cp_model.FEASIBLE) else False}
+    return {'data': output_inflate(), 'status': True if (status == cp_model.OPTIMAL or status == cp_model.FEASIBLE) else False}
 
 
 def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workplaces, emp_preferences, emp_absences,
