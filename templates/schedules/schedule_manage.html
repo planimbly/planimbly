@@ -309,7 +309,7 @@
                         </div>
                         
                         <div class="modal-footer" v-if="loading == false">
-                            <button type="submit" class="btn btn-primary" v-if="checked_workplace.length > 0">Wygeneruj</button>
+                            <button type="submit" class="btn btn-primary" v-if="checked_workplace.length > 0" v-on:click="on_generation_start_schedule">Wygeneruj</button>
                             <button type="button" class="btn btn-primary disabled" v-else>Wygeneruj</button>
                         </div>
 
@@ -380,6 +380,7 @@
                     attach_statistics_employees_report: true,
                     shifttype_name_list: [],
                     margin_top_for_statistics_report: 0,
+                    use_huey_for_scheduling: '{{ use_huey }}',
                     month_labels: [
                         {id: 1, name: 'Styczeń'},
                         {id: 2, name: 'Luty'},
@@ -407,6 +408,15 @@
                 }
             },
             methods: {
+                on_generation_start_schedule() {
+                    if (this.is_huey_used_for_scheduling()) {
+                        console.log('huey used');
+                        window.location.href = '{% url 'schedule_generating' %}'
+                    }
+                },
+                is_huey_used_for_scheduling() {
+                    return this.use_huey_for_scheduling === 'True' ? true : false;
+                },
                 // set margin, so statistics are always on another page
                 set_margin_top_for_report_statistics() {
                     const PDF_PAGE_LANDSCAPE_PX_HEIGHT_CHROMIUM = 803;

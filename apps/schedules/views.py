@@ -74,6 +74,10 @@ class JobTimeManageView(GroupRequiredMixin, TemplateView):
     template_name = 'schedules/jobtime_manage.html'
 
 
+class ScheduleGeneratingView(GroupRequiredMixin, TemplateView):
+    template_name = 'schedules/schedule_generating.html'
+
+
 class AbsenceManageView(GroupRequiredMixin, TemplateView):
     template_name = 'schedules/absence_manage.html'
 

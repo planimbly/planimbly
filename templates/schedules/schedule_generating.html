@@ -11,11 +11,28 @@
     </script>
 {% endblock head %}
 
-{% block content %}
+{% block navsidebar %}
+
+{% endblock navsidebar %}
+{% block vue-nav-app %}
+
+{% endblock vue-nav-app %}
+
+{% block no-nav-content %}
+    <img src="{% static 'img/Logo-Main-Big2.svg' %}" alt="Main Logo" class="large--logo--center mt-5">
     <div id="vue-app">
-        Właśnie generujemy grafik dla twojej aplikacji.
+        <div class="text-center d-flex flex-column justify-content-center">
+            <div class="mb-3 mt-3">
+                Właśnie generujemy grafik dla twojej aplikacji.
+            </div>
+            <div class="text-center">
+                <div class="spinner-border spinner-border-lg text-primary" role="status">
+                    <span class="visually-hidden">Waiting...</span>
+                </div>
+            </div>
+        </div>
     </div>
-{% endblock %}
+{% endblock no-nav-content %}
 
 {% block vue-content %}
 
@@ -23,7 +40,29 @@
         const {createApp} = Vue
         createApp({
             delimiters: ["[[", "]]"],
+
             data() {
+            },
+
+            methods: {
+                run_algorithm_check_every_3_seconds(){
+                    let timer = setInterval(function() {
+                        axios
+                        .get('{% url 'check_algorithm' %}')
+                        .then(response => {
+
+                            if (!response.data.task_status) {
+                                window.location.href = '{% url 'schedule_manage' %}';
+                            }
+                        
+                        });
+
+                    }, 3000);
+                }
+            },
+
+            mounted(){
+                this.run_algorithm_check_every_3_seconds();
             }
         }).mount('#vue-app');
 
