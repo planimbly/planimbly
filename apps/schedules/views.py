@@ -74,6 +74,10 @@ class JobTimeManageView(GroupRequiredMixin, TemplateView):
     template_name = 'schedules/jobtime_manage.html'
 
 
+class ScheduleGeneratingView(GroupRequiredMixin, TemplateView):
+    template_name = 'schedules/schedule_generating.html'
+
+
 class AbsenceManageView(GroupRequiredMixin, TemplateView):
     template_name = 'schedules/absence_manage.html'
 
@@ -440,14 +444,14 @@ class ShiftTypeViewSet(viewsets.ModelViewSet):
                               workplace=workplace)
         shiftType.save()
 
-    def perform_update(self, serializer):
+    """def perform_update(self, serializer):
         v_data = serializer.vaildated_data
         og_shift_Type = ShiftType.objects.get(pk=v_data['id'])
         if og_shift_Type.hour_start != v_data['hour_start'] or og_shift_Type.hour_end != v_data['hour_end']:
             print('aaa')
         else:
             # obj = serializer(instance, data=v)
-            pass
+        pass"""
 
 
 class AbsenceViewSet(viewsets.ModelViewSet):

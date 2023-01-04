@@ -215,7 +215,7 @@ export default {
       },
 
       work_month(){
-        const weekdays = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+        const weekdays = ["Niedziela","Poniedziałek","Wtorek","Środa","Czwartek","Piątek","Sobota"];
         var workMonth = [];
 
         if (this.show_for_workplace && this.schedule) {

@@ -1073,8 +1073,7 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
     shift_free = ShiftType(hour_start=dt.time(dt.strptime('00:00', '%H:%M')),
                            hour_end=dt.time(dt.strptime('00:00', '%H:%M')),
                            name='-', workplace=Workplace.objects.all().first(), active_days='1111111',
-                           shift_code="---",
-                           is_used=True, is_archive=False)
+                           shift_code="---", is_used=True, is_archive=False)
     shift_free.pk = 0
     shift_types.insert(0, shift_free)
 
