@@ -206,7 +206,7 @@ class ScheduleCreateApiView(APIView):
                                                         emp_assignments, jobtime, work_for_workplace_closing,
                                                         shifts_before, shifts_after)
 
-            for shift in data:
+            for shift in data['data']:
                 shift.save()
 
         return Response()
