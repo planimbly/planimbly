@@ -5,9 +5,12 @@ export default {
       year: Number,
       month: Number, //1-12
       attach_days_employees_report: Boolean,
+      attach_statistics_employees_report: Boolean,
       schedule_for_each_workplace: Array,
       workdays_for_each_employee: Object,
       chosen_workplaces: Array,
+      margin_top_for_statistics: Number,
+      shifttype_name_list: Array
     },
 
     data () {
@@ -35,8 +38,27 @@ export default {
 
       }
     },
-    
+
     methods:{
+      /* COPIED FROM SCHEDULE_MANAGE.HTML*/
+      calculate_diff(hours, job_time) {
+        return hours - job_time
+      },
+      return_sick_or_vac(data){
+        if (data == null){
+            return 'brak'
+        }else{
+            return data
+        }
+      },
+      return_shift_count(shift_list, shift) {
+        for (let in_shift in shift_list) {
+            if (in_shift == shift){
+                return shift_list[in_shift]
+            }
+        }
+        return 0
+    },
       /* HELPER METHODS */
       get_nonwhite_random_color(){
         // TO BE DEPRECATED
@@ -289,127 +311,147 @@ export default {
 
     template: `
     <div class="PN-pdf-container">
-      <div class="PN-report-header">
-        <div class="PN-report-header-item fw-bold"> Dyżury w [[ unit_name ]]</div>
-        <div class="PN-report-header-item"><div class="fw-bold">[[month]].[[year]] </div>&nbsp(norma [[ jobtime_norm ]])</div>
-      </div>
-      <div v-for="workpl_sch in schedule_for_each_workplace">
-        <div class="PN-workplace-title mb-1"> [[workpl_sch.schedule.workplace_name]] </div>
-        <div class="PN-report-schedule-table-container">
-        
-          <div class="PN-schedule-column"><div class="PN-schedule-column-label">&nbsp</div>
-            <div v-for="shift_type in workplace_included_shiftTypes(workpl_sch.schedule)" class="PN-schedule-column-content" :style="{ 'background-color': shift_type[1].shift_type_color }">
-              <div class="flex-column ms-1 me-1">
-                <div class="fw-bold" :style="{ 'color': best_text_color(shift_type[1].shift_type_color) }" >
-                [[shift_type[1].shiftType_name]]  ( [[ shift_type[1].shiftType_code ]] ) 
-                </div>  
-                <div :style="{ 'color': best_text_color(shift_type[1].shift_type_color) }">[[shift_type[1].label]]</div> 
+
+      <div class="PN-pdf-subcontainer" id="report_element_to_measure">
+        <div class="PN-report-header">
+          <div class="PN-report-header-item fw-bold"> Dyżury w [[ unit_name ]]</div>
+          <div class="PN-report-header-item"><div class="fw-bold">[[month]].[[year]] </div>&nbsp(norma [[ jobtime_norm ]])</div>
+        </div>
+        <div v-for="workpl_sch in schedule_for_each_workplace">
+          <div class="PN-workplace-title mb-1"> [[workpl_sch.schedule.workplace_name]] </div>
+          <div class="PN-report-schedule-table-container">
+          
+            <div class="PN-schedule-column"><div class="PN-schedule-column-label">&nbsp</div>
+              <div v-for="shift_type in workplace_included_shiftTypes(workpl_sch.schedule)" class="PN-schedule-column-content" :style="{ 'background-color': shift_type[1].shift_type_color }">
+                <div class="flex-column ms-1 me-1">
+                  <div class="fw-bold" :style="{ 'color': best_text_color(shift_type[1].shift_type_color) }" >
+                  [[shift_type[1].shiftType_name]]  ( [[ shift_type[1].shiftType_code ]] ) 
+                  </div>  
+                  <div :style="{ 'color': best_text_color(shift_type[1].shift_type_color) }">[[shift_type[1].label]]</div> 
+                </div>
               </div>
             </div>
-          </div>
 
-          <div v-for="empl_day in sorted_employees_per_day(workpl_sch.schedule.days, workplace_included_shiftTypes(workpl_sch.schedule))" class="PN-schedule-column">
-            <div v-if="empl_day[2]==0" class="PN-schedule-column-label">[[ empl_day[0] ]]</div>
-            <div v-else class="PN-schedule-column-label" style="background-color: #C2C2C2">[[ empl_day[0] ]]</div>
+            <div v-for="empl_day in sorted_employees_per_day(workpl_sch.schedule.days, workplace_included_shiftTypes(workpl_sch.schedule))" class="PN-schedule-column">
+              <div v-if="empl_day[2]==0" class="PN-schedule-column-label">[[ empl_day[0] ]]</div>
+              <div v-else class="PN-schedule-column-label" style="background-color: #C2C2C2">[[ empl_day[0] ]]</div>
+              
+              <div v-for="empl_shift in empl_day[1]" class="PN-schedule-column-content" v-if="empl_day[2]==0">
+                  <div v-if="empl_shift.length != 0" class="PN-flex-row">
+                    <div v-for="empl in empl_shift" class="PN-schedule-column-content-employee">
+                        [[empl]]
+                    </div>
+                  </div>
+                  <div v-else class="PN-flew-row">
+                    &nbsp
+                  </div>                 
+              </div>
             
-            <div v-for="empl_shift in empl_day[1]" class="PN-schedule-column-content" v-if="empl_day[2]==0">
-                <div v-if="empl_shift.length != 0" class="PN-flex-row">
-                  <div v-for="empl in empl_shift" class="PN-schedule-column-content-employee">
-                      [[empl]]
+            
+              <div v-for="empl_shift in empl_day[1]" class="PN-schedule-column-content" style="background-color: #C2C2C2" v-if="empl_day[2]!=0">
+                  <div v-if="empl_shift.length != 0" class="PN-flex-row">
+                    <div v-for="empl in empl_shift" class="PN-schedule-column-content-employee"> 
+                        [[empl]]
+                    </div>
                   </div>
-                </div>
-                <div v-else class="PN-flew-row">
-                  &nbsp
-                </div>                 
-            </div>
-          
-          
-            <div v-for="empl_shift in empl_day[1]" class="PN-schedule-column-content" style="background-color: #C2C2C2" v-if="empl_day[2]!=0">
-                <div v-if="empl_shift.length != 0" class="PN-flex-row">
-                  <div v-for="empl in empl_shift" class="PN-schedule-column-content-employee"> 
-                      [[empl]]
-                  </div>
-                </div>
-                <div v-else class="PN-flew-row">
-                  &nbsp
-                </div>                 
+                  <div v-else class="PN-flew-row">
+                    &nbsp
+                  </div>                 
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      
-      <div v-if="attach_days_employees_report">
-        <div class="PN-report-employee-table-container" v-if="workdays_for_each_employee != null && schedule_for_each_workplace[0] != null">
-          <div class="PN-day-label-row">
-              <div class="PN-day-label-content-start">
-                &nbsp
-              </div>
-              <div v-for="(value, date) in schedule_for_each_workplace[0].schedule.days">
-                <div v-if="weekends_holidays.includes(date)" class="PN-day-label-content" style="background-color: #C2C2C2">
-                  [[new Date(date + 'T01:00').getDate()]]
+        
+        <div v-if="attach_days_employees_report">
+          <div class="PN-report-employee-table-container" v-if="workdays_for_each_employee != null && schedule_for_each_workplace[0] != null">
+            <div class="PN-day-label-row">
+                <div class="PN-day-label-content-start">
+                  &nbsp
                 </div>
-                <div v-else class="PN-day-label-content">
-                  [[new Date(date + 'T01:00').getDate()]]
+                <div v-for="(value, date) in schedule_for_each_workplace[0].schedule.days">
+                  <div v-if="weekends_holidays.includes(date)" class="PN-day-label-content" style="background-color: #C2C2C2">
+                    [[new Date(date + 'T01:00').getDate()]]
+                  </div>
+                  <div v-else class="PN-day-label-content">
+                    [[new Date(date + 'T01:00').getDate()]]
+                  </div>
+                </div>
+                <div class="PN-day-counter-content">
+                Liczba dni
+              </div>
+            </div>
+            <div v-for="employee_info in all_included_employees" class="PN-employee-row">
+              <div class="PN-employee-content-start"> 
+                <b>[[employee_info[1].indicator]]</b>. [[employee_info[1].first_name]] [[employee_info[1].last_name]] [[employee_info[1].additional_info]]
+              </div>
+
+              <div v-for="(workday, workdate) in workdays_for_each_employee.employees[employee_info[0]].days"> 
+                <div class="PN-employee-content" :style="{ 'background-color': weekends_holidays.includes(workdate) ? '#C2C2C2' : 'inherit'}" >
+                  <div v-if="is_employee_day_absence(workdate, employee_info[0], workdays_for_each_employee)" class="PN-container-flex-center-div">
+                    <div class="material-icons md-14">person_off</div>
+                  </div>
+                  <div v-else-if="workday.length > 0">
+                    [[workday[0].shift_code]]
+                  </div>
+                  <div v-else>
+                    &nbsp
+                  </div>
                 </div>
               </div>
+
+
               <div class="PN-day-counter-content">
-              Liczba dni
-            </div>
-          </div>
-          <div v-for="employee_info in all_included_employees" class="PN-employee-row">
-            <div class="PN-employee-content-start"> 
-              <b>[[employee_info[1].indicator]]</b>. [[employee_info[1].first_name]] [[employee_info[1].last_name]] [[employee_info[1].additional_info]]
-            </div>
-
-            <div v-for="(workday, workdate) in workdays_for_each_employee.employees[employee_info[0]].days"> 
-              <div class="PN-employee-content" :style="{ 'background-color': weekends_holidays.includes(workdate) ? '#C2C2C2' : 'inherit'}" >
-                <div v-if="is_employee_day_absence(workdate, employee_info[0], workdays_for_each_employee)" class="PN-container-flex-center-div">
-                  <div class="material-icons md-14">person_off</div>
-                </div>
-                <div v-else-if="workday.length > 0">
-                  [[workday[0].shift_code]]
-                </div>
-                <div v-else>
-                  &nbsp
-                </div>
+                [[get_working_days_employee(employee_info[0], workdays_for_each_employee)]]
               </div>
+          
             </div>
 
-
-            <div class="PN-day-counter-content">
-              [[get_working_days_employee(employee_info[0], workdays_for_each_employee)]]
-            </div>
-        
           </div>
-
         </div>
-      </div>
 
-      <div v-else style="display: flex; flex-direction: row; flex-wrap: wrap;">
-        <div v-for="empl in all_included_employees">
-          &nbsp <b>[[empl[1].indicator]]</b>. [[empl[1].first_name]] [[empl[1].last_name]] [[empl[1].additional_info]]
+        <div v-else style="display: flex; flex-direction: row; flex-wrap: wrap;">
+          <div v-for="empl in all_included_employees">
+            &nbsp <b>[[empl[1].indicator]]</b>. [[empl[1].first_name]] [[empl[1].last_name]] [[empl[1].additional_info]]
+          </div>
         </div>
+
       </div>
 
-      <!--
-      <div v-for="workpl_sch in schedule_for_each_workplace">
-        [[workplace_included_shiftTypes(workpl_sch.schedule)]]  
-      </div>
-      <br>
-      <div v-for="workpl_sch in schedule_for_each_workplace">
-        [[sorted_employees_per_day(workpl_sch.schedule.days, workplace_included_shiftTypes(workpl_sch.schedule))]]  
-      </div>
-      <br>
-      <br>
-      <div v-for="workpl_sch in schedule_for_each_workplace">
+      <div v-if="attach_statistics_employees_report && schedule_for_each_workplace[0] != null" :style="{ 'margin-top': margin_top_for_statistics + 'px' }">
         
-        <div v-for="(day_props, day) in workpl_sch.schedule.days">
-          [[day]] :: [[day_props]]
-        </div>
-        
+        <h5 style="margin-top: 25px; margin-top: 20px;">Statystyki dla jednostki</h5>
+
+        <table class="w-100 table">
+            <thead>
+            <tr>
+                <th scope="col">lp.</th>
+                <th scope="col">Pracownik</th>
+                <th scope="col">Godziny/Etat</th>
+                <th scope="col">Bilans</th>
+                <th v-for="shift in shifttype_name_list" scope="col">[[ shift ]]</th>
+                <th scope="col">Godziny L4</th>
+                <th scope="col">Godziny urlopu</th>
+                <th scope="col">Inne nieobecości</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(stat, worker_id) in schedule_for_each_workplace[0].schedule.statistics">
+                <td>[[ stat.order_number ]]</td>
+                <td>[[ stat.name ]]</td>
+                <td>[[ stat.hours ]]/[[ stat.jobtime ]]h</td>
+                    <td v-if="calculate_diff(stat.hours, stat.jobtime) < 0" style="color: red;">[[ calculate_diff(stat.hours, stat.jobtime) ]]</td>
+                    <td v-if="calculate_diff(stat.hours, stat.jobtime) == 0">[[ calculate_diff(stat.hours, stat.jobtime) ]]</td>
+                    <td v-if="calculate_diff(stat.hours, stat.jobtime) > 0" style="color: green;">[[ calculate_diff(stat.hours, stat.jobtime) ]]</td>
+                    <td v-for="shift in shifttype_name_list">[[ return_shift_count(stat.shift_type, shift) ]]</td>
+                    <td>[[ return_sick_or_vac(stat.SICK) ]]</td>
+                    <td>[[ return_sick_or_vac(stat.VAC) ]]</td>
+                    <td>[[ return_sick_or_vac(stat.OTHER) ]]</td>
+                </tr>
+            </tbody>
+        </table>
+
       </div>
-      -->
     </div>
   `
 }
