@@ -88,7 +88,7 @@ def run_algorithm(year, month, user_id, workplace_list):
                                                 emp_for_workplaces, emp_preferences, emp_absences,
                                                 emp_assignments, jobtime, work_for_workplace_closing,
                                                 shifts_before, shifts_after)
-    for shift in data:
+    for shift in data['data']:
         shift.save()
     return
 
