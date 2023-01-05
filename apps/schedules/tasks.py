@@ -71,10 +71,18 @@ def run_algorithm(year, month, user_id, workplace_list):
     seven_before = first_day - datetime.timedelta(days=7)
     seven_after = last_day + datetime.timedelta(days=7)
 
-    shifts_before = Shift.objects.filter(date__gte=seven_before).filter(date__lt=first_day).filter(
+    shifts_before = {}
+    shifts_after = {}
+
+    shifts_b = Shift.objects.filter(date__gte=seven_before).filter(date__lt=first_day).filter(
         schedule__workplace_id__in=workplace_list).order_by('date')
-    shifts_after = Shift.objects.filter(date__gt=last_day).filter(date__lte=seven_after).filter(
+    shifts_a = Shift.objects.filter(date__gt=last_day).filter(date__lte=seven_after).filter(
         schedule__workplace_id__in=workplace_list).order_by('date')
+
+    for shift in shifts_b:
+        shifts_before.setdefault(shift.date, []).append(shift)
+    for shift in shifts_a:
+        shifts_after.setdefault(shift.date, []).append(shift)
 
     data = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month,
                                                 emp_for_workplaces, emp_preferences, emp_absences,
