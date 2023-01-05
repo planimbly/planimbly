@@ -418,18 +418,17 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     work = {}
 
     friday_before = saturday_before = 999
-    for i, sb in enumerate(shifts_before):
-        if len(shifts_before.keys()) < 1:
-            break
-        d_shifts = shifts_before[sb]
-        if sb.weekday() == 4:
-            friday_before = -6 + i
-        elif sb.weekday() == 5:
-            saturday_before = -6 + i
-        for s in d_shifts:
-            work[s.employee.pk, s.shift_type.id, -6 + i] = model.NewBoolVar('work%i_%i_%i' % (s.employee.pk, s.shift_type.id, -6 + i))
-            model.Add(work[s.employee.pk, s.shift_type.id, -6 + i] == 1)
-            # print(s.employee.pk, s.shift_type.id, -6 + i)
+    if shifts_before:
+        for i, sb in enumerate(shifts_before):
+            d_shifts = shifts_before[sb]
+            if sb.weekday() == 4:
+                friday_before = -6 + i
+            elif sb.weekday() == 5:
+                saturday_before = -6 + i
+            for s in d_shifts:
+                work[s.employee.pk, s.shift_type.id, -6 + i] = model.NewBoolVar('work%i_%i_%i' % (s.employee.pk, s.shift_type.id, -6 + i))
+                model.Add(work[s.employee.pk, s.shift_type.id, -6 + i] == 1)
+                # print(s.employee.pk, s.shift_type.id, -6 + i)
 
     for ei in ctx.employees:
         for s in ei.allowed_shift_types.keys():
