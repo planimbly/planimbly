@@ -129,15 +129,12 @@ class ScheduleCreateApiView(APIView):
 
             workplace_query = Workplace.objects.filter(id__in=workplace_list)
             schedule_dict = dict()
-            # Sprawdzamy czy istnieją już jakieś grafiki, jeżeli tak usuwamy wszystkie
+
             for workplace in workplace_query:
-                old_schedule = Schedule.objects.filter(year=year).filter(month=month).filter(
-                    workplace=workplace).first()
-                if old_schedule is not None:
-                    old_schedule.delete()
+
                 schedule = Schedule(year=year, month=month,
                                     workplace=workplace)
-                schedule.save()
+                schedule.save(commit=False)
                 schedule_dict.setdefault(workplace.id, schedule)
 
             shiftType_list = list(ShiftType.objects.filter(workplace_id__in=workplace_list).filter(is_used=True))
@@ -201,13 +198,32 @@ class ScheduleCreateApiView(APIView):
             for shift in shifts_a:
                 shifts_after.setdefault(shift.date, []).append(shift)
 
-            data = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month,
-                                                        emp_for_workplaces, emp_preferences, emp_absences,
-                                                        emp_assignments, jobtime, work_for_workplace_closing,
-                                                        shifts_before, shifts_after)
-
-            for shift in data['data']:
-                shift.save()
+            response = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month,
+                                                            emp_for_workplaces, emp_preferences, emp_absences,
+                                                            emp_assignments, jobtime, work_for_workplace_closing,
+                                                            shifts_before, shifts_after)
+            if response.get('status'):
+                for workplace in workplace_query:
+                    old_schedule = Schedule.objects.filter(year=year).filter(month=month).filter(
+                        workplace=workplace).first()
+                    if old_schedule is not None:
+                        old_schedule.delete()
+                for schedule in schedule_dict:
+                    schedule.save(commit=True)
+                data = response.get('data')
+                for shift in data:
+                    shift.save()
+            else:
+                for workplace in workplace_query:
+                    old_schedule = Schedule.objects.filter(year=year).filter(month=month).filter(
+                        workplace=workplace).first()
+                    if old_schedule is not None:
+                        old_schedule.message = "Nie udało się wygenerować nowego grafiku"
+                        old_schedule.save()
+                    else:
+                        schedule = schedule_dict.get(workplace)
+                        schedule.message = "Nie udało się wygenerować nowego grafiku"
+                        schedule.save()
 
         return Response()
 

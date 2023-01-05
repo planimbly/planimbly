@@ -40,7 +40,7 @@ class MyAccountManager(BaseUserManager):
 
 
 class Employee(AbstractUser):
-    email = models.EmailField(verbose_name="Adres email")
+    email = models.EmailField(verbose_name="Adres email", unique=True)
     username = models.CharField(max_length=50, unique=True, verbose_name="Nazwa użytkownika")
     first_name = models.CharField(max_length=50, verbose_name="Imię")
     last_name = models.CharField(max_length=50, verbose_name="Nazwisko")
