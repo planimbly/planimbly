@@ -40,6 +40,10 @@ jobs:
             python -m pip install -r requirements.txt
             python manage.py migrate --no-input
             python manage.py collectstatic --no-input
+            sudo /bin/systemctl restart redis-server.service
+            systemctl status redis-server.service
+            sudo /bin/systemctl restart huey.service
+            systemctl status huey.service
             sudo /bin/systemctl restart planimbly.service
             systemctl status planimbly.service
             sudo /bin/systemctl restart nginx.service
