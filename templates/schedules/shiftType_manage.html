@@ -4,6 +4,7 @@
 
 {% block head %}
     <link rel="stylesheet" href="{% static 'css/schedules/shiftType_manage.css' %}">
+    <link rel="stylesheet" href="{% static 'css/tooltip.css' %}">
     <script type="application/javascript" src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script type="application/javascript" src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script>
@@ -105,7 +106,16 @@
                                             required>
                                 </div>
                                 <div class="col-4">
-                                    <label for="shiftName" class="form-label modal-style" required>Skrót</label>
+                                    <table>
+                                        <tbody>
+                                            <td><label for="shiftName" class="form-label modal-style" required>Skrót</label></td>
+                                            <td>
+                                                <tooltip text="Skróty bardzo to fajna sprawa" margin="-93px">
+                                                    <div class="material-icons" style="font-size: 0.93rem; color: #616161; margin-top: 5px;">help</div>
+                                                </tooltip>
+                                            </td>
+                                        </tbody>
+                                    </table>
                                 </div>
                                 <div class="col-8">
                                     <input type="text" class="form-control" v-model="shift_code" id="shiftName"
@@ -114,7 +124,7 @@
 
 
                                 <div class="col-4">
-                                    <label for="demand" class="form-label modal-style">Liczba osób na zamianie</label>
+                                    <label for="demand" class="form-label modal-style">Liczba osób na zmianie</label>
                                 </div>
                                 <div class="col-8">
                                     <input type="number" class="form-control" v-model="demand" id="demand"
@@ -229,9 +239,14 @@
 {% block vue-content %}
     {% if is_any_workplace %}
         <script type="module">
+            import tooltip from "{% static 'js/components/tooltip.js' %}";
+
             const {createApp} = Vue
             var app = createApp({
                 delimiters: ["[[", "]]"],
+                components: {
+                    tooltip,
+                },
                 data() {
                     return {
                         hour_start: '',
