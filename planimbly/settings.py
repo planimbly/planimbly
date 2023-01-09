@@ -176,7 +176,16 @@ DATE_INPUT_FORMATS = [
 ]
 
 # Email backend
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+TEST_EMAIL = env.bool("TEST_EMAIL", default=True)
+if TEST_EMAIL:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST_USER = env.str("EMAIL_HOST_USER", default='')
+    EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD", default='')
+    EMAIL_HOST = env.str("EMAIL_HOST", default='')
+    EMAIL_PORT = env.str("EMAIL_PORT", default='')
+    EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=False)
 
 # Crispy config
 CRISPY_TEMPLATE_PACK = 'bootstrap'

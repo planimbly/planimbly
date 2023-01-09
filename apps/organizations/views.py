@@ -40,7 +40,7 @@ def send_user_activation_mail(user, request):
     email = EmailMessage(
         email_subject,
         email_body,
-        'noreply@planimbyl.com',
+        'noreply@planimbly.com',
         [user.email]
     )
     email.send()
