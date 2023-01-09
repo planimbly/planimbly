@@ -3,7 +3,7 @@
 {% load static %}
 
 {% block head %}
-    <link rel="stylesheet" href="{% static 'css/organizations/employees_manage.css' %}">
+    {% comment %} <link rel="stylesheet" href="{% static 'css/organizations/employees_manage.css' %}"> {% endcomment %}
     <script type="application/javascript" src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script type="application/javascript" src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script>
@@ -106,7 +106,7 @@
                                 <div class="col-6">
                                     <div class="form-floating">
                                         <select id="jobtimeSelect" class="form-select" v-model="selected_jobtime" style="padding-top: .625rem" required>
-                                            <option :value="null" disabled hidden>Wybierz z listy</option>
+                                            <option :value="null" disabled hidden>Wymiar etatu</option>
                                             <option v-for="jobtime in jobtime_list" :value="jobtime">
                                                 <div class="fw-bold">[[ jobtime.jobtime_fraction ]]</div>
                                             </option>

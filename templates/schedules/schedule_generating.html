@@ -37,6 +37,26 @@
 {% block vue-content %}
 
     <script type="module">
+        // REGULAR JAVASCRIPT
+        function run_algorithm_check_every_3_seconds() {
+            let timer = setInterval(function() {
+                axios
+                .get('{% url 'check_algorithm' %}')
+                .then(response => {
+
+                    if (!response.data.task_status) {
+                        window.location.href = '{% url 'schedule_manage' %}';
+                    }
+                
+                });
+
+            }, 3000);
+        }
+
+        window.onload = run_algorithm_check_every_3_seconds;
+        
+        // VUE APP
+        /*
         const {createApp} = Vue
         createApp({
             delimiters: ["[[", "]]"],
@@ -65,6 +85,7 @@
                 this.run_algorithm_check_every_3_seconds();
             }
         }).mount('#vue-app');
+        */
 
     </script>
 {% endblock vue-content %}
