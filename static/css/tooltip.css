@@ -32,7 +32,7 @@
     position: absolute;
     z-index: 1;
   
-    background: #333333;
+    background: #616161;
 }
   
 .PN-text::after {
@@ -43,6 +43,6 @@
     margin-left: -5px;
     border-width: 5px;
     border-style: solid;
-    border-color: #000000 transparent transparent transparent;
+    border-color: #616161 transparent transparent transparent;
   
 }
