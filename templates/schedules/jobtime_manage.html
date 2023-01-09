@@ -108,6 +108,8 @@
                     jobtime_manage_url: '{% url 'jobtime-list' %}',
                     freeday_url: '{% url 'freeday-list' %}',
                     year_cal: new Date().getFullYear(),
+                    date_bottom_limit: Date.now(),
+                    date_top_limit: Date.now(),
                     available_years: [
                         new Date().getFullYear() - 5,
                         new Date().getFullYear() - 4,
@@ -290,7 +292,7 @@
                 },
             },
             mounted() {
-                this.fetch_data()
+                this.fetch_data();
             },
         }).mount('#vue-app');
 
