@@ -42,8 +42,8 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <p>Plik tekstowy powinien być w formacie utf-8: email, nazwa użytkownika, imię, nazwisko,
-                                liczba porządkowa, wymiar etatu</p>
+                            <p>Plik CSV powinien być w formacie utf-8: email, nazwa użytkownika, imię, nazwisko,
+                                liczba porządkowa, wymiar etatu. Z przecinkiem jako z separatorem</p>
                             <p>Wybierz plik do zaimportowania:</p>
                             <input type="file" name="employeesList" id="employeesList">
                         </div>
@@ -106,7 +106,7 @@
                                 <div class="col-6">
                                     <div class="form-floating">
                                         <select id="jobtimeSelect" class="form-select" v-model="selected_jobtime" style="padding-top: .625rem" required>
-                                            <option :value="null" disabled hidden>Wybierz z listy</option>
+                                            <option :value="null" disabled hidden>Wymiar etatu</option>
                                             <option v-for="jobtime in jobtime_list" :value="jobtime">
                                                 <div class="fw-bold">[[ jobtime.jobtime_fraction ]]</div>
                                             </option>

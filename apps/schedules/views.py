@@ -1,5 +1,6 @@
 # Create your views here.
 import calendar
+import copy
 import datetime
 
 import holidays
@@ -18,7 +19,7 @@ from apps.schedules.models import ShiftType, Shift, Schedule, Preference, Absenc
 from apps.schedules.serializers import ShiftTypeSerializer, PreferenceSerializer, AbsenceSerializer, \
     AssignmentSerializer, JobTimeSerializer, FreeDaySerializer
 from apps.schedules.tasks import run_algorithm
-from planimbly.permissions import GroupRequiredMixin, Issupervisor
+from planimbly.permissions import GroupRequiredMixin, Issupervisor, Isemployee
 
 
 def free_days(year, month):
@@ -129,24 +130,22 @@ class ScheduleCreateApiView(APIView):
 
             workplace_query = Workplace.objects.filter(id__in=workplace_list)
             schedule_dict = dict()
-            # Sprawdzamy czy istnieją już jakieś grafiki, jeżeli tak usuwamy wszystkie
+
             for workplace in workplace_query:
-                old_schedule = Schedule.objects.filter(year=year).filter(month=month).filter(
-                    workplace=workplace).first()
-                if old_schedule is not None:
-                    old_schedule.delete()
                 schedule = Schedule(year=year, month=month,
                                     workplace=workplace)
-                schedule.save()
+                # schedule.save()
                 schedule_dict.setdefault(workplace.id, schedule)
 
-            shiftType_list = list(ShiftType.objects.filter(workplace_id__in=workplace_list).filter(is_used=True))
+            shiftType_list = list(
+                ShiftType.objects.filter(workplace_id__in=workplace_list).filter(is_used=True).filter(is_archive=False))
 
             emp_for_workplaces = {}
 
             for work_id in workplace_list:
                 emp_for_workplaces[work_id] = Employee.objects.filter(
-                    user_workplace__in=Workplace.objects.filter(id__in=[work_id])).distinct().order_by('id')
+                    user_workplace__in=Workplace.objects.filter(id__in=[work_id])).exclude(is_supervisor=True).exclude(
+                    groups__name='supervisor').exclude(is_superuser=True).distinct().order_by('id')
 
             employee_list = Employee.objects.filter(user_workplace__in=workplace_query).distinct().order_by('id')
             preferences = Preference.objects.filter(employee__in=employee_list)
@@ -201,13 +200,32 @@ class ScheduleCreateApiView(APIView):
             for shift in shifts_a:
                 shifts_after.setdefault(shift.date, []).append(shift)
 
-            data = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month,
-                                                        emp_for_workplaces, emp_preferences, emp_absences,
-                                                        emp_assignments, jobtime, work_for_workplace_closing,
-                                                        shifts_before, shifts_after)
-
-            for shift in data['data']:
-                shift.save()
+            response = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month,
+                                                            emp_for_workplaces, emp_preferences, emp_absences,
+                                                            emp_assignments, jobtime, work_for_workplace_closing,
+                                                            shifts_before, shifts_after)
+            if response.get('status'):
+                for workplace in workplace_query:
+                    old_schedule = Schedule.objects.filter(year=year).filter(month=month).filter(
+                        workplace=workplace).first()
+                    if old_schedule is not None:
+                        old_schedule.delete()
+                for schedule in schedule_dict:
+                    schedule_dict[schedule].save()
+                data = response.get('data')
+                for shift in data:
+                    shift.save()
+            else:
+                for workplace in workplace_query:
+                    old_schedule = Schedule.objects.filter(year=year).filter(month=month).filter(
+                        workplace=workplace).first()
+                    if old_schedule is not None:
+                        old_schedule.message = "Nie udało się wygenerować nowego grafiku"
+                        old_schedule.save()
+                    else:
+                        schedule = schedule_dict[workplace.id]
+                        schedule.message = "Nie udało się wygenerować nowego grafiku"
+                        schedule.save()
 
         return Response()
 
@@ -222,8 +240,7 @@ class ScheduleReportGetApiView(APIView):
             employee_list_pk = Shift.objects.filter(schedule__month=month).filter(schedule__year=year).filter(
                 schedule__workplace__workplace_unit__pk=unit_pk).values_list('employee_id', flat=True).distinct()
             employee_list = Employee.objects.filter(pk__in=employee_list_pk)
-            data = {}
-            data['employees'] = {}
+            data = {'employees': {}}
             for employee in employee_list:
                 days = {}
                 days_num = calendar.monthrange(int(year), int(month))[1]
@@ -265,11 +282,48 @@ class ScheduleReportGetApiView(APIView):
             return Response(data=data)
 
 
+class ScheduleEmployeeGetApiView(APIView):
+    permisson_classes = [Isemployee]
+
+    def get(self, request, employee_pk):
+        # 127.0.0.1:8000/schedules/api/3/schedule_employee_get?year=2023&month=1
+        year = self.request.GET.get('year')
+        month = self.request.GET.get('month')
+        date_format = '%Y-%m-%d'
+        if year and month:
+
+            days_num = calendar.monthrange(int(year), int(month))[1]
+            days = {}
+            for x in range(1, days_num + 1):
+                date = datetime.date(int(year), int(month), x).strftime(date_format)
+                days.update({date: []})
+            shifts = Shift.objects.filter(employee_id=employee_pk).filter(schedule__month=month).filter(
+                schedule__year=year).order_by('date')
+
+            for shift in shifts:
+                days[shift.date.strftime(date_format)].append((
+                    {
+                        'id': shift.id,
+                        'shift_type_id': shift.shift_type.id,
+                        'shift_type_color': shift.shift_type.color,
+                        'shift_code': shift.shift_type.shift_code,
+                        'time_start': shift.shift_type.hour_start,
+                        'time_end': shift.shift_type.hour_end,
+                        'name': shift.shift_type.name,
+                    }
+                ))
+            data = {'days': days
+                    }
+            return Response(data=data)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
 class ScheduleGetApiView(APIView):
     permission_classes = [Issupervisor]
 
     def get(self, request, workplace_pk):
-        # 127.0.0.1:8000/schedules/api/2/schedule_get?year=2022&month=5
+        # 127.0.0.1:8000/schedules/api/2/schedule_get?year=2023&month=1
         year = self.request.GET.get('year')
         month = self.request.GET.get('month')
         date_format = '%Y-%m-%d'
@@ -344,6 +398,8 @@ class ScheduleGetApiView(APIView):
                         }
                     }
                 ))
+
+            schedule = Schedule.objects.filter(year=year).filter(month=month).filter(workplace_id=workplace_pk).first()
             response = {
                 'unit_id': workplace.workplace_unit.id,
                 'workplace_id': workplace.id,
@@ -353,6 +409,7 @@ class ScheduleGetApiView(APIView):
                 'statistics': statistics,
                 'free_days': free_days(int(year), int(month)),
                 'jobtime': jobtime,
+                'message': schedule.message if schedule is not None else None
             }
             return Response(data=response)
         else:
@@ -444,14 +501,25 @@ class ShiftTypeViewSet(viewsets.ModelViewSet):
                               workplace=workplace)
         shiftType.save()
 
-    """def perform_update(self, serializer):
-        v_data = serializer.vaildated_data
-        og_shift_Type = ShiftType.objects.get(pk=v_data['id'])
+    def perform_update(self, serializer):
+        v_data = serializer.validated_data
+        og_shift_Type = ShiftType.objects.get(pk=self.kwargs['pk'])
         if og_shift_Type.hour_start != v_data['hour_start'] or og_shift_Type.hour_end != v_data['hour_end']:
-            print('aaa')
+            new_shift_type = copy.copy(og_shift_Type)
+            for attr, value in v_data.items():
+                setattr(new_shift_type, attr, value)
+            new_shift_type.pk = None
+            new_shift_type.save()
+            og_shift_Type.is_archive = True
+            og_shift_Type.save()
         else:
-            # obj = serializer(instance, data=v)
-        pass"""
+            for attr, value in v_data.items():
+                setattr(og_shift_Type, attr, value)
+            og_shift_Type.save()
+
+    def perform_destroy(self, instance):
+        instance.is_archive = True
+        instance.save()
 
 
 class AbsenceViewSet(viewsets.ModelViewSet):
