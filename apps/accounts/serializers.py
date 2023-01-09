@@ -13,3 +13,9 @@ class EmployeeSerializer(serializers.ModelSerializer):
             'user_workplace': {'read_only': True},
         }
         depth = 1
+
+
+class EmailEmployeeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = get_user_model()
+        fields = ['email', 'username', 'first_name', 'last_name', 'order_number', 'job_time']
