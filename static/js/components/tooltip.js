@@ -5,9 +5,13 @@ export default {
       type: String,
       required: true
     },
-    elementid: {
+    margin: {
       type: String,
-      required: true
+      required: false
+    },
+    bottom: {
+      type: String,
+      required: false
     },
   },
   data(){
@@ -15,22 +19,10 @@ export default {
       cWidth: null,
     }
   },
-  methods: {
-
-  },
-  computed: {
-    updateId(){
-      if ( document.getElementById(this.elementid) != null) {
-        this.cWidth = document.getElementById(this.elementid).clientWidth
-        console.log(this.cWidth)
-      }
-    }
-  },
   template: `
   <div class="PN-tooltip-container">
-    [[ updateId ]]
     <slot />
-    <div class="PN-tooltip">
+    <div class="PN-tooltip" :style="{ 'margin-left': margin, 'bottom': bottom }">
       <span class="PN-text">
         [[ text ]]
       </span>

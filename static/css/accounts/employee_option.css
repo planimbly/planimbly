@@ -17,6 +17,10 @@
     margin: 5px;
 }
 
+.emp_tool_box{
+    justify-content: flex-start;
+}
+
 h5 {
     white-space: nowrap;
     width: 260px;
@@ -33,7 +37,7 @@ h5 {
     column-gap: 10px;
 }
 
-.emp_option_big_box, .emp_option_small_box, .emp_option_wide_box, .emp_option_table_box, .emp_option_list_box{
+.emp_option_big_box, .emp_option_small_box, .emp_option_wide_box, .emp_option_table_box, .emp_option_list_box, .emp_tool_box{
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
