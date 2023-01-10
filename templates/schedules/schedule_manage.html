@@ -569,6 +569,9 @@
                             }
                         )
                         .then(() => {
+                                if (this.fetched_schedule.message != null){
+                                    this.give_popup(this.fetched_schedule.message)
+                                }
                                 if (Object.values(this.statistics).length != 0){
                                     this.add_to_shifttype_name_list(Object.values(this.statistics)[0].shift_type)
                                 }
@@ -601,6 +604,15 @@
                     }).then(() => {
                         this.check_report_workplace_availability(this.schedule_for_each_workplace);
                     });
+                },
+                give_popup(message){
+                    swal({
+                        toast: true,
+                        icon: "error",
+                        title: message,
+                        position: "top",
+                        button: true,
+                    })
                 },
                 check_report_workplace_availability(schedule_for_workplace){
                     this.available_workplace_report = [];
