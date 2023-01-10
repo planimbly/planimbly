@@ -85,8 +85,8 @@
         <div>
             <div class="emp_tool_box">
                 <div>
-                    <tooltip text="Preferencje zmianowe to fajna sprawa">
-                        <div class="material-icons" style="font-size: 0.93rem; color: #616161; margin-top: 6px;;">help</div>
+                    <tooltip text="Kliknij aby uzyskać informację o preferencjach zmianowych.">
+                        <button data-bs-target="#PreferenceInfoModal" data-bs-toggle="modal" data-bs-dismiss="modal" class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0); font-size: 0.93rem; color: #616161; margin-top: 6px;;">help</button>
                     </tooltip>
                 </div>
                 <div><h5>Preferencje zmianowe</h5></div>
@@ -109,8 +109,8 @@
         <div>
             <div class="emp_tool_box">
                 <div>
-                    <tooltip text="Przypisania bardzo to fajna sprawa">
-                        <div class="material-icons" style="font-size: 0.93rem; color: #616161; margin-top: 6px;;">help</div>
+                    <tooltip text="Kliknij aby uzyskać informację o przypisaniach.">
+                        <button data-bs-target="#AssignmentInfoModal" data-bs-toggle="modal" data-bs-dismiss="modal" class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0); font-size: 0.93rem; color: #616161; margin-top: 6px;;">help</button>
                     </tooltip>
                 </div>
                 <div><h5>Przypisania</h5></div>
@@ -131,8 +131,8 @@
         <div>
             <div class="emp_tool_box">
                 <div>
-                    <tooltip text="Wykluczenia to fajna sprawa">
-                        <div class="material-icons" style="font-size: 0.93rem; color: #616161; margin-top: 6px;;">help</div>
+                    <tooltip text="Kliknij aby uzyskać informację o wykluczeniach">
+                        <button data-bs-target="#BadAssignmentInfoModal" data-bs-toggle="modal" data-bs-dismiss="modal" class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0); font-size: 0.93rem; color: #616161; margin-top: 6px;;">help</button>
                     </tooltip>
                 </div>
                 <div><h5>Wykluczenia</h5></div>
@@ -155,12 +155,11 @@
     <div class="modal fade" id="pickUnitForEmployee" tabindex="-1">
         <div class="modal-dialog modal-dialog-scrollable">
             <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Dodaj jednostkę</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
                 <div class="modal-body">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Wybierz jednostkę</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    
                     <div class="list-group">
                         <div v-for="unit in unit_list" v-on:click="add_unit_for_employee(unit.id, unit.name)" 
                              class="list-group-item list-group-item-action" style="cursor: pointer">
@@ -176,12 +175,12 @@
         <div class="modal-dialog modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                      <h5 class="modal-title">Wybierz jednostkę</h5>
+                      <h5 class="modal-title">Dodaj dział</h5>
                       <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <select id="unitSelect" class="form-select" v-model="selected_unit" v-on:change="workplace_list_fetch">
-                        <option :value="null" disabled hidden>Wybierz z listy</option>
+                        <option :value="null" disabled hidden>Wybierz jednostkę z listy</option>
                         <option v-for="unit in employee_info.user_unit" :value="unit.id">
                             [[ unit.name ]]
                         </option>
@@ -315,6 +314,63 @@
                             </div>
                         </div> 
                     </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="PreferenceInfoModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">PREFERENCJE</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Preferencje służą informowaniu algorytmu o preferencjach pracowniczych. Są "miękkie", tzn. jeśli pracownik ma ustawioną preferencję, np. dla zmiany porannej, algorytm będzie starał mu się przypisać zmianę poranną, natomiast jeśli nie będzie to możliwe, przydzieli mu inną zmianę. 
+                    </p>
+                    <p>
+                        Preferencje nie wpływają znacząco na szanse na znalezienie rozwiązania przez algorytm.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="AssignmentInfoModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">PRZYPISANIA</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Przypisania służą ograniczeniu zmian możliwych do przydzielenia pracownikowi. Jeśli pracownik ma przypisaną zmianę poranną w danym dziale, to w terminie obowiązywania przypisania będzie wyznaczany do pracy TYLKO na tej zmianie - nie będzie rozważany do pracy na innych zmianach.
+                    </p>
+                    <p>
+                        Przypisania znacznie wpływają na szanse znalezienia rozwiązania przez algorytm. Jeśli przypisań w danym okresie jest zbyt dużo lub są stosowane przypisania bezterminowe i, np. dany pracownik może pracować tylko na jednej zmianie przez cały miesiąc, istnieje duże prawdopodobieństwo, że algorytm nie zwróci grafiku, ponieważ nie będzie możliwe obsadzenie wszystkich zmian w miesiącu (chyba, że pracowników będzie dostatecznie wielu).
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="BadAssignmentInfoModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">WYKLUCZENIA</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Wykluczenia służą ograniczeniu zmian możliwych do przydzielenia pracownikowi. Jeśli pracownik ma wykluczoną zmianę poranną w danym dziale, to w terminie obowiązywania przypisania będzie wyznaczany do pracy na wszystkich zmianach poza tą wykluczaną - nie znajdzie się na niej wtedy, gdy nie będzie dostępny żaden pracownik.
+                    </p>
+                    <p>
+                        Wykluczenia wpływają na szanse znalezienia rozwiązania przez algorytm, ale w mniejszym stopniu, niż przypisania. Chyba, że pracownik jest wykluczony bezterminowo z pracy, np. na większości zmian.
+                    </p>
                 </div>
             </div>
         </div>
