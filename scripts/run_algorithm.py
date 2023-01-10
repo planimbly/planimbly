@@ -714,6 +714,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                     min_free_shifts = 2
                 case '1/2':
                     min_free_shifts = 3
+
         # Overtime, but not over full job time
         elif ei.calculate_job_time(ctx.job_time) < hard_max_hours <= ctx.job_time:
             if hard_max_hours == ctx.job_time:
@@ -1064,16 +1065,16 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
     logger.add(sys.stdout, format="<level>{level} | {message}</level>", level="INFO")
 
     logger.success("Logging started...")
+    logger.info("Month: {} | Year: {}".format(month, year))
 
     # Calendar data
     global num_days
     num_days = get_month_by_weeks(year, month)[-1][-1][0]
 
     # Adding free shift to shift_types
-    shift_free = ShiftType(hour_start=dt.time(dt.strptime('00:00', '%H:%M')),
-                           hour_end=dt.time(dt.strptime('00:00', '%H:%M')),
-                           name='-', workplace=Workplace.objects.all().first(), active_days='1111111',
-                           shift_code="---", is_used=True, is_archive=False)
+    shift_free = ShiftType(hour_start=dt.time(dt.strptime('00:00', '%H:%M')), hour_end=dt.time(dt.strptime('00:00', '%H:%M')),
+                           name='-', workplace=Workplace.objects.all().first(), active_days='1111111', shift_code="---",
+                           is_used=True, is_archive=False)
     shift_free.pk = 0
     shift_types.insert(0, shift_free)
 
@@ -1086,20 +1087,25 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
             logger.warning("Employee no. {} has invalid job time ({}) and won't be used in solving!".format(e.pk, e.job_time))
 
     if type(job_time) is not int or job_time == 0:
-        logger.critical("Job time is not set!!!")
+        logger.critical("Job time is not set! Current value: {}".format(job_time))
 
-    data = solve_shift_scheduling(emp_for_workplaces,
-                                  emp_preferences,
-                                  emp_absences,
-                                  emp_assignments,
-                                  schedule_dict,
-                                  new_emp,
-                                  shift_types,
-                                  work_for_workplace_closing,
-                                  shifts_before,
-                                  year, month,
-                                  job_time,
-                                  params='max_time_in_seconds:120.0', output_proto=None)
+    data = {}
+
+    try:
+        data = solve_shift_scheduling(emp_for_workplaces,
+                                      emp_preferences,
+                                      emp_absences,
+                                      emp_assignments,
+                                      schedule_dict,
+                                      new_emp,
+                                      shift_types,
+                                      work_for_workplace_closing,
+                                      shifts_before,
+                                      year, month,
+                                      job_time,
+                                      params='max_time_in_seconds:90.0', output_proto=None)
+    except Exception as e:
+        logger.critical(e)
 
     logger.remove()
 
