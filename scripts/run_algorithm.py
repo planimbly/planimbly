@@ -360,6 +360,9 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     for ei in ctx.employees:
         allowed_shift_types = dict()
 
+        for s in ctx.shift_types:
+            allowed_shift_types[s.get()] = []
+
         allowed_shift_types[ctx.shift_types[0].get()] = [d for d in range(1, num_days + 1)]
         # Firstly, check for positive indefinite assignments
         for pia in ei.positive_indefinite_assignments:
@@ -367,7 +370,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
             logger.success("[ASSIGNMENTS] Assigned shift {:d} to emp {:d} [positive indefinite assignment]".format(pia.id, ei.get().pk))
 
         # Assign all shifts to employee if there are no positive indefinite assignments
-        if len(allowed_shift_types.keys()) == 1:
+        if len(ei.positive_indefinite_assignments) == 0:
             # Only allow shifts in workplaces assigned to employee
             logger.success("Assigned all shifts to emp {:d}".format(ei.get().pk))
             for s in ctx.shift_types[1:]:
@@ -379,16 +382,14 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
 
         # Now we handle negative indefinite assignments
         for nia in ei.negative_indefinite_assignments:
-            allowed_shift_types.pop(nia, None)
+            allowed_shift_types[nia] = []
             logger.success("[ASSIGNMENTS] Removed shift {:d} from employee {:d} [negative indefinite assignment]".format(
                 nia.id, ei.get().pk))
 
         # Allow shifts from term assignments
         for ta in ei.term_assignments:
             if ta[1] is False:  # if assignment is positive
-                if ta[0] not in allowed_shift_types.keys():
-                    allowed_shift_types[ta[0]] = []
-                allowed_shift_types[ta[0]].append(ta[2].day)  # TODO: check if makes problems
+                allowed_shift_types[ta[0]].append(ta[2].day)
 
                 for ast in allowed_shift_types:
                     if ast.id == 0:
@@ -416,25 +417,34 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
 
     # Create model variables
     work = {}
+    forbidden_work = []
+
+    for ei in ctx.employees:
+        for s in ctx.shift_types:
+            for d in range(-6, num_days + 1):
+                work[ei.get().pk, s.id, d] = model.NewBoolVar('work%i_%i_%i' % (ei.get().pk, s.id, d))
+                if d not in ei.allowed_shift_types[s.get()] and d > 0:
+                    forbidden_work.append((ei.get().pk, s.id, d))
+        # for s in ei.allowed_shift_types.keys():
+        #     for d in ei.allowed_shift_types[s]:
+        #         work[ei.get().pk, s.id, d] = model.NewBoolVar('work%i_%i_%i' % (ei.get().pk, s.id, d))
 
     friday_before = saturday_before = 999
     for i, sb in enumerate(shifts_before):
-        if len(shifts_before.keys()) < 1:
-            break
         d_shifts = shifts_before[sb]
         if sb.weekday() == 4:
             friday_before = -6 + i
         elif sb.weekday() == 5:
             saturday_before = -6 + i
         for s in d_shifts:
-            work[s.employee.pk, s.shift_type.id, -6 + i] = model.NewBoolVar('work%i_%i_%i' % (s.employee.pk, s.shift_type.id, -6 + i))
-            model.Add(work[s.employee.pk, s.shift_type.id, -6 + i] == 1)
-            # print(s.employee.pk, s.shift_type.id, -6 + i)
+            if (s.employee.pk, s.shift_type.id, -6 + i) not in work.keys():
+                work[s.employee.pk, s.shift_type.id, -6 + i] = model.NewBoolVar('work%i_%i_%i' % (s.employee.pk, s.shift_type.id, -6 + i))
+                forbidden_work.remove((s.employee.pk, s.shift_type.id, -6 + i))
+            # if (s.employee.pk, s.shift_type.id, -6 + i) in work.keys() and -6 + i > 0:
+            #     forbidden_work.remove((s.employee.pk, s.shift_type.id, -6 + i))
 
-    for ei in ctx.employees:
-        for s in ei.allowed_shift_types.keys():
-            for d in ei.allowed_shift_types[s]:
-                work[ei.get().pk, s.id, d] = model.NewBoolVar('work%i_%i_%i' % (ei.get().pk, s.id, d))
+            model.AddExactlyOne(work[s.employee.pk, s.shift_type.id, -6 + i])
+            print(s.employee.pk, s.shift_type.id, -6 + i)
 
     # Linear terms of the objective in a minimization context.
     obj_int_vars = []
@@ -451,21 +461,20 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         # Check for positive term assignments
         for ta in ei.term_assignments:
             if ta[1] is False:
-                if ta[0] in ei.allowed_shift_types.keys():
-                    if ta[2].day in ei.allowed_shift_types[ta[0]]:
-                        term_assignments[ta[2].day] = ta[0]
+                if ta[2].day in ei.allowed_shift_types[ta[0]]:
+                    term_assignments[ta[2].day] = ta[0]
 
         # Add exactly one shift per day
         for d in range(1, num_days + 1):
             if term_assignments[d] == -1:
                 # No assignments for this day, allow all shifts
-                model.AddExactlyOne(work[ei.get().pk, s.id, d] for s in ei.allowed_shift_types.keys() if (ei.get().pk, s.id, d) in work.keys())
+                model.AddExactlyOne(work[ei.get().pk, s.id, d] for s in ei.allowed_shift_types.keys() if (ei.get().pk, s.id, d) not in forbidden_work)
             else:
                 # Allow only assigned shift for this day
 
-                if (ei.get().pk, term_assignments[d].id, d) not in work.keys():
+                if (ei.get().pk, term_assignments[d].id, d) in forbidden_work:
                     logger.debug("Alerta de macacas")
-                    model.AddExactlyOne(work[ei.get().pk, s.id, d] for s in ei.allowed_shift_types.keys() if (ei.get().pk, s.id, d) in work.keys())
+                    model.AddExactlyOne(work[ei.get().pk, s.id, d] for s in ei.allowed_shift_types.keys() if (ei.get().pk, s.id, d) not in forbidden_work)
                     continue
 
                 # model.AddExactlyOne(work[ei.get().pk, term_assignments[d].id, d])
@@ -477,7 +486,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     for ei in ctx.employees:
         for ta in ei.term_assignments:
             if ta[1] is True:
-                if (ei.get().pk, ta[0].id, ta[2].day) not in work.keys():
+                if (ei.get().pk, ta[0].id, ta[2].day) in forbidden_work:
                     logger.warning("[ASSIGNMENTS] Negative term assignment on day {:d} for employee {} \
                                     overlapping with indefinite assignment/absence".format(ta[2].day, ei.get().pk))
                     continue
@@ -487,13 +496,13 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     # TODO: this will be used for generating schedule on top of existing schedule (in specific date range)
     # Fixed assignments.
     for e, s, d in ctx.fixed_assignments:
-        if (e, s, d) not in work.keys():
+        if (e, s, d) in forbidden_work:
             continue
         model.Add(work[e, s, d] == 1)
 
     # Employee requests (soft)
     for e, s, d, w in ctx.requests:
-        if (e, s, d) not in work.keys():
+        if (e, s, d) in forbidden_work:
             logger.warning("[REQUESTS] Shift on day {:d} for employee {} \
                 overlapping with indefinite assignment/absence".format(d, e))
             continue
@@ -504,14 +513,14 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     for ct in shift_constraints:
         shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = ct
         for ei in ctx.employees:
-            if shift not in [s.id for s in ei.allowed_shift_types.keys()]:
+            if len(ei.allowed_shift_types[ctx.get_shift_info_by_id(shift).get()]) == 0:
                 continue
 
             absences = ei.get_absent_days_in_month(month, year)
 
             works = [work[ei.get().pk, shift, d] for d in ei.allowed_shift_types[ctx.get_shift_info_by_id(shift).get()] if d not in absences]
 
-            pre_works = [work[ei.get().pk, shift, d] for d in range(-6, 0) if (ei.get().pk, shift, d) in work.keys()]
+            pre_works = [work[ei.get().pk, shift, d] for d in range(-6, 1) if (ei.get().pk, shift, d) not in forbidden_work]
             pre_works.extend(works)
 
             works = pre_works
@@ -678,13 +687,13 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
             for w, week in enumerate(ctx.month_by_billing_weeks):
                 shift, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost = ct
 
-                if shift not in [s.id for s in ei.allowed_shift_types.keys()]:
+                if len(ei.allowed_shift_types[ctx.get_shift_info_by_id(shift).get()]) == 0:
                     continue
 
                 if len(week) <= 3:  # TODO: this is a temporary fix...
                     continue
 
-                works = [work[ei.get().pk, shift, d[0]] for d in week if (ei.get().pk, shift, d[0]) in work.keys()]
+                works = [work[ei.get().pk, shift, d[0]] for d in week if (ei.get().pk, shift, d[0]) not in forbidden_work]
 
                 # Account for absences
                 if shift == 0:
@@ -724,7 +733,8 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
             elif hard_max_hours <= ctx.job_time // 2:
                 min_free_shifts = 3
 
-        works_sunday = [work[ei.get().pk, 0, d[0]] for d in flatten(get_month_by_weeks(year, month)) if d[1] == 6 and (ei.get().pk, 0, d[0]) in work.keys()]
+        works_sunday = [work[ei.get().pk, 0, d[0]] for d in flatten(get_month_by_weeks(year, month))
+                        if d[1] == 6 and (ei.get().pk, 0, d[0]) not in forbidden_work]
         # print(ei.get().pk, hard_max_hours, min_free_shifts, len(works_sunday))
         logger.info("Min number of free sundays for employee {:d}: {:d}".format(ei.get().pk, min_free_shifts))
 
@@ -746,12 +756,12 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                     forbidden_shifts.append(i.id)
             for os in ctx.overnight_shifts[0]:
                 for ei in ctx.employees:
-                    if (ei.get().pk, os[0], d[0]) not in work.keys():
+                    if (ei.get().pk, os[0], d[0]) in forbidden_work:
                         continue
                     for fs in forbidden_shifts:
-                        if (ei.get().pk, 0, d[0] + 1) not in work.keys() \
-                            or (ei.get().pk, 0, d[0] + 2) not in work.keys() \
-                                or (ei.get().pk, fs, d[0] + 3) not in work.keys():
+                        if (ei.get().pk, 0, d[0] + 1) in forbidden_work \
+                            or (ei.get().pk, 0, d[0] + 2) in forbidden_work \
+                                or (ei.get().pk, fs, d[0] + 3) in forbidden_work:
                             continue
 
                         transitions.append([work[ei.get().pk, os[0], d[0]].Not(),
@@ -778,9 +788,9 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                         illegal_transitions.append((i.id, j.id))
 
             for ei in ctx.employees:
-                if (ei.get().pk, 0, d[0]) not in work.keys() \
-                        or (ei.get().pk, 0, d[0] + 1) not in work.keys() \
-                        or (ei.get().pk, 0, d[0] + 2) not in work.keys():
+                if (ei.get().pk, 0, d[0]) in forbidden_work \
+                        or (ei.get().pk, 0, d[0] + 1) in forbidden_work \
+                        or (ei.get().pk, 0, d[0] + 2) in forbidden_work:
                     continue
                 transitions = []
                 for i in list(ei.allowed_shift_types.keys())[1:]:
@@ -790,7 +800,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                             continue
                         t = [work[ei.get().pk, i.id, d[0]], work[ei.get().pk, j.id, d[0] + 1]]
                         for it in illegal_transitions:
-                            if j.id == it[0] and (ei.get().pk, it[1], d[0] + 2) in work.keys():
+                            if j.id == it[0] and (ei.get().pk, it[1], d[0] + 2) not in forbidden_work:
                                 transitions.append([work[ei.get().pk, i.id, d[0]].Not(),
                                                     work[ei.get().pk, j.id, d[0] + 1].Not(),
                                                     work[ei.get().pk, it[1], d[0] + 2].Not()])
@@ -801,7 +811,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     # Minimum one free weekend per employee
     for ei in ctx.employees:
         works = [[work[ei.get().pk, 0, d[0]], work[ei.get().pk, 0, d[0] + 1]] for d in flatten(get_month_by_weeks(year, month))
-                 if d[1] == 5 and ((ei.get().pk, 0, d[0]) in work.keys() and (ei.get().pk, 0, d[0] + 1) in work.keys())]
+                 if d[1] == 5 and ((ei.get().pk, 0, d[0]) not in forbidden_work and (ei.get().pk, 0, d[0] + 1) not in forbidden_work)]
 
         for w in works:
             model.AddBoolAnd(w[0]).OnlyEnforceIf(w[1])
@@ -810,8 +820,8 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     for previous_shift, next_shift, cost in penalized_transitions:
         for ei in ctx.employees:
             for d in range(0, num_days):
-                if (ei.get().pk, previous_shift, d) not in work.keys() \
-                        or (ei.get().pk, next_shift, d + 1) not in work.keys():
+                if (ei.get().pk, previous_shift, d) in forbidden_work \
+                        or (ei.get().pk, next_shift, d + 1) in forbidden_work:
                     continue
 
                 transition = [work[ei.get().pk, previous_shift, d].Not(), work[ei.get().pk, next_shift, d + 1].Not()]
@@ -831,7 +841,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                 if d[0] in s.get_closing_days_in_month(month, year):
                     continue
                 works = [work[ei.get().pk, s.id, d[0]] for ei in
-                         [e for e in ctx.employees] if (ei.get().pk, s.id, d[0]) in work.keys()]
+                         [e for e in ctx.employees] if (ei.get().pk, s.id, d[0]) not in forbidden_work]
                 # Ignore Off shift.
                 demand = s.get().demand
                 worked = model.NewIntVar(demand, len(ctx.employees), '')
@@ -867,7 +877,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         for d in range(1, num_days + 1):
             for ei in ctx.employees:
                 for s in ei.allowed_shift_types.keys():
-                    if (ei.get().pk, s.id, d) not in work.keys() or s.id == 0:
+                    if (ei.get().pk, s.id, d) in forbidden_work or s.id == 0:
                         continue
                     if solver.BooleanValue(work[ei.get().pk, s.id, d]):
                         work_time[ei.get().pk] += ctx.get_shift_info_by_id(s.id).get_duration_in_hours()
@@ -882,7 +892,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         for s, d, v in excess_shifts:
             candidates = list()
             for ei in ctx.employees:
-                if (ei.get().pk, s, d) not in work.keys():
+                if (ei.get().pk, s, d) in forbidden_work:
                     continue
                 if solver.BooleanValue(work[ei.get().pk, s, d]):
                     candidates.append([ei.get(), s, d])
@@ -902,7 +912,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         for s, d, v in sorted_excess_shifts:
             candidates = list()
             for ei in ctx.employees:
-                if (ei.get().pk, s, d) not in work.keys():
+                if (ei.get().pk, s, d) in forbidden_work:
                     continue
                 if solver.BooleanValue(work[ei.get().pk, s, d]):
                     candidates.append([ei, s, d])
@@ -999,7 +1009,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
             for w, week in enumerate(ctx.month_by_billing_weeks):
                 for d in week:
                     for s in ei.allowed_shift_types.keys():
-                        if (ei.get().pk, s.id, d[0]) not in work.keys():
+                        if (ei.get().pk, s.id, d[0]) in forbidden_work:
                             continue
                         if solver.BooleanValue(work[ei.get().pk, s.id, d[0]]):
                             sched += '%2s ' % s.name[0]
