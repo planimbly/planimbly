@@ -204,6 +204,13 @@
                                     })
                                     .catch(error => {
                                             this.response = error.response.data
+                                            swal({
+                                                toast: true,
+                                                icon: "error",
+                                                title: "Błąd przy dodawaniu dnia wolnego! - Istnieje już dzień wolny z tą datą.",
+                                                position: "top",
+                                                button: true,
+                                            })
                                         }
                                     )
                             }
