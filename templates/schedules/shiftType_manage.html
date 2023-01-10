@@ -164,7 +164,8 @@
                 </div>
             </div>
         </div>
-
+        [[shiftType_list]]
+        <div class="table-responsive">
         <table class="table styled-table">
             <thead>
             <tr>
@@ -222,6 +223,10 @@
             </tr>
             </tbody>
         </table>
+        </div>
+
+        <data-table :fields_options="[]" :data_rows="[]">
+        </data-table>
     </div>
     {% else %}
         <span>Brak działów</span>
@@ -231,9 +236,14 @@
 {% block vue-content %}
     {% if is_any_workplace %}
         <script type="module">
+            import DataTable from "{% static 'js/components/DataTable.js' %}";
+
             const {createApp} = Vue
             var app = createApp({
                 delimiters: ["[[", "]]"],
+                components: {
+                    DataTable
+                },
                 data() {
                     return {
                         hour_start: '',
