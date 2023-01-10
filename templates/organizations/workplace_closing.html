@@ -4,6 +4,7 @@
 
 {% block head %}
     <link rel="stylesheet" href="{% static 'css/organizations/workplace_closing.css' %}">
+    <link rel="stylesheet" href="{% static 'css/tooltip.css' %}">
     <script type="application/javascript" src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script type="application/javascript" src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script>
@@ -47,7 +48,17 @@
         </div>
 
         <div>
-            <h5 style="margin-top: 35px">Wyłączenia</h5>
+            
+            <table>
+                <tbody>
+                    <td><h5 style="margin-top: 35px">Wyłączenia</h5></td>
+                    <td>
+                        <tooltip text="Wyłączenia bardzo to fajna sprawa" bottom="50%">
+                            <div class="material-icons" style="font-size: 0.93rem; color: #616161; margin-top: 30px;">help</div>
+                        </tooltip>
+                    </td>
+                </tbody>
+            </table>
             <div class="list-group">
                 <div v-for="closure in current_closing_list" :key="closure.id" class="list-group-item list-group-item-action position-static w-50">
                     <div class="closure_table_box">
@@ -71,23 +82,27 @@
                           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     
-                        <form id="closing_form" v-on:submit.prevent="add_closing">
-                            <div class="modal-body">
-                                <div class="form-floating" style="margin-bottom: 10px">
-                                    <input type="date" class="form-control" v-model="inputDateStart" id="inputDateStart" placeholder="Data rozpoczęcia wyłączenia" required>
-                                    <label for="inputDateStart">Data rozpoczęcia wyłączenia</label>
-                                </div>
-        
-                                <div class="form-floating" style="margin-bottom: 10px">
-                                    <input type="date" class="form-control" v-model="inputDateEnd" id="inputDateEnd" placeholder="Data końca wyłączenia" required>
-                                    <label for="inputDateEnd">Data końca wyłączenia</label>
-                                </div>
+                    <form id="closing_form" v-on:submit.prevent="add_closing">
+                        <div class="modal-body">
+                            <div class="form-floating" style="margin-bottom: 10px">
+                                <input type="date" class="form-control" v-model="inputDateStart" id="inputDateStart" placeholder="Data rozpoczęcia wyłączenia" 
+                                        :min="date_bottom_limit" :max="date_top_limit" required>
+                                <label for="inputDateStart">Data rozpoczęcia wyłączenia</label>
                             </div>
-                            <div class="modal-footer">
-                                <input type="submit" value="Zapisz" class="btn btn-outline-success">
+    
+                            <div class="form-floating" style="margin-bottom: 10px">
+                                <input type="date" class="form-control" v-model="inputDateEnd" id="inputDateEnd" placeholder="Data końca wyłączenia" 
+                                        :min="inputDateStart" :max="date_top_limit" required>
+                                <label for="inputDateEnd">Data końca wyłączenia</label>
                             </div>
-                        </form>
-                    
+                            <label v-for="(field, index) in response" style="color: #FF0000; margin-top: 20px">
+                                [[ field.join('') ]]
+                            </label>
+                        </div>
+                        <div class="modal-footer">
+                            <input type="submit" value="Zapisz" class="btn btn-outline-success">
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -99,9 +114,14 @@
 {% block vue-content %}
 
     <script type="module">
+        import tooltip from "{% static 'js/components/tooltip.js' %}";
+
         const {createApp} = Vue
         createApp({
             delimiters: ["[[", "]]"],
+            components: {
+                tooltip,
+            },
             data() {
                 return {
                     response: null,
@@ -114,6 +134,8 @@
                     current_closing_list: [],
                     inputDateStart: null,
                     inputDateEnd: null,
+                    date_bottom_limit: new Date(),
+                    date_top_limit: new Date(),
                 }
             },
             methods: {
@@ -122,7 +144,6 @@
                         .get(this.workplace_closing_url)
                         .then(response => {
                                 this.workplace_closing_list = response.data;
-                                console.log(this.workplace_closing_list)
                             }
                         )
                         .catch(error => {this.response = error.response.data});
@@ -163,9 +184,10 @@
                                 )
                                 .then(() => {
                                     this.fetch_data()
+                                    console.log(this.inputDateEnd)
                                     this.current_closing_compute
                                 })
-                                //.catch(error => {this.response = error.response.data})
+                                .catch(error => {this.response = error.response.data})
                             }
                         });
                 },
@@ -192,7 +214,21 @@
                                 //.catch(error => {this.response = error.response.data});
                             }
                         });
-                }
+                },
+                dates_compute(){
+                    let this_year = new Date().getFullYear()
+                    let bottom_date = new Date()
+                    let top_date = new Date()
+                    bottom_date.setFullYear(this_year - 1)
+                    top_date.setFullYear(this_year + 1)
+                    if (bottom_date.getDate() < 10){
+                        this.date_bottom_limit = bottom_date.getFullYear() + '-' + bottom_date.getMonth() + 1 + '-' + '0' + bottom_date.getDate()
+                        this.date_top_limit = top_date.getFullYear() + '-' + top_date.getMonth() + 1 + '-' + '0' + top_date.getDate()
+                    } else {
+                        this.date_bottom_limit = bottom_date.getFullYear() + '-' + bottom_date.getMonth() + 1 + '-' + bottom_date.getDate()
+                        this.date_top_limit = top_date.getFullYear() + '-' + top_date.getMonth() + 1 + '-' + top_date.getDate()
+                    }
+                },
             },
             computed: {
                 workplace_url: {
@@ -216,6 +252,7 @@
                 this.fetch_data()
                 this.fetch_unit_data()
                 this.workplace_list_fetch()
+                this.dates_compute()
             },
         }).mount('#vue-app');
 

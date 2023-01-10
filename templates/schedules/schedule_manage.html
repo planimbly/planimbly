@@ -5,6 +5,7 @@
 {% block head %}
     <link rel="stylesheet" href="{% static 'css/schedules/uam-schedule.css' %}">
     <link rel="stylesheet" href="{% static 'css/schedules/report.css' %}">
+    <link rel="stylesheet" href="{% static 'css/tooltip.css' %}">
     <script type="application/javascript" src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script type="application/javascript" src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.js"></script>
@@ -67,10 +68,12 @@
                         data-bs-target="#generateReportModal" v-if="available_workplace_report.length > 0">
                     Wygeneruj raport
                 </button>
-                <button type="button" class="btn btn-outline-primary" disabled v-else
-                        data-bs-toggle="tooltip" data-bs-placement="top" title="Nie wykryto grafiku dla danego miesiąca..." style="z-index: -1;">
-                    Wygeneruj raport
-                </button>
+                
+                <tooltip v-else text="Nie wykryto grafiku dla danego miesiąca..." elementid="NoScheduleButton"> 
+                    <button id="NoScheduleButton" type="button" class="btn btn-outline-primary" disabled style="z-index: -1;">
+                        Wygeneruj raport
+                    </button> 
+                </tooltip>
             </div>
             <div class="col d-flex justify-content-end" style="padding-left: 0px">
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal"
@@ -176,16 +179,38 @@
                         
                         <div class="col6 d-flex flex-column">
                             <div>
-                                <input class="form-check-input" type="checkbox" v-model="attach_days_employees_report" id="attachDaysEmployeesReport">
-                                <label class="form-check-label ms-2 mb-4" for="attachDaysEmployeesReport">
-                                    Dołącz zestawienie dni pracy per pracownik
-                                </label>
+                                <table>
+                                    <tbody>
+                                        <td>
+                                            <input class="form-check-input" type="checkbox" v-model="attach_days_employees_report" id="attachDaysEmployeesReport">
+                                            <label class="form-check-label ms-2 mb-4" for="attachDaysEmployeesReport">
+                                                Dołącz zestawienie dni pracy per pracownik
+                                            </label>
+                                        </td>
+                                        <td>
+                                            <tooltip text="Zestawnienia bardzo to fajna sprawa">
+                                                <div class="material-icons" style="font-size: 0.93rem; color: #616161; margin-bottom: 30px;">help</div>
+                                            </tooltip>
+                                        </td>
+                                    </tbody>
+                                </table>
                             </div>
                             <div>
-                                <input class="form-check-input" type="checkbox" v-model="attach_statistics_employees_report" id="attachStatisticsEmployeesReport">
-                                <label class="form-check-label ms-2 mb-4" for="attachStatisticsEmployeesReport">
-                                    Dołącz statystyki dla pracowników
-                                </label>
+                                <table>
+                                    <tbody>
+                                        <td>
+                                            <input class="form-check-input" type="checkbox" v-model="attach_statistics_employees_report" id="attachStatisticsEmployeesReport">
+                                            <label class="form-check-label ms-2 mb-4" for="attachStatisticsEmployeesReport">
+                                                Dołącz statystyki dla pracowników
+                                            </label>
+                                        </td>
+                                        <td>
+                                            <tooltip text="Statystyki bardzo to fajna sprawa">
+                                                <div class="material-icons" style="font-size: 0.93rem; color: #616161; margin-bottom: 30px;">help</div>
+                                            </tooltip>
+                                        </td>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -248,7 +273,7 @@
         </div>
 
         <div class="modal fade" id="generateScheduleModal" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 500px">
                 <div class="modal-content">
                     <form id="schedule_form" v-on:submit.prevent="create_schedule">
                         {% csrf_token %}
@@ -293,12 +318,12 @@
                                             <div v-if="shiftType.is_used"  class="list-group-item">
                                                 <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
                                                     [[shiftType.name]]
-                                                    <span class="badge rounded-pill bg-primary">[[shiftType.hour_start.toString().slice(0, 5) + " - " + shiftType.hour_end.toString().slice(0, 5)]]</span>
-                                                    <div>
+                                                    <span class="badge rounded-pill bg-primary d-inline-flex">[[shiftType.hour_start.toString().slice(0, 5) + " - " + shiftType.hour_end.toString().slice(0, 5)]]</span>
+                                                    {% comment %} <div>
                                                         <div v-for="abbr in active_days_to_string_abbr_array(shiftType.active_days)" class="d-inline-flex">
                                                             <span class="badge bg-light text-dark me-1">[[abbr]]</span>
                                                         </div>
-                                                    </div>
+                                                    </div> {% endcomment %}
                                                 </div>
                                             </div>
                                         </div>
@@ -309,7 +334,7 @@
                         </div>
                         
                         <div class="modal-footer" v-if="loading == false">
-                            <button type="submit" class="btn btn-primary" v-if="checked_workplace.length > 0">Wygeneruj</button>
+                            <button type="submit" class="btn btn-primary" v-if="checked_workplace.length > 0" v-on:click="on_generation_start_schedule">Wygeneruj</button>
                             <button type="button" class="btn btn-primary disabled" v-else>Wygeneruj</button>
                         </div>
 
@@ -341,13 +366,15 @@
         <script type="module">
         import WorkCalendar from "{% static 'js/components/WorkCalendar.js' %}";
         import ScheduleReport from "{% static 'js/components/ScheduleReport.js' %}";
+        import tooltip from "{% static 'js/components/tooltip.js' %}";
 
         const {createApp} = Vue
         createApp({
             delimiters: ["[[", "]]"],
             components: {
                 WorkCalendar,
-                ScheduleReport
+                ScheduleReport,
+                tooltip,
             },
             data() {
                 return {
@@ -380,6 +407,7 @@
                     attach_statistics_employees_report: true,
                     shifttype_name_list: [],
                     margin_top_for_statistics_report: 0,
+                    use_huey_for_scheduling: '{{ use_huey }}',
                     month_labels: [
                         {id: 1, name: 'Styczeń'},
                         {id: 2, name: 'Luty'},
@@ -403,10 +431,22 @@
                         new Date().getFullYear(),
                         new Date().getFullYear() + 1,
                         new Date().getFullYear() + 2,
+                        new Date().getFullYear() + 3,
+                        new Date().getFullYear() + 4,
+                        new Date().getFullYear() + 5,
                     ],
                 }
             },
             methods: {
+                on_generation_start_schedule() {
+                    if (this.is_huey_used_for_scheduling()) {
+                        console.log('huey used');
+                        window.location.href = '{% url 'schedule_generating' %}'
+                    }
+                },
+                is_huey_used_for_scheduling() {
+                    return this.use_huey_for_scheduling === 'True' ? true : false;
+                },
                 // set margin, so statistics are always on another page
                 set_margin_top_for_report_statistics() {
                     const PDF_PAGE_LANDSCAPE_PX_HEIGHT_CHROMIUM = 803;
@@ -529,6 +569,9 @@
                             }
                         )
                         .then(() => {
+                                if (this.fetched_schedule.message != null){
+                                    this.give_popup(this.fetched_schedule.message)
+                                }
                                 if (Object.values(this.statistics).length != 0){
                                     this.add_to_shifttype_name_list(Object.values(this.statistics)[0].shift_type)
                                 }
@@ -561,6 +604,15 @@
                     }).then(() => {
                         this.check_report_workplace_availability(this.schedule_for_each_workplace);
                     });
+                },
+                give_popup(message){
+                    swal({
+                        toast: true,
+                        icon: "error",
+                        title: message,
+                        position: "top",
+                        button: true,
+                    })
                 },
                 check_report_workplace_availability(schedule_for_workplace){
                     this.available_workplace_report = [];

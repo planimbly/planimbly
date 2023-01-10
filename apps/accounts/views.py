@@ -14,7 +14,7 @@ class EmployeeViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Employee.objects.all().filter(user_org=self.request.user.user_org) \
-            .exclude(is_supervisor=True)
+            .exclude(is_supervisor=True).exclude(groups__name='supervisor').exclude(is_superuser=True)
         return queryset
 
     def perform_create(self, serializer):

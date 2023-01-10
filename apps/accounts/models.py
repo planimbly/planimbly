@@ -19,28 +19,30 @@ class MyAccountManager(BaseUserManager):
         # TODO automatyczne tworzenie username
         if job_time is None:
             job_time = '1'
-        user = self.model(email=self.normalize_email(email), username=username, first_name=first_name, last_name=last_name,
+        user = self.model(email=self.normalize_email(email), username=username, first_name=first_name,
+                          last_name=last_name,
                           order_number=order_number, user_org=user_org, is_supervisor=is_supervisor, job_time=job_time)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    # TODO DO PRZEMYŚLENIA
-    def create_superuser(self, email, username, password):
-        user = self.create_user(email=self.normalize_email(email),
-                                username=username,
-                                password=password,
-                                first_name="admin",
-                                last_name="admin",
-                                order_number="0")
-        user.is_staff = True
-        user.is_superuser = True
-        user.save(using=self._db)
-        return user
+
+''' # TODO DO PRZEMYŚLENIA
+def create_superuser(self, email, username, password):
+    user = self.create_user(email=self.normalize_email(email),
+                            username=username,
+                            password=password,
+                            first_name="admin",
+                            last_name="admin",
+                            order_number="0")
+    user.is_staff = True
+    user.is_superuser = True
+    user.save(using=self._db)
+    return user'''
 
 
 class Employee(AbstractUser):
-    email = models.EmailField(verbose_name="Adres email")
+    email = models.EmailField(verbose_name="Adres email", unique=True)
     username = models.CharField(max_length=50, unique=True, verbose_name="Nazwa użytkownika")
     first_name = models.CharField(max_length=50, verbose_name="Imię")
     last_name = models.CharField(max_length=50, verbose_name="Nazwisko")

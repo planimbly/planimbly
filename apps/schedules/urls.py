@@ -3,7 +3,8 @@ from rest_framework import routers
 
 from apps.schedules.views import ShiftTypeManageView, ShiftTypeViewSet, ScheduleManageView, ScheduleGetApiView, \
     ScheduleCreateApiView, ShiftManageApiView, PreferenceViewSet, AbsenceViewSet, AbsenceManageView, \
-    ScheduleReportGetApiView, AssignmentViewSet, JobTimeViewSet, JobTimeManageView, FreeDayViewSet, CheckAlgorithmView
+    ScheduleReportGetApiView, AssignmentViewSet, JobTimeViewSet, JobTimeManageView, FreeDayViewSet, CheckAlgorithmView, \
+    ScheduleGeneratingView, ScheduleEmployeeGetApiView
 
 shiftType_router = routers.DefaultRouter()
 shiftType_router.register(r'shiftType', ShiftTypeViewSet, basename='shiftType')
@@ -19,6 +20,7 @@ urlpatterns = [
     path('schedule_manage/', ScheduleManageView.as_view(), name="schedule_manage"),
     path('absence_manage/', AbsenceManageView.as_view(), name="absence_manage"),
     path('jobtime_manage/', JobTimeManageView.as_view(), name="jobtime_manage"),
+    path('schedule_generating/', ScheduleGeneratingView.as_view(), name="schedule_generating"),
 
     # API urls
     path('api/check_algorithm/', CheckAlgorithmView.as_view(), name="check_algorithm"),
@@ -28,6 +30,8 @@ urlpatterns = [
     path('api/shift_manage/', ShiftManageApiView.as_view(), name='shift_manage'),
     path('api/<int:workplace_pk>/schedule_get/', ScheduleGetApiView.as_view(),
          name='schedule_get'),
+    path('api/<int:employee_pk>/schedule_employee_get/', ScheduleEmployeeGetApiView.as_view(),
+         name='schedule_employee_get'),
     path('api/<int:unit_pk>/schedule_report_get/', ScheduleReportGetApiView.as_view(),
          name='schedule_report_get')
 

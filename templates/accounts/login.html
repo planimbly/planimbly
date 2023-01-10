@@ -23,10 +23,18 @@
                     <form method="post" class="form--input--style">
                         {% csrf_token %}
                         <h3 class="mb-3 font-weight-normal">Zaloguj się:</h3>
+                        {% for field, errors in form.errors.items %}
+                            <div class="alert alert-danger">
+                                {% for error in errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
                         {% render_field form.username class+="form-control mb-1" placeholder="Nazwa użytkownika" %}
                         {% render_field form.password class+="form-control mb-1" placeholder="Hasło" %}
-                        
-                        <a href="{% url 'password_reset' %}" style="text-decoration: none; color: #7c7c7c;font-size:0.8rem">Zapomniałeś hasła?</a>
+
+                        <a href="{% url 'password_reset' %}"
+                           style="text-decoration: none; color: #7c7c7c;font-size:0.8rem">Zapomniałeś hasła?</a>
                         <div class="mt-4">
                             <input type="submit" class="btn btn-lg btn-primary" value="Zaloguj">
                         </div>

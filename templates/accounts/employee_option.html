@@ -4,6 +4,7 @@
 
 {% block head %}
     <link rel="stylesheet" href="{% static 'css/accounts/employee_option.css' %}">
+    <link rel="stylesheet" href="{% static 'css/tooltip.css' %}">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script>
@@ -82,7 +83,14 @@
         </div>
         
         <div>
-            <h5>Preferencje zmianowe</h5>
+            <div class="emp_tool_box">
+                <div>
+                    <tooltip text="Preferencje zmianowe to fajna sprawa">
+                        <div class="material-icons" style="font-size: 0.93rem; color: #616161; margin-top: 6px;;">help</div>
+                    </tooltip>
+                </div>
+                <div><h5>Preferencje zmianowe</h5></div>
+            </div>
             <div class="list-group">
                 <div v-for="preference in preferences_list" :key="preference.id" class="list-group-item list-group-item-action position-static">
                     <div class="emp_option_table_box">
@@ -99,7 +107,14 @@
         {% comment %} [[ preference.shift_type_obj.hour_start.toString().slice(0, 5) ]] {% endcomment %}
 
         <div>
-            <h5>Przypisania</h5>
+            <div class="emp_tool_box">
+                <div>
+                    <tooltip text="Przypisania bardzo to fajna sprawa">
+                        <div class="material-icons" style="font-size: 0.93rem; color: #616161; margin-top: 6px;;">help</div>
+                    </tooltip>
+                </div>
+                <div><h5>Przypisania</h5></div>
+            </div>
             <div class="list-group">
                 <div v-for="assignment in good_assignment_list" :key="assignment.id" class="list-group-item list-group-item-action position-static">
                     <div class="emp_option_table_box">
@@ -114,7 +129,14 @@
         </div>
 
         <div>
-            <h5>Wykluczenia</h5>
+            <div class="emp_tool_box">
+                <div>
+                    <tooltip text="Wykluczenia to fajna sprawa">
+                        <div class="material-icons" style="font-size: 0.93rem; color: #616161; margin-top: 6px;;">help</div>
+                    </tooltip>
+                </div>
+                <div><h5>Wykluczenia</h5></div>
+            </div>
             <div class="list-group">
                 <div v-for="assignment in bad_assignment_list" :key="assignment.id" class="list-group-item list-group-item-action position-static">
                     <div class="emp_option_table_box">
@@ -233,12 +255,14 @@
                         </select>
 
                         <div class="form-floating" style="margin-bottom: 10px">
-                            <input type="date" class="form-control" v-model="assign_add_start" id="inputDateStart" placeholder="Data rozpoczęcia przypisania">
+                            <input type="date" class="form-control" v-model="assign_add_start" id="inputDateStart" placeholder="Data rozpoczęcia przypisania"
+                                   :min="date_bottom_limit" :max="date_top_limit">
                             <label for="inputDateStart">Data rozpoczęcia przypisania</label>
                         </div>
 
                         <div class="form-floating" style="margin-bottom: 10px">
-                            <input type="date" class="form-control" v-model="assign_add_end" id="inputDateEnd" placeholder="Data końca przypisania">
+                            <input type="date" class="form-control" v-model="assign_add_end" id="inputDateEnd" placeholder="Data końca przypisania" 
+                                   :max="date_top_limit" :min="assign_add_start">
                             <label for="inputDateEnd">Data końca przypisania</label>
                         </div>
 
@@ -273,12 +297,14 @@
                         </select>
 
                         <div class="form-floating" style="margin-bottom: 10px">
-                            <input type="date" class="form-control" v-model="assign_add_start" id="inputDateStart" placeholder="Data rozpoczęcia przypisania">
+                            <input type="date" class="form-control" v-model="assign_add_start" id="inputDateStart" placeholder="Data rozpoczęcia przypisania"
+                                   :min="date_bottom_limit" :max="date_top_limit">
                             <label for="inputDateStart">Data rozpoczęcia przypisania</label>
                         </div>
 
                         <div class="form-floating" style="margin-bottom: 10px">
-                            <input type="date" class="form-control" v-model="assign_add_end" id="inputDateEnd" placeholder="Data końca przypisania">
+                            <input type="date" class="form-control" v-model="assign_add_end" id="inputDateEnd"  placeholder="Data końca przypisania" 
+                                   :max="date_top_limit":min="assign_add_start">
                             <label for="inputDateEnd">Data końca przypisania</label>
                         </div>
 
@@ -300,10 +326,15 @@
 {% endblock content %}
 
 {% block vue-content %}
-    <script type="module">  
+    <script type="module"> 
+        import tooltip from "{% static 'js/components/tooltip.js' %}";
+
         const {createApp} = Vue
         var vue_app = createApp({
             delimiters: ["[[", "]]"],
+            components: {
+                tooltip,
+            },
             data() {
                 return {
                     employee_id: {{ pk }},
@@ -353,6 +384,9 @@
                         {jobtime_fraction: '3/4', jobtime_hours: 120, jobtime_name: 'Trzy czwarte etatu'},
                         {jobtime_fraction: '1', jobtime_hours: 160, jobtime_name: 'Cały etat'},
                     ],
+
+                    date_bottom_limit: new Date(),
+                    date_top_limit: new Date(),
 
                     // API COUNTER: 8
                 }
@@ -464,7 +498,6 @@
                     axios
                         .get(this.emp_preferences_url)
                         .then(response_pref_data => (this.preferences_list = response_pref_data.data))
-                        .then(() => console.log(this.preferences_list))
                         .catch(error => {this.response = error.response.data})
                     this.daylist = this.st_numbers_to_list('0000000')
                 },
@@ -484,7 +517,7 @@
                         if (assign.negative_flag == false){
                             this.good_assignment_list.push(assign)
                         } else {
-                            this.bad_assignment_list.push(assign)
+                            this.bad_assignment_list.push(assign) 
                         }
                     }
                 },
@@ -755,6 +788,20 @@
                     }
                     return day_str
                 },
+                dates_compute(){
+                    let this_year = new Date().getFullYear()
+                    let bottom_date = new Date()
+                    let top_date = new Date()
+                    bottom_date.setFullYear(this_year - 1)
+                    top_date.setFullYear(this_year + 1)
+                    if (bottom_date.getDate() < 10){
+                        this.date_bottom_limit = bottom_date.getFullYear() + '-' + bottom_date.getMonth() + 1 + '-' + '0' + bottom_date.getDate()
+                        this.date_top_limit = top_date.getFullYear() + '-' + top_date.getMonth() + 1 + '-' + '0' + top_date.getDate()
+                    } else {
+                        this.date_bottom_limit = bottom_date.getFullYear() + '-' + bottom_date.getMonth() + 1 + '-' + bottom_date.getDate()
+                        this.date_top_limit = top_date.getFullYear() + '-' + top_date.getMonth() + 1 + '-' + top_date.getDate()
+                    }
+                },
             },
             mounted() {
                 this.fetch_data()
@@ -762,6 +809,7 @@
                 this.workplace_list_fetch()
                 this.fetch_preferences_data()
                 this.fetch_assignment_data()
+                this.dates_compute()
             }
         }).mount('#vue-app');
     </script>

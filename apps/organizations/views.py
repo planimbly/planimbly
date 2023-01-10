@@ -40,13 +40,12 @@ def send_user_activation_mail(user, request):
     email = EmailMessage(
         email_subject,
         email_body,
-        'noreply@planimbyl.com',
+        'noreply@planimbly.com',
         [user.email]
     )
     email.send()
 
 
-# TODO DO POPRAWY TWORZENIE ORGANIZACJI + UŻYTKOWNIKÓW, dużo zmian było
 class OrganizationCreateView(GroupRequiredMixin, TemplateView):
     template_name = 'organizations/organization_create.html'
 

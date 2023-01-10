@@ -13,26 +13,24 @@ from apps.schedules.models import ShiftType, Schedule, Preference, Absence, Assi
 
 @db_task()
 def run_algorithm(year, month, user_id, workplace_list):
-
     workplace_query = Workplace.objects.filter(id__in=workplace_list)
     schedule_dict = dict()
-    # Sprawdzamy czy istnieją już jakieś grafiki, jeżeli tak usuwamy wszystkie
+
     for workplace in workplace_query:
-        old_schedule = Schedule.objects.filter(year=year).filter(month=month).filter(workplace=workplace).first()
-        if old_schedule is not None:
-            old_schedule.delete()
         schedule = Schedule(year=year, month=month,
                             workplace=workplace)
-        schedule.save()
+        # schedule.save()
         schedule_dict.setdefault(workplace.id, schedule)
 
-    shiftType_list = list(ShiftType.objects.filter(workplace_id__in=workplace_list).filter(is_used=True))
+    shiftType_list = list(
+        ShiftType.objects.filter(workplace_id__in=workplace_list).filter(is_used=True).filter(is_archive=False))
 
     emp_for_workplaces = {}
 
     for work_id in workplace_list:
         emp_for_workplaces[work_id] = Employee.objects.filter(
-            user_workplace__in=Workplace.objects.filter(id__in=[work_id])).distinct().order_by('id')
+            user_workplace__in=Workplace.objects.filter(id__in=[work_id])).exclude(is_supervisor=True).exclude(
+            groups__name='supervisor').exclude(is_superuser=True).distinct().order_by('id')
 
     employee_list = Employee.objects.filter(user_workplace__in=workplace_query).distinct().order_by('id')
     preferences = Preference.objects.filter(employee__in=employee_list)
@@ -53,7 +51,8 @@ def run_algorithm(year, month, user_id, workplace_list):
 
     term_assignments = Assignment.objects.filter(employee__in=employee_list).filter(start__lte=last_day).filter(
         end__gte=first_day)
-    general_assignments = Assignment.objects.filter(employee__in=employee_list).filter(start=None).filter(end=None)
+    general_assignments = Assignment.objects.filter(employee__in=employee_list).filter(start=None).filter(
+        end=None)
 
     emp_assignments = {}
     for assignment in term_assignments:
@@ -66,22 +65,52 @@ def run_algorithm(year, month, user_id, workplace_list):
     for work_id in workplace_list:
         work_for_workplace_closing[work_id] = WorkplaceClosing.objects.filter(start__lte=last_day).filter(
             end__gte=first_day).filter(workplace_id=work_id)
-    jobtime = JobTime.objects.filter(year=int(year)).values_list(calendar.month_name[month].lower(), flat=True).first()
+
+    jobtime = JobTime.objects.filter(year=int(year)).values_list(calendar.month_name[month].lower(),
+                                                                 flat=True).first()
 
     seven_before = first_day - datetime.timedelta(days=7)
     seven_after = last_day + datetime.timedelta(days=7)
 
-    shifts_before = Shift.objects.filter(date__gte=seven_before).filter(date__lt=first_day).filter(
+    shifts_before = {}
+    shifts_after = {}
+
+    shifts_b = Shift.objects.filter(date__gte=seven_before).filter(date__lt=first_day).filter(
         schedule__workplace_id__in=workplace_list).order_by('date')
-    shifts_after = Shift.objects.filter(date__gt=last_day).filter(date__lte=seven_after).filter(
+    shifts_a = Shift.objects.filter(date__gt=last_day).filter(date__lte=seven_after).filter(
         schedule__workplace_id__in=workplace_list).order_by('date')
 
-    data = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month,
-                                                emp_for_workplaces, emp_preferences, emp_absences,
-                                                emp_assignments, jobtime, work_for_workplace_closing,
-                                                shifts_before, shifts_after)
-    for shift in data:
-        shift.save()
+    for shift in shifts_b:
+        shifts_before.setdefault(shift.date, []).append(shift)
+    for shift in shifts_a:
+        shifts_after.setdefault(shift.date, []).append(shift)
+
+    response = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month,
+                                                    emp_for_workplaces, emp_preferences, emp_absences,
+                                                    emp_assignments, jobtime, work_for_workplace_closing,
+                                                    shifts_before, shifts_after)
+    if response.get('status'):
+        for workplace in workplace_query:
+            old_schedule = Schedule.objects.filter(year=year).filter(month=month).filter(
+                workplace=workplace).first()
+            if old_schedule is not None:
+                old_schedule.delete()
+        for schedule in schedule_dict:
+            schedule_dict[schedule].save()
+        data = response.get('data')
+        for shift in data:
+            shift.save()
+    else:
+        for workplace in workplace_query:
+            old_schedule = Schedule.objects.filter(year=year).filter(month=month).filter(
+                workplace=workplace).first()
+            if old_schedule is not None:
+                old_schedule.message = "Nie udało się wygenerować nowego grafiku"
+                old_schedule.save()
+            else:
+                schedule = schedule_dict[workplace.id]
+                schedule.message = "Nie udało się wygenerować nowego grafiku"
+                schedule.save()
     return
 
 
