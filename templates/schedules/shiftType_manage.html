@@ -159,16 +159,18 @@
                                             v-model="is_used" id="isShiftUsed" checked>
                                 </div>
                             </div>
+
+                            <label v-for="(field, index) in response" style="color: #FF0000; margin-top: 20px">
+                                [[ field.join('') ]]
+                            </label>
                         </div>
+                        
+                        
 
                         <div class="modal-footer">
                             <button type="submit" class="btn btn-outline-primary">Dodaj</button>
                         </div>
                     </form>
-
-                    {% comment %} <p v-for="(field, index) in response">
-                    [[ index ]] : [[ field.join('') ]]
-                </p> {% endcomment %}
                 </div>
             </div>
         </div>
@@ -230,6 +232,9 @@
             </tr>
             </tbody>
         </table>
+
+        
+
     </div>
     {% else %}
         <span>Brak działów</span>

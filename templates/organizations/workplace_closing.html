@@ -82,24 +82,28 @@
                           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     
-                        <form id="closing_form" v-on:submit.prevent="add_closing">
-                            <div class="modal-body">
-                                <div class="form-floating" style="margin-bottom: 10px">
-                                    <input type="date" class="form-control" v-model="inputDateStart" id="inputDateStart" placeholder="Data rozpoczęcia wyłączenia" 
-                                           :min="date_bottom_limit" :max="date_top_limit" required>
-                                    <label for="inputDateStart">Data rozpoczęcia wyłączenia</label>
-                                </div>
-        
-                                <div class="form-floating" style="margin-bottom: 10px">
-                                    <input type="date" class="form-control" v-model="inputDateEnd" id="inputDateEnd" placeholder="Data końca wyłączenia" 
-                                           :min="inputDateStart" :max="date_top_limit" required>
-                                    <label for="inputDateEnd">Data końca wyłączenia</label>
-                                </div>
+                    <form id="closing_form" v-on:submit.prevent="add_closing">
+                        <div class="modal-body">
+                            <div class="form-floating" style="margin-bottom: 10px">
+                                <input type="date" class="form-control" v-model="inputDateStart" id="inputDateStart" placeholder="Data rozpoczęcia wyłączenia" 
+                                        :min="date_bottom_limit" :max="date_top_limit" required>
+                                <label for="inputDateStart">Data rozpoczęcia wyłączenia</label>
                             </div>
-                            <div class="modal-footer">
-                                <input type="submit" value="Zapisz" class="btn btn-outline-success">
+    
+                            <div class="form-floating" style="margin-bottom: 10px">
+                                <input type="date" class="form-control" v-model="inputDateEnd" id="inputDateEnd" placeholder="Data końca wyłączenia" 
+                                        :min="inputDateStart" :max="date_top_limit" required>
+                                <label for="inputDateEnd">Data końca wyłączenia</label>
                             </div>
-                        </form>
+                        </div>
+                        <div class="modal-footer">
+                            <input type="submit" value="Zapisz" class="btn btn-outline-success">
+                        </div>
+                    </form>
+
+                    <label v-for="(field, index) in response" style="color: #FF0000; margin-top: 20px">
+                        [[ field.join('') ]]
+                    </label>
                 </div>
             </div>
         </div>
@@ -184,7 +188,7 @@
                                     console.log(this.inputDateEnd)
                                     this.current_closing_compute
                                 })
-                                //.catch(error => {this.response = error.response.data})
+                                .catch(error => {this.response = error.response.data})
                             }
                         });
                 },
