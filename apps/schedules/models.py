@@ -40,6 +40,7 @@ class Schedule(models.Model):
     year = models.IntegerField(verbose_name='Rok')
     month = models.IntegerField(verbose_name='Miesiąc')
     workplace = models.ForeignKey(Workplace, on_delete=models.CASCADE, verbose_name="Dział")
+    message = models.CharField(max_length=512, verbose_name="Wiadomość po wygenerowaniu grafiku", null=True, blank=True)
 
     def __str__(self):
         return str(self.year) + ' ' + str(self.month) + ' ' + self.workplace.__str__()

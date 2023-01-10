@@ -1,0 +1,49 @@
+.PN-tooltip-container { 
+    position: relative;
+    display: inherit;
+    /* margin:100px; */
+    margin-bottom: 0px;
+}
+  
+.PN-tooltip-container:hover .PN-tooltip{
+    opacity: 1;
+    transition-duration: 0.5s;
+}
+  
+.PN-tooltip { 
+    pointer-events: none;
+    
+    color: #ffffff;
+    text-align: center;
+    padding: 5px 0;
+    border-radius: 5px;
+
+    max-width: 200px;
+    min-width: 50px;
+    overflow-wrap: break-word;
+
+    width: max-content;
+    bottom: 110%;
+    left: 50%;
+    margin-left: -100px;
+  
+    opacity: 0;
+    transition: opacity 0.5s;
+  
+    position: absolute;
+    z-index: 1;
+  
+    background: #616161;
+}
+  
+.PN-text::after {
+    content: " ";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #616161 transparent transparent transparent;
+  
+}

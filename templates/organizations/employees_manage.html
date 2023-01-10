@@ -42,8 +42,8 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <p>Plik tekstowy powinien być w formacie utf-8: email, nazwa użytkownika, imię, nazwisko,
-                                liczba porządkowa, wymiar etatu</p>
+                            <p>Plik CSV powinien być w formacie utf-8: email, nazwa użytkownika, imię, nazwisko,
+                                liczba porządkowa, wymiar etatu. Z przecinkiem jako z separatorem</p>
                             <p>Wybierz plik do zaimportowania:</p>
                             <input type="file" name="employeesList" id="employeesList">
                         </div>
@@ -106,7 +106,7 @@
                                 <div class="col-6">
                                     <div class="form-floating">
                                         <select id="jobtimeSelect" class="form-select" v-model="selected_jobtime" style="padding-top: .625rem" required>
-                                            <option :value="null" disabled hidden>Wybierz z listy</option>
+                                            <option :value="null" disabled hidden>Wymiar etatu</option>
                                             <option v-for="jobtime in jobtime_list" :value="jobtime">
                                                 <div class="fw-bold">[[ jobtime.jobtime_fraction ]]</div>
                                             </option>
@@ -114,16 +114,17 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <label v-for="(field, index) in response" style="color: #FF0000; margin-top: 20px">
+                                [[ field.join('') ]]
+                            </label>
+
                         </div>
 
                         <div class="modal-footer">
                             <button type="submit" class="btn btn-outline-primary">Dodaj</button>
                         </div>
                     </form>
-
-                    <p v-for="(field, index) in response">
-                        [[ index ]] : [[ field.join('') ]]
-                    </p>
                 </div>
             </div>
         </div>
@@ -222,30 +223,33 @@
                     })
                         .then((willAdd) => {
                             if (willAdd) {
-
-                                axios
-                                    .post(this.base_url,
-                                        {
-                                            email: this.email,
-                                            username: this.username,
-                                            first_name: this.first_name,
-                                            last_name: this.last_name,
-                                            order_number: this.order_number,
-                                            job_time: this.selected_jobtime.jobtime_fraction,
-                                        }
-                                    )
-                                    .then(
-                                        this.fetch_data
-                                    )
-                                    .catch(error => {
-                                            this.response = error.response.data
-                                        }
-                                    )
-                                this.email = ''
-                                this.username = ''
-                                this.first_name = ''
-                                this.last_name = ''
-                                this.order_number = 0
+                                if (this.selected_jobtime != null){
+                                    axios
+                                        .post(this.base_url,
+                                            {
+                                                email: this.email,
+                                                username: this.username,
+                                                first_name: this.first_name,
+                                                last_name: this.last_name,
+                                                order_number: this.order_number,
+                                                job_time: this.selected_jobtime.jobtime_fraction,
+                                            }
+                                        )
+                                        .then(
+                                            this.fetch_data()
+                                        )
+                                        .catch(error => {
+                                                this.response = error.response.data
+                                            }
+                                        )
+                                    this.email = ''
+                                    this.username = ''
+                                    this.first_name = ''
+                                    this.last_name = ''
+                                    this.order_number = 0
+                                } else {
+                                    this.response = { username: ["Nie został wybrany wymiar etatu"] }
+                                }
                             }
                         });
                 },

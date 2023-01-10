@@ -15,7 +15,7 @@
 {% block content %}
     <div id="vue-app" v-cloak>
         <div class="col d-flex justify-content-start">
-            <h3 class="content-title">Etaty i dni wolne</h3>
+            <h3 class="content-title">Wymiar etatu w miesiącu i dni wolne</h3>
         </div>
         <div class="content_box">
             <div>
@@ -68,7 +68,7 @@
                     <div class="form-floating" style="margin-bottom: 10px; max-width: 200px">
                         <input type="text" class="form-control" v-model="newname" id="inputName"
                                placeholder="Dodaj dzień wolny" required>
-                        <label for="inputName">Nazwa</label>
+                        <label for="inputName">Nazwa dnia wolnego</label>
                     </div>
                     <input type="submit" value="Dodaj" class="btn btn-outline-success" style="height: 72px">
                 </form>
@@ -93,7 +93,7 @@
 {% endblock %}
 
 {% block vue-content %}
-
+    
     <script type="module">
         const {createApp} = Vue
         createApp({
@@ -117,6 +117,9 @@
                         new Date().getFullYear(),
                         new Date().getFullYear() + 1,
                         new Date().getFullYear() + 2,
+                        new Date().getFullYear() + 3,
+                        new Date().getFullYear() + 4,
+                        new Date().getFullYear() + 5,
                     ],
                 }
             },
@@ -201,6 +204,13 @@
                                     })
                                     .catch(error => {
                                             this.response = error.response.data
+                                            swal({
+                                                toast: true,
+                                                icon: "error",
+                                                title: "Błąd przy dodawaniu dnia wolnego! - Istnieje już dzień wolny z tą datą.",
+                                                position: "top",
+                                                button: true,
+                                            })
                                         }
                                     )
                             }
@@ -288,7 +298,7 @@
                 },
             },
             mounted() {
-                this.fetch_data()
+                this.fetch_data();
             },
         }).mount('#vue-app');
 
