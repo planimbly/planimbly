@@ -53,6 +53,10 @@
                                     [[employee.first_name]] [[employee.last_name]]
                                 </option>
                             </select>
+
+                            <label v-for="(field, index) in response" style="color: #FF0000; margin-top: 20px">
+                                [[ field.join('') ]]
+                            </label>
                         </div>
                         
                         <div class="modal-footer">
@@ -125,6 +129,7 @@
                     hours_number: '',
                     date_bottom_limit: new Date(),
                     date_top_limit: new Date(),
+                    response: null,
                 }
             },
             methods: {
@@ -151,6 +156,12 @@
                     })
                         .then((willAdd) => {
                             if (willAdd) {
+                                if(this.employee_id == null){
+                                    this.response = { employee: ["Nie został wybrany pracownik"] }
+                                }
+                                if(this.type == null){
+                                    this.response = { employee: ["Nie został wybrany typ nieobecności"] }
+                                }
                                 axios
                                 .post(this.absence_url,
                                     {
@@ -167,6 +178,7 @@
                                 )
                                 .catch(error => {
                                         this.response = error.response.data
+                                        console.log(this.response)
                                     }
                                 )
                             }
