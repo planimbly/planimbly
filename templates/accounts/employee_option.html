@@ -546,6 +546,7 @@
                                             first_name: this.employee_info.first_name,
                                             last_name: this.employee_info.last_name,
                                             job_time: this.selected_jobtime.jobtime_fraction,
+                                            order_number: this.employee_info.order_number
                                         }
                                     )
                                     .then(() => window.location.href = '{% url 'employees_manage' %}')
