@@ -4,7 +4,7 @@ from loguru import logger
 
 from apps.accounts.models import Employee
 from apps.schedules.models import ShiftType
-from scripts.helpers import get_month_by_weeks, get_month_by_billing_weeks, get_letter_for_weekday
+from scripts.helpers import get_month_by_weeks, get_month_by_billing_weeks
 
 
 class ShiftTypeInfo:
@@ -75,7 +75,7 @@ class ShiftTypeInfo:
             list of days when shift is unused.
         """
 
-        logger.trace("Preparing closing days started...")
+        logger.trace("Preparing closing days started (ST: {:2d})...".format(self.id))
 
         cd = []
 
@@ -83,7 +83,7 @@ class ShiftTypeInfo:
             for i in range((cl.end - cl.start).days + 1):
                 inter_date = cl.start + timedelta(days=i)
                 cd.append(inter_date)
-                logger.log("ADDED", "[CLOSING] SHIFT: {:2d} | DAY: {:2d}".format(self.id, inter_date.day))
+                logger.debug("[CTX] | [CLOSING] SHIFT: {:2d} | DAY: {:2d}".format(self.id, inter_date.day))
 
         logger.trace("Preparing closing days ended.")
 
@@ -106,7 +106,7 @@ class ShiftTypeInfo:
         return self.shift_type
 
     def __str__(self) -> str:
-        return "[SHIFT] ID: {:2d} | {} | {} | DURATION (h): {:.1f} | DEMAND: {:d}".format(
+        return "[SHIFT] ID: {:2d} | {} | {} | DURATION: {:.1f} | DEMAND: {:d}".format(
             self.id, self.shift_type.workplace, self.shift_type.name, self.get_duration_in_hours(), self.shift_type.demand)
 
 
@@ -387,7 +387,6 @@ class Context:
             else:
                 s.closings = work_for_workplace_closing[s.get().workplace.id]
                 s.closing_days = s.prepare_closing_days()
-                s.get_closing_days_in_month(month, year)
 
         # Calculating worktime and job time stuff
         self.total_work_time = self.calculate_total_work_time()
@@ -406,7 +405,7 @@ class Context:
         self.job_time_multiplier = self.total_work_time / self.total_job_time
 
         if len(self.get_full_time_employees()) == 0:
-            logger.debug("There are no full time employees!")
+            logger.warning("There are no full time employees!")
         elif len(self.employees) == len(self.get_full_time_employees()):
             self.overtime_multiplier = 1
         else:
@@ -450,7 +449,7 @@ class Context:
                 s_delta = j_start - i_end
                 s_delta = int(s_delta.total_seconds() // 60)
                 if s_delta < (11 * 60):  # break if difference between: i, j is below 11 hours
-                    logger.debug("Found illegal transition: {} to {}".format(i.get().name, j.get().name))
+                    logger.debug("[CTX] | [ILLEGAL TRANSITION] {} to {} (IDs: {} to {})".format(i.get().name, j.get().name, i.get().id, j.get().id))
                     # TODO: think about returning a list instead of tuples (np żeby przechowywać transitions dla więcej niż 2 zmian)
                     it.append((i.id, j.id, 0))
 
@@ -479,7 +478,7 @@ class Context:
             end = i.get().hour_end.hour
             # TODO: we should be comparing hours with datetime, just in case sometime we have super long shifts to consider
             if end < start:
-                logger.debug("Found overnight shift: {}".format(i.get().name))
+                logger.debug("[CTX] | [OVERNIGHT SHIFT] NAME: {} | ID: {}".format(i.get().name, i.get().id))
                 # Between 2 and 3 consecutive days of night shifts, 1 and 4 are possible but penalized.
                 sc.append((i.get().id, 1, 2, 20, 3, 4, 5))
                 # At least 1 night shift per week (penalized). At most 4 (hard).
@@ -542,7 +541,7 @@ class Context:
             sum of all employees maximum allowed work time
         """
 
-        logger.trace("Calculating max allowed work time started...")
+        logger.trace("Calculating maximum allowed work time started...")
 
         mwt = 0
 
@@ -555,10 +554,10 @@ class Context:
                 elif len(week) > 3:
                     max_week_work_time -= 8  # Minimum one free shift per 7-day week by default
                 ei.max_work_time += max(max_week_work_time, 0)
-            logger.info("Max work time for employee {}: {}h".format(ei.get().pk, ei.max_work_time))
+            logger.debug("[CTX] | [MAX WORK TIME] EMP: {:2d} | MWT: {:3d}h".format(ei.get().pk, ei.max_work_time))
             mwt += ei.max_work_time
 
-        logger.trace("Calculating max allowed work time ended.")
+        logger.trace("Calculating maximum allowed work time ended.")
 
         return mwt
 
@@ -569,6 +568,8 @@ class Context:
             list of employees requests prepared to be added to model in run_algorithm.py.
         """
 
+        logger.trace("Preparing requests started...")
+
         req = []
 
         for ei in self.employees:
@@ -577,9 +578,11 @@ class Context:
                     for d in week:
                         if pref.active_days[d[1]] == "1":
                             req.append((ei.employee.pk, next(st.get().id for st in self.shift_types if pref.shift_type == st.get()), d[0], -1))
-                            logger.log("ADDED", "[PREFERENCE] EMP: {:2d} | SHIFT: {} | DAY: {:2d} ({}) | WEIGHT: {:d}".format(
+                            logger.debug("[CTX] | [PREFERENCE] EMP: {:2d} | SHIFT: {} | DAY: {:2d} | WEIGHT: {:d}".format(
                                 ei.employee.pk, next(st.get().name for st in self.shift_types if pref.shift_type == st.get()),
-                                d[0], get_letter_for_weekday(d[1]), -1))
+                                d[0], -1))
+
+        logger.trace("Preparing requests ended.")
 
         return req
 
@@ -590,11 +593,16 @@ class Context:
             list of absences prepared to be added to fixed assignments.
         """
 
+        logger.trace("Preparing fixed assignments (absent days) started...")
+
         fa = []
 
         for ei in self.employees:
             for d in ei.get_absent_days_in_month(self.month, self.year):
+                logger.debug("[CTX] | [ABSENCE] EMP: {:2d} | DAY {:2d}".format(ei.employee.pk, d))
                 fa.append((ei.employee.pk, 0, d))
+
+        logger.trace("Preparing fixed assignments (absent days) ended.")
 
         return fa
 
@@ -611,48 +619,25 @@ class Context:
         if not self.employees:
             logger.critical("NO EMPLOYEES!")
         else:
-            logger.debug("Employees: {}".format(self.employees))
+            logger.debug("Employees: {}".format([e.get() for e in self.employees]))
 
         if len(self.shift_types) <= 1:  # 1 not 0, because when comparing to 0 it doesn't work - we have a free shift!
             logger.critical("NO SHIFTS!")
         else:
-            logger.debug("Shifts: {}".format(self.shift_types))
-
-        logger.debug("Given month: {}".format(self.month))
-        logger.debug("Given year: {}".format(self.year))
+            logger.debug("Shifts: {}".format([st.get() for st in self.shift_types]))
 
         logger.debug("Month separated into weeks: {}".format(self.month_by_weeks))
         logger.debug("Month separated into billing weeks: {}".format(self.month_by_billing_weeks))
 
         logger.debug("Given job time for month: {}".format(self.job_time))
 
-        if self.requests:
-            logger.debug("Returned requests {}.".format(self.requests))
-        else:
-            logger.debug("There are no employees requests")
-
-        if self.fixed_assignments:
-            logger.debug("Returned absences {}.".format(self.fixed_assignments))
-        else:
-            logger.debug("There are no employees absences")
-
-        if self.illegal_transitions:
-            logger.debug("Returned illegal transitions {}.".format(self.illegal_transitions))
-        else:
-            logger.debug("No illegal transitions")
-
-        if self.overnight_shifts:
-            logger.debug("Found overnight shifts: {}.".format([s[0] for s in self.overnight_shifts[0]]))
-        else:
-            logger.debug("No overnight shifts")
-
         logger.trace("Calculated total worktime: {}".format(self.total_work_time))
         logger.trace("Calculated total job time: {}".format(self.total_job_time))
         logger.trace("Calculated maximum worktime: {}".format(self.max_work_time))
 
-        logger.trace("Calculated job time multiplier: {}".format(self.job_time_multiplier))
-        logger.trace("Calculated overtime multiplier {}; for full-timers {}, above full-time {}.".format(
-            self.overtime_multiplier, self.overtime_for_full_timers, self.overtime_above_full_time))
+        logger.trace("Calculated job time multiplier: {:.5f}".format(self.job_time_multiplier))
+        logger.trace("Calculated overtime multiplier: {:.5f}".format(self.overtime_multiplier))
+        logger.trace("Calculated overtime above full time: {}".format(self.overtime_above_full_time))
 
         if self.overtime_for_full_timers:
             logger.warning("There might be overtime for full time workers!")

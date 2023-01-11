@@ -1071,8 +1071,8 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
     except (Exception,):
         logger.level("MODEL", no=24, color="<magenta><bold>")
 
-    logger.add("./scripts/logs/log_{time}.log", level="TRACE")
-    logger.add(sys.stdout, format="<level>{level} | {message}</level>", level="INFO")
+    logger.add("./scripts/logs/log_{time}.log", level="TRACE", backtrace=True, diagnose=True)
+    logger.add(sys.stdout, format="<level>{level} | {message}</level>", level="INFO", backtrace=True, diagnose=True)
 
     logger.success("Logging started...")
     logger.info("Month: {} | Year: {}".format(month, year))
@@ -1115,7 +1115,7 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
                                       job_time,
                                       params='max_time_in_seconds:90.0', output_proto=None)
     except Exception as e:
-        logger.critical(e)
+        logger.exception("Something went wrong! {}".format(e))
 
     logger.remove()
 
