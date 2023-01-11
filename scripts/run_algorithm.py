@@ -318,12 +318,12 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     # TODO: move this sorting to backend
     emp_info = sorted(emp_info, key=lambda e: e.job_time, reverse=True)
 
-    ctx = Context(emp_info, shift_types, year, month, job_time, work_for_workplace_closing)
-
     # Sanitize employee list by absences
-    for ei in ctx.employees:
+    for ei in emp_info:
         ei.num_absent_days = sum(1 for _ in ei.get_absent_days_in_month(month, year))
-    ctx.employees = [ei for ei in ctx.employees if num_days > ei.num_absent_days]
+    emp_info = [ei for ei in emp_info if num_days > ei.num_absent_days]
+
+    ctx = Context(emp_info, shift_types, year, month, job_time, work_for_workplace_closing)
 
     for ei in ctx.employees:
         logger.log("ADDED", "[EMPLOYEE] {}".format(ei))
