@@ -12,6 +12,8 @@ class EmployeeAdmin(admin.ModelAdmin):
         # Proper kwargs are form, fields, exclude, formfield_callback
         if obj is None:  # obj is not None, so this is a change page
             kwargs['exclude'] = ['password', 'last_login', 'user_permissions', 'user_unit', 'user_workplace']
+        else:
+            kwargs['exclude'] = ['password']
         return super(EmployeeAdmin, self).get_form(request, obj, **kwargs)
 
 

@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
 
     # Internal
     'apps.accounts',
@@ -209,3 +210,5 @@ HUEY = RedisHuey('planimbly', connection_pool=pool)
 
 # Log 500 Error
 DEBUG_PROPAGATE_EXCEPTIONS = True
+
+SITE_ID = 1

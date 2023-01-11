@@ -1,5 +1,5 @@
 from django.contrib.auth.base_user import BaseUserManager
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Group
 from django.db import models
 
 from apps.organizations.models import Organization, Workplace, Unit
@@ -24,6 +24,9 @@ class MyAccountManager(BaseUserManager):
                           order_number=order_number, user_org=user_org, is_supervisor=is_supervisor, job_time=job_time)
         user.set_password(password)
         user.save(using=self._db)
+        if is_supervisor is False:
+            emp_group = Group.objects.filter(name='employee').first()
+            user.groups.add(emp_group)
         return user
 
 
