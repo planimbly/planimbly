@@ -47,7 +47,8 @@
                 </div>
             </div>
         </div>
-        <input type="button" value="Usuń pracownika" class="btn btn-outline-danger" style="margin-bottom: 50px; margin-left: 10px">
+        <input type="button" value="Usuń pracownika" class="btn btn-outline-danger" style="margin-bottom: 50px; margin-left: 10px"
+           v-on:click="delete_employee(employee_info.id)">
         <input type="submit" value="Zapisz zmiany" class="btn btn-outline-success" style="margin-bottom: 50px; margin-left: 10px">
         
     </form>
@@ -757,6 +758,28 @@
                         }
                     }
                     return day_str
+                },
+                delete_employee(employee_id){
+                    swal({
+                        title: "Czy na pewno chcesz usunąć pracownika?",
+                        icon: "warning",
+                        buttons: true,
+                        dangerMode: true,
+                    })
+                        .then((willDelete) => {
+                            if (willDelete) {
+                                let url = '{% url 'employee-list' %}' + employee_id + '/'
+                                axios
+                                    .delete(url,
+                                        {
+                                            id: employee_id
+                                        }
+                                    )
+                                .then(() => window.location.href = '{% url 'employees_manage' %}')
+                                .catch(error => {this.response = error.response.data});
+                                
+                            }
+                        });
                 },
             },
             mounted() {
