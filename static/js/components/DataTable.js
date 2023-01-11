@@ -256,10 +256,10 @@ export default {
                 <thead>
                 <tr>
                     <th v-for="field in fields_options" scope="col">
-                        <div v-on:click="set_user_field_filter(field)" class="d-flex inline-flex justify-content-center">
+                        <div v-on:click="set_user_field_filter(field)" class="d-flex inline-flex justify-content-center" style="cursor: pointer">
                         [[ field.title ]]
-                        <div v-if="filter_triangle_to_show(field) === 'asc'" class="ms-1">&#x25B4</div>
-                        <div v-else-if="filter_triangle_to_show(field) === 'desc'" class="ms-1">&#x25BE</div>
+                        <div v-if="filter_triangle_to_show(field) === 'asc'" class="ms-1" style="cursor: pointer">&#x25B4</div>
+                        <div v-else-if="filter_triangle_to_show(field) === 'desc'" class="ms-1" style="cursor: pointer">&#x25BE</div>
                         </div>
                     </th>
                 </tr>
@@ -283,7 +283,7 @@ export default {
             </table>
         </div>
         <div v-else>
-            <div v-for="(row, i) in filtered_data_rows" class="card position-relative mb-1" v-on:click="set_row_to_edit_mobile(row); register_row_click(row);"
+            <div v-for="(row, i) in filtered_data_rows" class="card position-relative mb-1 PN-hover-card" v-on:click="set_row_to_edit_mobile(row); register_row_click(row);"
                 v-bind="{'data-bs-toggle': (options.allow_modal_edit_on_mobile ? 'modal' : 'none')}" data-bs-target="#editRowModal" style="cursor: pointer">
                 <div class="card-body text-center">
                     <h5 class="card-title mb-0" v-if="fields_options && fields_options.find(f => f.highlighted === true)"> 

@@ -14,3 +14,7 @@
     border-color: black;
     border-width: 1px;
 }
+
+.PN-hover-card:hover{
+    background-color: rgb(228, 228, 228);
+}
