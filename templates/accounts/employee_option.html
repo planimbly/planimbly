@@ -536,7 +536,8 @@
                         .then((willAdd) => {
                             if (willAdd) {
                                 if (this.selected_jobtime == null){
-                                    this.selected_jobtime = this.return_jobtime_obj(this.employee_info.job_time)
+                                    this.selected_jobtime = this.employee_info.job_time
+                                    console.log(this.employee_info.job_time)
                                 }
                                 axios
                                     .put(this.base_url,
