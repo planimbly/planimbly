@@ -15,7 +15,9 @@
 {% block content %}
     <div id="vue-app" v-cloak>
         <div class="col d-flex justify-content-start">
-            <h3 class="content-title">Wymiar etatu w miesiącu i dni wolne</h3>
+
+            <h6 class="content-title">Wymiar etatu w miesiącu i dni wolne</h6>
+
         </div>
         <div class="content_box">
             <div>
@@ -53,7 +55,7 @@
                     <div class="month_box"><h5>Grudzień</h5><input type="number" class="w-50 form-control"
                                                                    v-model="year_object.december" required></div>
 
-                    <input type="submit" value="Zapisz zmiany" class="btn btn-outline-success"
+                    <input type="submit" value="Zapisz zmiany" class="btn btn-outline-primary"
                            style="margin-bottom: 50px">
                 </form>
             </div>
@@ -70,7 +72,7 @@
                                placeholder="Dodaj dzień wolny" required>
                         <label for="inputName">Nazwa dnia wolnego</label>
                     </div>
-                    <input type="submit" value="Dodaj" class="btn btn-outline-success" style="height: 72px">
+                    <input type="submit" value="Dodaj" class="btn btn-outline-primary" style="height: 72px">
                 </form>
 
                 <div class="list-group" style="margin-left: 5px; margin-right: 5px">

@@ -84,4 +84,7 @@ class AbsenceSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['employee_obj'] = EmployeeSerializer(Employee.objects.get(pk=data['employee'])).data
+        data['employee_first_name'] = EmployeeSerializer(Employee.objects.get(pk=data['employee'])).data['first_name']
+        data['employee_last_name'] = EmployeeSerializer(Employee.objects.get(pk=data['employee'])).data['last_name']
+        data['employee_username'] = EmployeeSerializer(Employee.objects.get(pk=data['employee'])).data['username']
         return data
