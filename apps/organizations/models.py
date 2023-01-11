@@ -46,3 +46,13 @@ class WorkplaceClosing(models.Model):
 
     class Meta:
         ordering = ['start']
+        unique_together = ('workplace', 'start', 'end')
+
+
+class Message(models.Model):
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, verbose_name="Organizacja")
+    content = models.CharField(max_length=512, verbose_name="Treść")
+    MESSAGE_TYPE = [
+        ('SCHEDULE', 'Grafik'),
+    ]
+    type = models.CharField(max_length=256, verbose_name="Typ wiadomości", choices=MESSAGE_TYPE)

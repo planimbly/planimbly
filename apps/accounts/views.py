@@ -14,7 +14,8 @@ class EmployeeViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Employee.objects.all().filter(user_org=self.request.user.user_org) \
-            .exclude(is_supervisor=True).exclude(groups__name='supervisor').exclude(is_superuser=True)
+            .exclude(is_supervisor=True).exclude(groups__name='supervisor').exclude(is_superuser=True).exclude(
+            is_active=False)
         return queryset
 
     def perform_create(self, serializer):
@@ -27,6 +28,10 @@ class EmployeeViewSet(viewsets.ModelViewSet):
                                                         job_time=v_data.get('job_time'),
                                                         user_org=self.request.user.user_org)
         send_user_activation_mail(employee, self.request)
+
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save()
 
 
 class EmployeeOptionView(GroupRequiredMixin, TemplateView):

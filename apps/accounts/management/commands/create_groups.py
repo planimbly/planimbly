@@ -1,8 +1,3 @@
-"""
-Copied from:
-https://stackoverflow.com/questions/22250352/programmatically-create-a-django-group-with-permissions
-"""
-
 from django.contrib.auth.models import Group, Permission
 from django.core.management import BaseCommand
 
