@@ -50,7 +50,7 @@ class ShiftTypeInfo:
         self.id = index
         self.duration = (dt.combine(date.min, self.shift_type.hour_end) - dt.combine(date.min, self.shift_type.hour_start)).seconds // 60
 
-        logger.log("ADDED", self)
+        logger.debug(self)
 
     def get_duration_in_minutes(self) -> int:
         """ Returns shift duration in minutes.
