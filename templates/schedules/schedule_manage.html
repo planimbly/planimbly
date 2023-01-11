@@ -92,7 +92,8 @@
                 :show_for_workplace="show_for_workplace"
                 :schedule="fetched_schedule"
                 :available_workers="available_workers"
-                :available_shift_types="available_shift_types">
+                :available_shift_types="available_shift_types"
+                :absences="absence_list">
         </work-calendar>
 
         <div>
@@ -409,6 +410,8 @@
                     shifttype_name_list: [],
                     margin_top_for_statistics_report: 0,
                     use_huey_for_scheduling: '{{ use_huey }}',
+                    absence_list: [],
+                    absence_url: '{% url 'absence-list' %}',
                     month_labels: [
                         {id: 1, name: 'Styczeń'},
                         {id: 2, name: 'Luty'},
@@ -587,6 +590,17 @@
                         .get(this.shift_type_list_url)
                         .then(response => {
                                 this.available_shift_types = response.data;
+                            }
+                        );
+                    axios
+                        .get(this.absence_url)
+                        .then(response => {
+                                this.absence_list = response.data;
+
+                            }
+                        )
+                        .catch(error => {
+                                this.response = error.response.data
                             }
                         );
                     this.fetch_shift_types_for_each_workplace().then(result => {
