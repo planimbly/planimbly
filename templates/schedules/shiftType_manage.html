@@ -225,7 +225,16 @@
         </table>
         </div>
 
-        <data-table :fields_options="[]" :data_rows="[]">
+        <data-table 
+        :fields_options="[
+        {title: 'Start zmiany', editable: true, property_name: 'hour_start', type: 'time', allow_filter: true, default_filter: 'asc'},
+        {title: 'Koniec zmiany', editable: true, property_name: 'hour_end', type: 'time', allow_filter: true},
+        {title: 'Nazwa', editable: true, property_name: 'name', type: 'text', highlighted: true, allow_filter: true},
+        {title: 'Skrót', editable: true, property_name: 'shift_code', type: 'text', allow_filter: true},
+        {title: 'Kolor', editable: true, property_name: 'color', type: 'color'},
+        {title: 'Zapotrzebowanie', editable: true, property_name: 'demand', type: 'number', allow_filter: true},
+        {title: 'W użyciu', editable: true, property_name: 'is_used', type: 'checkbox', allow_filter: true},]" 
+        :data_rows="shiftType_list">
         </data-table>
     </div>
     {% else %}

@@ -111,6 +111,12 @@
             </tr>
             </tbody>
             </table>
+
+            <data-table
+        :fields_options="[{title: 'Dział', editable: true, property_name: 'name', type: 'text', highlighted: true, allow_filter: true}]"
+        :data_rows="workplace_list"
+        :options="{start_mobile_view_px: 1450, editable: true,}">
+        </data-table>
     </div>
     {% else %}
         <span>Brak działów</span>
@@ -119,9 +125,15 @@
 {% block vue-content %}
     {% if is_any_unit %}
         <script type="module">
+            import DataTable from "{% static 'js/components/DataTable.js' %}";
+
             const {createApp} = Vue
             var app = createApp({
                 delimiters: ["[[", "]]"],
+                components: {
+                    DataTable
+                },
+
                 data() {
                     return {
                         name: '',

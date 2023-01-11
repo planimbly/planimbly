@@ -1,6 +1,8 @@
 export default {
     delimiters: ["[[", "]]"],
 
+    emits: ['rows-sent-to-delete', 'rows-sent-to-update', 'click-row'],
+
     props: {
         /*
         [{
@@ -30,7 +32,8 @@ export default {
 
     data () {
       return {
-        mock_field_options: [
+        /*
+        fields_options: [
             {title: 'Start zmiany', editable: true, property_name: 'hour_start', type: 'time', allow_filter: true, default_filter: 'asc'},
             {title: 'Koniec zmiany', editable: true, property_name: 'hour_end', type: 'time', allow_filter: true},
             {title: 'Nazwa', editable: true, property_name: 'name', type: 'text', highlighted: true, allow_filter: true},
@@ -39,13 +42,14 @@ export default {
             {title: 'Zapotrzebowanie', editable: true, property_name: 'demand', type: 'number', allow_filter: true},
             {title: 'W użyciu', editable: true, property_name: 'is_used', type: 'checkbox', allow_filter: true},
         ],
-        mock_data_rows: [
+        data_rows: [
             { "id": 1, "hour_start": "06:00:00", "hour_end": "14:00:00", "name": "M", "shift_code": "AAA", "workplace": 1, "demand": 1, "color": "#BEDAFF", "active_days": "1111111", "is_used": true }, { "id": 2, "hour_start": "14:00:00", "hour_end": "22:00:00", "name": "A", "shift_code": "AAC", "workplace": 1, "demand": 3, "color": "#BEDAFF", "active_days": "1111111", "is_used": true }, { "id": 3, "hour_start": "22:00:00", "hour_end": "06:00:00", "name": "N", "shift_code": "AFA", "workplace": 1, "demand": 1, "color": "#BEDAFF", "active_days": "1111111", "is_used": false } 
-        ],
+        ],*/
         window_width: 0,
         row_to_edit_mobile: null,
         user_changed_filter_property: null,
         user_changed_filter_is_asc: null,
+        special_edit_mode: false,
       }
     },
 
@@ -53,14 +57,69 @@ export default {
         resize_handler(e){
             this.window_width = window.innerWidth;
         },
-        edit_row_datatable(){
-            console.log('edit row');
+
+        register_row_click(row){
+            if (!this.special_edit_mode){
+                console.log('registered click');
+                console.log(row);
+                this.$emit('click-row', row);
+            }  
         },
+
+        hide_modal(modal_id){
+            let editRowModalElement = document.getElementById(modal_id)
+            let editRowModal= bootstrap.Modal.getInstance(editRowModalElement)
+            editRowModal.hide();
+        },
+
+        send_rows_to_delete(rows){
+            console.log('will delete following rows: ');
+            console.log(rows);
+            this.$emit('rows-sent-to-delete', rows);
+        },
+
+        send_rows_to_update(rows){
+            console.log('will update following rows: ');
+            console.log(rows);
+            this.$emit('rows-sent-to-update', rows);
+        },
+
+        edit_row_datatable(row){
+            swal({
+                title: "Czy chcesz zatwierdzić zmiany",
+                icon: "info",
+                buttons: true
+            })
+                .then((willAdd) => {
+                    if (willAdd) {
+                        this.hide_modal('editRowModal');
+                        this.send_rows_to_update([row]);
+                    }
+                });
+        },
+
+        delete_row_datatable(row){
+            
+            swal({
+                title: "Czy na pewno chcesz usunąć?",
+                icon: "warning",
+                buttons: true,
+                dangerMode: true,
+            })
+                .then((willDelete) => {
+                    if (willDelete) {
+                        this.hide_modal('editRowModal');
+                        this.send_rows_to_delete([row]);
+                    }
+                });
+        },
+
         set_row_to_edit_mobile(row){
             console.log('row to edit below');
             this.row_to_edit_mobile = Object.assign({}, row);
             console.log(this.row_to_edit_mobile);
         },
+
         filter_triangle_to_show(field){
             if (this.user_changed_filter_property === null && field.hasOwnProperty('default_filter')){
                 return field.default_filter === 'desc' ? 'desc' : 'asc';
@@ -72,6 +131,7 @@ export default {
                 return false
             }
         },
+
         set_user_field_filter(field){
             if (field.hasOwnProperty('allow_filter') && field.allow_filter === true) {
                 if (this.user_changed_filter_property === field.property_name && this.user_changed_filter_is_asc != null) {
@@ -88,6 +148,7 @@ export default {
             }
 
         },
+
         sort_rows(raw_data_rows, property, asc_or_desc, property_type){
             let sorted_rows = [];
             
@@ -170,22 +231,25 @@ export default {
             return this.window_width > this.options.start_mobile_view_px ? true : false;
         },
         filtered_data_rows(){
-            let copied_data_rows = this.mock_data_rows.slice();
+            let copied_data_rows = []
+            if (this.data_rows && typeof this.data_rows !== undefined) {
+                copied_data_rows = this.data_rows.slice();
+            }
             if (this.user_changed_filter_property != null && this.user_changed_filter_is_asc != null){
                 console.log('user_filer');
                 return this.sort_rows(copied_data_rows, 
                     this.user_changed_filter_property,
                     this.user_changed_filter_is_asc === true ? 'asc' : 'desc',
-                    this.mock_field_options.find(f => f.property_name === this.user_changed_filter_property).type
+                    this.fields_options.find(f => f.property_name === this.user_changed_filter_property).type
                 );
             }
-            else if (this.mock_field_options.find(f => typeof f.default_filter === 'string')) {
-                // this.mock_field_options.find(f => typeof f.default_filter === 'string').
+            else if (this.fields_options && this.fields_options.find(f => typeof f.default_filter === 'string')) {
+                // this.fields_options.find(f => typeof f.default_filter === 'string').
                 console.log('default_filter');
                 return this.sort_rows(copied_data_rows, 
-                    this.mock_field_options.find(f => typeof f.default_filter === 'string').property_name,
-                    this.mock_field_options.find(f => typeof f.default_filter === 'string').default_filter,
-                    this.mock_field_options.find(f => typeof f.default_filter === 'string').type
+                    this.fields_options.find(f => typeof f.default_filter === 'string').property_name,
+                    this.fields_options.find(f => typeof f.default_filter === 'string').default_filter,
+                    this.fields_options.find(f => typeof f.default_filter === 'string').type
                 );
             }
             else {
@@ -208,12 +272,12 @@ export default {
 
     template: `
     <div class="PN-table-wrapper" id="table-ref" ref="table-ref">
-        [[ filtered_data_rows ]]
+        
         <div v-if="is_view_mobile">
-            <table class="table styled-table">
+            <table class="table styled-table table-hover">
                 <thead>
                 <tr>
-                    <th v-for="field in mock_field_options" scope="col">
+                    <th v-for="field in fields_options" scope="col">
                         <div v-on:click="set_user_field_filter(field)" class="d-flex inline-flex justify-content-center">
                         [[ field.title ]]
                         <div v-if="filter_triangle_to_show(field) === 'asc'" class="ms-1">&#x25B4</div>
@@ -234,8 +298,15 @@ export default {
                 </thead>
 
                 <tbody>
-                    <tr v-for="(row, i) in filtered_data_rows">
-                        <td v-for="field in mock_field_options">[[ row[field.property_name] ]]</td>
+                    <tr v-for="(row, i) in filtered_data_rows" v-on:click="register_row_click(row)">
+                        <td v-for="field in fields_options">
+                            <div v-if="field.type === 'checkbox' && row[field.property_name] === true">tak</div>
+                            <div v-else-if="field.type === 'checkbox' && row[field.property_name] === false">nie</div>
+                            <div v-else-if="field.type === 'color'" :style="{ 'background-color': row[field.property_name] }"
+                              class="PN-color-display-wrapper"> <div class="PN-color-display" :style="{ 'background-color': row[field.property_name] }">&nbsp</div>
+                            </div>
+                            <div v-else> [[ row[field.property_name] ]] </div>
+                        </td>
                     </tr>
                 <!--
                 <tr v-for="(shiftType, i) in shiftType_list" :key="shiftType.id">
@@ -265,15 +336,21 @@ export default {
             </table>
         </div>
         <div v-else>
-            <div v-for="(row, i) in filtered_data_rows" class="card position-relative mb-1" v-on:click="set_row_to_edit_mobile(row)"
+            <div v-for="(row, i) in filtered_data_rows" class="card position-relative mb-1" v-on:click="set_row_to_edit_mobile(row); register_row_click(row);"
                 data-bs-toggle="modal" data-bs-target="#editRowModal" style="cursor: pointer">
-                <div class="card-body">
-                    <h5 class="card-title" v-if="mock_field_options.find(f => f.highlighted === true)"> 
-                        [[ row[mock_field_options.find(f => f.highlighted == true).property_name] ]]
+                <div class="card-body text-center">
+                    <h5 class="card-title mb-0" v-if="fields_options && fields_options.find(f => f.highlighted === true)"> 
+                        [[ row[fields_options.find(f => f.highlighted == true).property_name] ]]
                     </h5>
-                    <div v-for="field in mock_field_options">
+                    <div v-for="field in fields_options">
                         <div v-if="field.highlighted === undefined || field.highlighted === false">
-                            [[ field.title ]] : [[ row[field.property_name] ]]
+                            <div v-if="field.type === 'color'" class="PN-color-display-wrapper">
+                                Kolor :   
+                                <div class="PN-color-display ms-2" :style="{ 'background-color': row[field.property_name] }">&nbsp</div> 
+                            </div>
+                            <div v-else-if="field.type === 'checkbox' && row[field.property_name] === true">[[ field.title ]] : tak</div>
+                            <div v-else-if="field.type === 'checkbox' && row[field.property_name] === false">[[ field.title ]] : nie</div>
+                            <div v-else> [[ field.title ]] : [[ row[field.property_name] ]] </div>
                         </div>
                     </div>
                 </div>
@@ -286,9 +363,10 @@ export default {
                 aria-hidden="true">
             <div class="modal-dialog" style="max-width: 800px">
                 <div class="modal-content">
-                    <form v-on:submit.prevent="edit_row_datatable">
+                    <form v-on:submit.prevent="edit_row_datatable(row_to_edit_mobile)">
                         <div class="modal-header">
                             <h5 class="modal-title" id="editRowModaLabel">Edycja</h5>
+                            
                             <button type="button" class="btn-close" data-bs-dismiss="modal"
                                     aria-label="Close"></button>
                         </div>
@@ -296,19 +374,33 @@ export default {
                         <div class="modal-body">
                             <div class="row g-3 d-flex align-items-center">
 
-                                <div v-for="field in mock_field_options">
+                                <div v-for="field in fields_options">
                                     <div v-if="field.editable">
                                         <div class="col-4">
                                             <label class="form-label modal-style">[[ field.title ]]</label>
                                         </div>
                                         <div class="col=8" v-if="row_to_edit_mobile != null && field.type === 'checkbox'">
-                                            <input :type="field.type" class="form-check-input" v-model="row_to_edit_mobile[field.property_name]" required>
+                                            <input :type="field.type" class="form-check-input" v-model="row_to_edit_mobile[field.property_name]">
                                         </div>
                                         <div class="col=8" v-else-if="row_to_edit_mobile != null && field.type === 'color'">
                                             <input :type="field.type" class="form-control form-control-color" v-model="row_to_edit_mobile[field.property_name]" required>
                                         </div>
                                         <div class="col=8" v-else-if="row_to_edit_mobile != null">
                                             <input :type="field.type" class="form-control" v-model="row_to_edit_mobile[field.property_name]" required>
+                                        </div>
+                                    </div>
+                                    <div v-else>
+                                        <div class="col-4">
+                                            <label class="form-label modal-style">[[ field.title ]]</label>
+                                        </div>
+                                        <div class="col=8" v-if="row_to_edit_mobile != null && field.type === 'checkbox'">
+                                            <input :type="field.type" class="form-check-input" v-model="row_to_edit_mobile[field.property_name]" disabled>
+                                        </div>
+                                        <div class="col=8" v-else-if="row_to_edit_mobile != null && field.type === 'color'">
+                                            <input :type="field.type" class="form-control form-control-color" v-model="row_to_edit_mobile[field.property_name]" disabled>
+                                        </div>
+                                        <div class="col=8" v-else-if="row_to_edit_mobile != null">
+                                            <input :type="field.type" class="form-control" v-model="row_to_edit_mobile[field.property_name]" disabled>
                                         </div>
                                     </div>
                                 </div>
@@ -375,10 +467,11 @@ export default {
                         </div>
 
                         <div class="modal-footer d-flex justify-content-between">
-                            <button type="submit" class="btn btn-outline-danger">Usuń</button>
+                            <button type="button" class="btn btn-outline-danger" v-on:click="delete_row_datatable(row_to_edit_mobile)">Usuń</button>
                             <div>
-                            <button type="submit" class="btn btn-outline-secondary me-2">Anuluj</button>
-                            <button type="submit" class="btn btn-outline-primary">Zapisz</button>
+                            <button type="button" class="btn btn-outline-secondary me-2"
+                                data-bs-target="#editRowModal" data-bs-toggle="modal" data-bs-dismiss="modal" aria-label="Close">Anuluj</button>
+                            <button v-if="options.editable" type="submit" class="btn btn-primary">Zapisz</button>
                             </div>
                         </div>
                     </form>

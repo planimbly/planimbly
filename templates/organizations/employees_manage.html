@@ -127,7 +127,7 @@
                 </div>
             </div>
         </div>
-        [[ employee_list ]]
+        
         <table class="table styled-table">
             <thead>
             <tr>
@@ -166,14 +166,29 @@
             </tr>
             </tbody>
         </table>
+        <data-table 
+        :fields_options="[
+        {title: 'L.p.', editable: true, property_name: 'order_number', type: 'number', allow_filter: true, default_filter: 'asc'},
+        {title: 'Login', editable: false, property_name: 'username', type: 'text', highlighted: true, allow_filter: true},
+        {title: 'Imię', editable: true, property_name: 'first_name', type: 'text', allow_filter: true},
+        {title: 'Nazwisko', editable: true, property_name: 'last_name', type: 'text', allow_filter: true},
+        {title: 'E-mail', editable: true, property_name: 'email', type: 'text', allow_filter: true},
+        {title: 'Etat', editable: false, property_name: 'job_time', type: 'text', allow_filter: false},]" 
+        :data_rows="employee_list">
+        </data-table>
     </div>
 {% endblock content %}
 
 {% block vue-content %}
     <script type="module">
+        import DataTable from "{% static 'js/components/DataTable.js' %}";
+
         const {createApp} = Vue
         var vue_app = createApp({
             delimiters: ["[[", "]]"],
+            components: {
+                DataTable
+            },
             data() {
                 return {
                     email: '',

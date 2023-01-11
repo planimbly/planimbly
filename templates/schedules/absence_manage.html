@@ -76,7 +76,7 @@
                         class="btn btn-outline-success" style="margin-top: 15px; margin-bottom: 15px">Dodaj nieobecność</button> 
             </div>
         </div>
-        [[absence_list]]
+        
         <table class="table styled-table">
             <thead>
             <tr>
@@ -103,16 +103,35 @@
             </tbody>
         </table>
 
+        <data-table 
+        :fields_options="[
+        {title: 'Początek', editable: false, property_name: 'start', type: 'date', allow_filter: true, default_filter: 'desc'},
+        {title: 'Koniec', editable: false, property_name: 'end', type: 'date',  allow_filter: true},
+        {title: 'Login', editable: false, property_name: 'employee_username', type: 'text', allow_filter: true, highlighted: true},
+        {title: 'Imię', editable: false, property_name: 'employee_first_name', type: 'text', allow_filter: true},
+        {title: 'Nazwisko', editable: false, property_name: 'employee_last_name', type: 'text', allow_filter: true},
+        {title: 'Typ', editable: false, property_name: 'type', type: 'text', allow_filter: true},
+        {title: 'Liczba godzin', editable: false, property_name: 'hours_number', type: 'number', allow_filter: true},]" 
+        :data_rows="absence_list"
+        :options="{
+            start_mobile_view_px: 1450,
+            editable: false,
+        }">
+        </data-table>
     </div>
 {% endblock %}
 
 {% block vue-content %}
 
     <script type="module">
+        import DataTable from "{% static 'js/components/DataTable.js' %}";
 
         const {createApp} = Vue
         createApp({
             delimiters: ["[[", "]]"],
+            components: {
+                DataTable
+            },
             data() {
                 return {
                     absence_list: null,
