@@ -23,6 +23,9 @@ class JobTime(models.Model):
     class Meta:
         unique_together = ('organization', 'year')
 
+    def __str__(self):
+        return self.organization.__str__() + ' ' + str(self.year)
+
 
 class FreeDay(models.Model):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, verbose_name="Organizacja")
@@ -40,7 +43,6 @@ class Schedule(models.Model):
     year = models.IntegerField(verbose_name='Rok')
     month = models.IntegerField(verbose_name='Miesiąc')
     workplace = models.ForeignKey(Workplace, on_delete=models.CASCADE, verbose_name="Dział")
-    message = models.CharField(max_length=512, verbose_name="Wiadomość po wygenerowaniu grafiku", null=True, blank=True)
 
     def __str__(self):
         return str(self.year) + ' ' + str(self.month) + ' ' + self.workplace.__str__()
@@ -56,7 +58,7 @@ class ShiftType(models.Model):
     shift_code = models.CharField(max_length=3, verbose_name="Krótka nazwa zmiany")
     workplace = models.ForeignKey(Workplace, verbose_name="Dział", on_delete=models.CASCADE)
     demand = models.IntegerField(verbose_name='Liczba pracowników', default=1)
-    color = models.CharField(max_length=7, verbose_name="Kolor zmiany", default="#BEDAFF")
+    color = models.CharField(max_length=7, verbose_name="Kolor zmiany", default="#BEDAFF", blank=True, null=True)
     active_days = models.TextField(verbose_name="Aktywne dni")
     is_used = models.BooleanField(default=False)
     is_archive = models.BooleanField(default=False)

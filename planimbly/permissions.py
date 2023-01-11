@@ -19,10 +19,6 @@ class Isemployee(permissions.BasePermission):
 
 
 class GroupRequiredMixin(object):
-    """
-        Function taken from:
-        https://gist.github.com/ceolson01/206139a093b3617155a6
-    """
 
     group_required = None
 

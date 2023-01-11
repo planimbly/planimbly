@@ -17,7 +17,7 @@ class JobTimeSerializer(serializers.ModelSerializer):
 class FreeDaySerializer(serializers.ModelSerializer):
     class Meta:
         model = FreeDay
-        fields = ['id', 'day', 'name']
+        fields = ['id', 'day', 'name', 'organization']
         extra_kwargs = {
             'id': {'read_only': True}
         }
@@ -33,7 +33,7 @@ class ShiftTypeSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, data):
-        """Check if shift take 8 hours"""
+        """Check if shift takes 8 hours"""
         shift_len = datetime.datetime.combine(datetime.date.min, data['hour_end']) - datetime.datetime.combine(
             datetime.date.min, data['hour_start'])
         shift_len = shift_len.seconds / 3600
