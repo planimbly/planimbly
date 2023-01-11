@@ -144,7 +144,10 @@ class EmployeeInfo:
     def __init__(self, emp: Employee, wp: list, pref: list, ab: list, ass: list, jt: int):
         # Preparing bases - employee and workplaces
         self.employee = emp
+        logger.debug(self)
+
         self.workplaces = wp
+        logger.debug(self.workplaces)
 
         # Preparing preferences and assignments
         self.preferences = pref
@@ -161,9 +164,6 @@ class EmployeeInfo:
         self.desired_job_time = self.calculate_job_time(jt)
         self.job_time = max(0, self.desired_job_time - self.absent_time)
 
-        # Logging data
-        self.log_employeeinfo_data()
-
     def calculate_job_time(self, jt) -> int:
         match self.employee.job_time:
             case '1':
@@ -175,10 +175,12 @@ class EmployeeInfo:
             case '3/4':
                 return jt * 3 // 4
             case _:
-                logger.warning("Something is wrong with calculating job time for employee {}".format(self.employee.pk))
+                logger.warning("Something is wrong with calculating job time for employee {:2d}".format(self.employee.pk))
                 return jt
 
     def prepare_assignments(self):
+        logger.trace("Preparing assignments started (EMP: {:2d})...".format(self.employee.pk))
+
         ta = []
         nia = []
         pia = []
@@ -189,20 +191,24 @@ class EmployeeInfo:
                 for i in range((a.end - a.start).days + 1):
                     inter_date = a.start + timedelta(days=i)
                     ta.append((a.shift_type, a.negative_flag, inter_date))
-                    logger.log("ADDED", "[ASSIGNMENT] EMP: {:2d} | DAY: {:2d} | ST: {:d} | TYPE: {}".format(
-                        a.employee.pk, inter_date.day, a.shift_type.id, "neg" if a.negative_flag else "pos"))
+                    logger.debug("[CTX] | [TERM ASSIGNMENT] EMP: {:2d} | DAY: {:2d} | ST: {:2d} | TYPE: {}".format(
+                        a.employee.pk, inter_date.day, a.shift_type.id, "- (NEG)" if a.negative_flag else "+ (POS)"))
             else:
                 # indefinite_assignments
                 if a.negative_flag:
                     nia.append(a.shift_type)
                 else:
                     pia.append(a.shift_type)
-                logger.log("ADDED", "[ASSIGNMENT] EMP: {:2d} | ST: {:d} | TYPE: {}".format(
-                    a.employee.pk, a.shift_type.id, "neg" if a.negative_flag else "pos"))
+                logger.debug("[CTX] | [INDEF. ASSIGNMENT] EMP: {:2d} | ST: {:2d} | TYPE: {}".format(
+                    a.employee.pk, a.shift_type.id, "- (NEG)" if a.negative_flag else "+ (POS)"))
+
+        logger.trace("Preparing assignments ended.")
 
         return ta, nia, pia
 
     def prepare_absent_days(self) -> (list, int):
+        logger.trace("Preparing absent days started (EMP: {:2d})...".format(self.employee.pk))
+
         ad = []
         at = 0
 
@@ -211,7 +217,9 @@ class EmployeeInfo:
             for i in range((ab.end - ab.start).days + 1):
                 inter_date = ab.start + timedelta(days=i)
                 ad.append(inter_date)
-                logger.log("ADDED", "[ABSENCE] EMP: {:2d} | DAY: {:2d}".format(ab.employee.pk, inter_date.day))
+                logger.debug("[CTX] | [ABSENCE] EMP: {:2d} | DAY: {:2d}".format(ab.employee.pk, inter_date.day))
+
+        logger.trace("Preparing absent days ended.")
 
         return ad, at
 
@@ -224,35 +232,6 @@ class EmployeeInfo:
 
     def __str__(self) -> str:
         return "[EMPLOYEE] ID: {:2d} | JT: {:3d} | {} {}".format(self.employee.pk, self.job_time, self.employee.first_name, self.employee.last_name)
-
-    def log_employeeinfo_data(self) -> None:
-        logger.log("ADDED", self)
-        logger.debug("Workplaces: {}".format(self.workplaces))
-
-        if len(self.preferences) > 0:
-            logger.debug("Preferences: {}".format(self.preferences))
-        else:
-            logger.debug("No preferences!")
-
-        if len(self.term_assignments) > 0:
-            logger.debug("Term assignments: {}".format(self.term_assignments))
-        else:
-            logger.debug("No term assignments")
-
-        if len(self.positive_indefinite_assignments) > 0:
-            logger.debug("Positive indefinite assignments: {}".format(self.positive_indefinite_assignments))
-        else:
-            logger.debug("No positive indefinite assignments")
-
-        if len(self.negative_indefinite_assignments) > 0:
-            logger.debug("Negative indefinite assignments: {}".format(self.negative_indefinite_assignments))
-        else:
-            logger.debug("No negative indefinite assignments")
-
-        if len(self.absences) > 0:
-            logger.debug("Absences: {}".format(["{} - {}".format(str(e.start), str(e.end)) for e in self.absences]))
-        else:
-            logger.debug("No absences")
 
 
 class Context:
