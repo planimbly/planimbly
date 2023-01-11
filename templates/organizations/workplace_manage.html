@@ -28,28 +28,30 @@
     <div id="vue-app" v-cloak>
         <div class="row d-flex justify-content-between align-items-center">
             <div class="col d-flex justify-content-start mb-1">
-                <h3 class="content-title">Lista działów</h3>
+                <h6 class="content-title">Lista działów</h6>
             </div>
-            <div class="col">
-                <div class="row align-items-center mb-1">
-                    <div class="col-auto">
-                        <label class="col-form-label" for="unitSelect">Jednostka:</label>
-                    </div>
-                    <div class="col-auto">
-                        <select id="unitSelect" class="form-select" v-model="selected_unit" v-on:change="fetch_data">
-                            <option v-for="unit in select_unit" :value="unit.id">
-                                [[ unit.name ]]
-                            </option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+            
 
             <div class="col d-flex justify-content-end mb-2">
-                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal"
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal"
                         data-bs-target="#addWorkplaceModal">
                     Dodaj dział
                 </button>
+            </div>
+        </div>
+
+        <div class="col mb-2">
+            <div class="row align-items-center mb-1">
+                <div class="col-auto">
+                    <label class="col-form-label" for="unitSelect">Jednostka:</label>
+                </div>
+                <div class="col-auto">
+                    <select id="unitSelect" class="form-select" v-model="selected_unit" v-on:change="fetch_data">
+                        <option v-for="unit in select_unit" :value="unit.id">
+                            [[ unit.name ]]
+                        </option>
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -85,32 +87,19 @@
             </div>
         </div>
 
-            <table class="table styled-table">
-                <thead>
-                <tr>
-                    <th scope="col">ID</th>
-                    <th scope="col">Dział</th>
-                    <th scope="col">Zapisz</th>
-                    <th scope="col">Usuń</th>
-                </tr>
-                </thead>
-
-            <tbody>
-            <tr v-for="(workplace, i) in workplace_list" :key="workplace.id">
-                <th scope="row"><span>[[ workplace.id ]]</span></th>
-                <td><input type="text" class="form-control" v-model="workplace.name"></td>
-                </td>
-                <td>
-                    <button v-on:click="change_workplace(i)" type="button"
-                            class="btn btn-primary table-buttons"><i class="material-icons">save</i></button>
-                </td>
-                <td>
-                    <button v-on:click="remove_workplace(workplace.id)" type="button"
-                            class="btn btn-danger table-buttons"><i class="material-icons">delete</i></button>
-                </td>
-            </tr>
-            </tbody>
-            </table>
+        <data-table
+        v-on:rows-sent-to-delete="datatable_delete_workplaces"
+        v-on:rows-sent-to-update="datatable_update_workplaces"
+        :fields_options="[{title: 'Dział', editable: true, property_name: 'name', type: 'text', highlighted: true, allow_filter: true}]"
+        :data_rows="workplace_list"
+        :options="{start_mobile_view_px: 1450, 
+            editable: true, 
+            allow_special_edit_mode: true,
+            allow_modal_edit_on_mobile: true,
+            allow_modal_edit_on_desktop: true,
+            always_mobile_mode: true,
+        }">
+        </data-table>
     </div>
     {% else %}
         <span>Brak działów</span>
@@ -119,13 +108,19 @@
 {% block vue-content %}
     {% if is_any_unit %}
         <script type="module">
+            import DataTable from "{% static 'js/components/DataTable.js' %}";
+
             const {createApp} = Vue
             var app = createApp({
                 delimiters: ["[[", "]]"],
+                components: {
+                    DataTable
+                },
+
                 data() {
                     return {
                         name: '',
-                        workplace_list: null,
+                        workplace_list: [],
                         response: null,
                         selected_unit: {{ default_unit }},
                         select_unit: {{ select_unit | safe}}
@@ -172,60 +167,49 @@
                                 }
                             });
                     },
-                    remove_workplace(id) {
-                        swal({
-                            title: "Czy na pewno chcesz usunąć dział?",
-                            icon: "warning",
-                            buttons: true,
-                            dangerMode: true,
-                        })
-                            .then((willAdd) => {
-                                if (willAdd) {
-                                    let url = this.base_url + id + '/'
-                                    axios
-                                        .delete(url,
-                                            {
-                                                id: id
-                                            }
-                                        )
-                                        .then(
-                                            this.fetch_data
-                                        )
-                                        .catch(error => {
-                                                this.response = error.response.data
-                                            }
-                                        )
-                                }
-                            });
-
+                    
+                    datatable_delete_workplaces(rows){
+                        this.request_delete_loop(rows).then(
+                            this.fetch_data
+                        )
                     },
-                    change_workplace(i) {
-                        let url = this.base_url + this.workplace_list[i].id + '/'
-                        swal({
-                            title: "Czy chcesz zatwierdzić zmiany",
-                            icon: "info",
-                            buttons: true
-                        })
-                            .then((willAdd) => {
-                                if (willAdd) {
-                                    axios
-                                        .put(url,
-                                            {
-                                                name: this.workplace_list[i].name
-                                            }
-                                        )
-                                        .then(
-                                            this.fetch_data
-                                        )
-                                        .catch(error => {
-                                                this.response = error.response.data
-                                            }
-                                        )
-
-                                }
-                            });
-
-                    }
+                    async request_delete_loop(rows){
+                        for (let i=0; i<rows.length; i++){
+    
+                            const current_url = this.base_url + rows[i].id + '/'
+                            await axios
+                                .delete(current_url,
+                                    {
+                                        id: rows[i].id
+                                    }
+                                ).catch(
+                                    error => {
+                                        this.response = error.response.data
+                                    }
+                                )
+                        }
+                    },
+                    datatable_update_workplaces(rows){
+                        this.request_put_loop(rows).then(
+                            this.fetch_data
+                        )
+                    },
+                    async request_put_loop(rows){
+                        for (let i=0; i<rows.length; i++){
+    
+                            const current_url = this.base_url + rows[i].id + '/'
+                            await axios
+                                .put(current_url,
+                                    {
+                                        name: rows[i].name
+                                    }
+                                ).catch(
+                                    error => {
+                                        this.response = error.response.data
+                                    }
+                                )
+                        }
+                    },
                 },
                 mounted() {
                     this.fetch_data()

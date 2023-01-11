@@ -24,12 +24,12 @@
     </nav> {% endcomment %}
 
     <div id="vue-app" v-cloak>
-        <div class="row d-flex justify-content-between align-items-center">
+        <div class="row d-flex justify-content-between align-items-center mb-2">
             <div class="col d-flex justify-content-start">
-                <h3 class="content-title">Lista jednostek</h3>
+                <h6 class="content-title">Lista jednostek</h6>
             </div>
             <div class="col d-flex justify-content-end">
-                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal"
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal"
                         data-bs-target="#addUnitModal">
                     Dodaj jednostkę
                 </button>
@@ -55,6 +55,11 @@
                                     <input type="text" class="form-control" v-model="name" id="inputName">
                                 </div>
                             </div>
+                        
+                            <label v-for="(field, index) in response" style="color: #FF0000; margin-top: 20px">
+                                [[ field.join('') ]]
+                            </label>
+                        
                         </div>
 
                         <div class="modal-footer">
@@ -62,52 +67,39 @@
                             </button>
                         </div>
                     </form>
-
-                    <p v-for="(field, index) in response">
-                        [[ index ]] : [[ field.join('') ]]
-                    </p>
                 </div>
             </div>
         </div>
-
-        <table class="table styled-table">
-            <thead>
-            <tr>
-                <th scope="col">ID</th>
-                <th scope="col">Jednostka</th>
-                <th scope="col">Zapisz</th>
-                <th scope="col">Usuń</th>
-            </tr>
-            </thead>
-
-            <tbody>
-            <tr v-for="(unit, i) in unit_list" :key="unit.id">
-                <th scope="row"><span>[[ unit.id ]]</span></th>
-                <td><input type="text" class="form-control" v-model="unit.name"></td>
-                <td>
-                    <button v-on:click="change_unit(i)" type="button" class="btn btn-primary table-buttons">
-                        <i class="material-icons">save</i></button>
-                </td>
-                <td>
-                    <button v-on:click="remove_unit(unit.id)" type="button" class="btn btn-danger table-buttons">
-                        <i class="material-icons">delete</i>
-                    </button>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+        <data-table 
+        v-on:rows-sent-to-delete="datatable_delete_units"
+        v-on:rows-sent-to-update="datatable_update_units"
+        :fields_options="[{title: 'Jednostka', editable: true, property_name: 'name', type: 'text', highlighted: true, allow_filter: true}]"
+        :data_rows="unit_list"
+        :options="{start_mobile_view_px: 1450, 
+            editable: true, 
+            allow_special_edit_mode: true,
+            allow_modal_edit_on_mobile: true,
+            allow_modal_edit_on_desktop: true,
+            always_mobile_mode: true,
+        }">
+        </data-table>
     </div>
 {% endblock content %}
 
 {% block vue-content %}
     <script type="module">
+        import DataTable from "{% static 'js/components/DataTable.js' %}";
+
         const {createApp} = Vue
         var app = createApp({
             delimiters: ["[[", "]]"],
+            components: {
+                DataTable
+            },
             data() {
                 return {
                     name: '',
-                    unit_list: null,
+                    unit_list: [],
                     response: null,
                     base_url: '{% url 'unit-list' %}',
                 }
@@ -144,60 +136,49 @@
                             }
                         });
                 },
-                remove_unit(id) {
-                    swal({
-                        title: "Czy na pewno chcesz usunąć jednostkę?",
-                        icon: "warning",
-                        buttons: true,
-                        dangerMode: true,
-                    })
-                        .then((willAdd) => {
-                            if (willAdd) {
-                                let url = this.base_url + id + '/'
-                                axios
-                                    .delete(url,
-                                        {
-                                            id: id
-                                        }
-                                    )
-                                    .then(
-                                        this.fetch_data
-                                    )
-                                    .catch(error => {
-                                            this.response = error.response.data
-                                        }
-                                    )
-                            }
-                        });
-
+                
+                datatable_delete_units(rows){
+                    this.request_delete_loop(rows).then(
+                        this.fetch_data
+                    )
                 },
-                change_unit(i) {
-                    let url = this.base_url + this.unit_list[i].id + '/'
-                    swal({
-                        title: "Czy chcesz zatwierdzić zmiany",
-                        icon: "info",
-                        buttons: true
-                    })
-                        .then((willAdd) => {
-                            if (willAdd) {
-                                axios
-                                    .put(url,
-                                        {
-                                            name: this.unit_list[i].name
-                                        }
-                                    )
-                                    .then(
-                                        this.fetch_data
-                                    )
-                                    .catch(error => {
-                                            this.response = error.response.data
-                                        }
-                                    )
+                async request_delete_loop(rows){
+                    for (let i=0; i<rows.length; i++){
 
-                            }
-                        });
+                        const current_url = this.base_url + rows[i].id + '/'
+                        await axios
+                            .delete(current_url,
+                                {
+                                    id: rows[i].id
+                                }
+                            ).catch(
+                                error => {
+                                    this.response = error.response.data
+                                }
+                            )
+                    }
+                },
+                datatable_update_units(rows){
+                    this.request_put_loop(rows).then(
+                        this.fetch_data
+                    )
+                },
+                async request_put_loop(rows){
+                    for (let i=0; i<rows.length; i++){
 
-                }
+                        const current_url = this.base_url + rows[i].id + '/'
+                        await axios
+                            .put(current_url,
+                                {
+                                    name: rows[i].name
+                                }
+                            ).catch(
+                                error => {
+                                    this.response = error.response.data
+                                }
+                            )
+                    }
+                },
             },
             mounted() {
                 this.fetch_data()

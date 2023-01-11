@@ -15,17 +15,17 @@
 {% block content %}
 
     <div id="vue-app" v-cloak>
-        <div class="row d-flex justify-content-between align-items-center">
+        <div class="row d-flex justify-content-between align-items-center mb-2">
             <div class="col d-flex justify-content-start">
-                <h3 class="content-title">Lista pracowników</h3>
+                <h6 class="content-title">Lista pracowników</h6>
             </div>
 
             <div class="col d-flex justify-content-end">
-                <button type="button" class="btn btn-outline-success mx-2" data-bs-toggle="modal"
+                <button type="button" class="btn btn-outline-secondary mx-2" data-bs-toggle="modal"
                         data-bs-target="#importEmployeeModal">
                     Importuj pracowników
                 </button>
-                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal"
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal"
                         data-bs-target="#addEmployeeModal">
                     Dodaj pracownika
                 </button>
@@ -114,66 +114,51 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <label v-for="(field, index) in response" style="color: #FF0000; margin-top: 20px">
+                                [[ field.join('') ]]
+                            </label>
+
                         </div>
 
                         <div class="modal-footer">
                             <button type="submit" class="btn btn-outline-primary">Dodaj</button>
                         </div>
                     </form>
-
-                    <p v-for="(field, index) in response">
-                        [[ index ]] : [[ field.join('') ]]
-                    </p>
                 </div>
             </div>
         </div>
-
-        <table class="table styled-table">
-            <thead>
-            <tr>
-                <th scope="col">Lp</th>
-                <th scope="col">E-mail</th>
-                <th scope="col">Login</th>
-                <th scope="col">Imię</th>
-                <th scope="col">Nazwisko</th>
-                <th scope="col">Zarządzaj</th>
-                <th scope="col">Zapisz</th>
-                <th scope="col">Usuń</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr v-for="(employee, i) in employee_list" :key="employee.id">
-                <!-- TODO może jakaś klasa css do zmniejszania długosci? -->
-                <td style="width: 100px"><input type="number" class="form-control" v-model="employee.order_number"></td>
-                <td><input type="text" class="form-control" v-model="employee.email"></td>
-                <td><input type="text" class="form-control" v-model="employee.username"></td>
-                <td><input type="text" class="form-control" v-model="employee.first_name"></td>
-                <td><input type="text" class="form-control" v-model="employee.last_name"></td>
-                <td>
-                    <a v-bind:href="return_reference_url(employee.id)">
-                        <button type="button" class="btn btn-primary table-buttons">
-                            <i class="material-icons">settings</i></button>
-                    </a>
-                </td>
-                <td>
-                    <button v-on:click="change_employee(i)" type="button" class="btn btn-primary table-buttons">
-                        <i class="material-icons">save</i></button>
-                </td>
-                <td>
-                    <button v-on:click="remove_employee(employee.id)" type="button"
-                            class="btn btn-danger table-buttons"><i class="material-icons">delete</i></button>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+        
+        <data-table v-on:click-row="goto_options"
+        :fields_options="[
+        {title: 'L.p.', editable: true, property_name: 'order_number', type: 'number', allow_filter: true, default_filter: 'asc'},
+        {title: 'Login', editable: false, property_name: 'username', type: 'text', highlighted: true, allow_filter: true},
+        {title: 'Imię', editable: true, property_name: 'first_name', type: 'text', allow_filter: true},
+        {title: 'Nazwisko', editable: true, property_name: 'last_name', type: 'text', allow_filter: true},
+        {title: 'E-mail', editable: true, property_name: 'email', type: 'text', allow_filter: true},
+        {title: 'Etat', editable: false, property_name: 'job_time', type: 'text', allow_filter: false},]" 
+        :data_rows="employee_list"
+        :options="{start_mobile_view_px: 1450, 
+            editable: true, 
+            allow_special_edit_mode: true,
+            allow_modal_edit_on_mobile: false,
+            allow_modal_edit_on_desktop: false,
+            always_mobile_mode: false,
+        }">
+        </data-table>
     </div>
 {% endblock content %}
 
 {% block vue-content %}
     <script type="module">
+        import DataTable from "{% static 'js/components/DataTable.js' %}";
+
         const {createApp} = Vue
         var vue_app = createApp({
             delimiters: ["[[", "]]"],
+            components: {
+                DataTable
+            },
             data() {
                 return {
                     email: '',
@@ -182,7 +167,7 @@
                     last_name: '',
                     order_number: 0,
                     is_supervisor: false,
-                    employee_list: null,
+                    employee_list: [],
                     response: null,
                     base_url: '{% url 'employee-list' %}',
                     import_url: '{% url 'employees_import_api' %}',
@@ -197,6 +182,9 @@
                 }
             },
             methods: {
+                goto_options(row) {
+                    window.location.href = this.return_reference_url(row.id);
+                },
                 return_reference_url(id) {
                     return '{% url 'employee_option' 123456789 %}'.replace(/123456789/, id);
                 },
@@ -222,33 +210,37 @@
                     })
                         .then((willAdd) => {
                             if (willAdd) {
-
-                                axios
-                                    .post(this.base_url,
-                                        {
-                                            email: this.email,
-                                            username: this.username,
-                                            first_name: this.first_name,
-                                            last_name: this.last_name,
-                                            order_number: this.order_number,
-                                            job_time: this.selected_jobtime.jobtime_fraction,
-                                        }
-                                    )
-                                    .then(
-                                        this.fetch_data
-                                    )
-                                    .catch(error => {
-                                            this.response = error.response.data
-                                        }
-                                    )
-                                this.email = ''
-                                this.username = ''
-                                this.first_name = ''
-                                this.last_name = ''
-                                this.order_number = 0
+                                if (this.selected_jobtime != null){
+                                    axios
+                                        .post(this.base_url,
+                                            {
+                                                email: this.email,
+                                                username: this.username,
+                                                first_name: this.first_name,
+                                                last_name: this.last_name,
+                                                order_number: this.order_number,
+                                                job_time: this.selected_jobtime.jobtime_fraction,
+                                            }
+                                        )
+                                        .then(
+                                            this.fetch_data()
+                                        )
+                                        .catch(error => {
+                                                this.response = error.response.data
+                                            }
+                                        )
+                                    this.email = ''
+                                    this.username = ''
+                                    this.first_name = ''
+                                    this.last_name = ''
+                                    this.order_number = 0
+                                } else {
+                                    this.response = { username: ["Nie został wybrany wymiar etatu"] }
+                                }
                             }
                         });
                 },
+                /* TO BE DEPRECATED */
                 remove_employee(id) {
                     swal({
                         title: "Czy na pewno chcesz usunąć pracownika?",
@@ -276,6 +268,7 @@
                         });
 
                 },
+                /* TO BE DEPRECATED */
                 change_employee(i) {
                     let url = this.base_url + this.employee_list[i].id + '/'
                     swal({
