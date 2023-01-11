@@ -98,6 +98,7 @@
         <div>
             <h5 style="margin-top: 25px; margin-top: 20px;">Statystyki dla jednostki</h5>
 
+            <div class="table-responsive">
             <table class="w-75 table">
                 <thead>
                 <tr>
@@ -126,7 +127,7 @@
                     </tr>
                 </tbody>
             </table>
-               
+            </div>
 
 
             {% comment %} <div class="stat_table" style="margin-left: 20px">
@@ -168,9 +169,9 @@
                         <div class="col-6">
                             <label for="month" class="form-label modal-style">Miesiąc</label>
                         </div>
-                        <div class="col-6">
+                        <div class="col-6 overflow-hidden">
                             {% comment %} <input type="number" class="form-control" v-model="month" required> {% endcomment %}
-                            <select class="form-control overflow-hidden" v-model="month_report" disabled>
+                            <select class="form-select overflow-hidden" v-model="month_report" disabled>
                                 <option v-for="label in month_labels" :value="label.id">
                                     [[ label.name ]]
                                 </option>
@@ -294,7 +295,7 @@
                                 <div class="col-6">
                                     <label for="month" class="form-label modal-style">Miesiąc</label>
                                 </div>
-                                <div class="col-6">
+                                <div class="col-6 overflow-hidden">
                                     {% comment %} <input type="number" class="form-control" v-model="month" required> {% endcomment %}
                                     <select class="form-select overflow-hidden" v-model="month">
                                         <option v-for="label in month_labels" :value="label.id">

@@ -32,6 +32,7 @@
                 <div class="emp_option_small_box"><h5>Imię</h5><input type="text" class="w-50 form-control" v-model="employee_info.first_name" required></div>
                 <div class="emp_option_small_box"><h5>Nazwisko</h5><input type="text" class="w-50 form-control" v-model="employee_info.last_name" required></div>
                 <div class="emp_option_small_box"><h5>Nazwa Użytkownika</h5><input type="text" class="w-50 form-control" v-model="employee_info.username" diasabled readonly></div>
+                <div class="emp_option_small_box"><h5>Liczba porządkowa</h5><input type="text" class="w-50 form-control" v-model="employee_info.order_number"></div>
             </div>
             <div>
                 <div class="emp_option_small_box"><h5>ID</h5><input type="text" class="w-50 form-control" v-model="employee_info.id" diasabled readonly></div>
@@ -47,7 +48,10 @@
                 </div>
             </div>
         </div>
+        <input type="button" value="Usuń pracownika" class="btn btn-outline-danger" style="margin-bottom: 50px; margin-left: 10px"
+           v-on:click="delete_employee(employee_info.id)">
         <input type="submit" value="Zapisz zmiany" class="btn btn-outline-success" style="margin-bottom: 50px; margin-left: 10px">
+        
     </form>
 
     <div class="emp_option_wide_box">
@@ -844,6 +848,29 @@
                     }
                     return day_str
                 },
+
+                delete_employee(employee_id){
+                    swal({
+                        title: "Czy na pewno chcesz usunąć pracownika?",
+                        icon: "warning",
+                        buttons: true,
+                        dangerMode: true,
+                    })
+                        .then((willDelete) => {
+                            if (willDelete) {
+                                let url = '{% url 'employee-list' %}' + employee_id + '/'
+                                axios
+                                    .delete(url,
+                                        {
+                                            id: employee_id
+                                        }
+                                    )
+                                .then(() => window.location.href = '{% url 'employees_manage' %}')
+                                .catch(error => {this.response = error.response.data});
+                                
+                            }
+                        });
+                },
                 dates_compute(){
                     let this_year = new Date().getFullYear()
                     let bottom_date = new Date()
@@ -857,6 +884,7 @@
                         this.date_bottom_limit = bottom_date.getFullYear() + '-' + bottom_date.getMonth() + 1 + '-' + bottom_date.getDate()
                         this.date_top_limit = top_date.getFullYear() + '-' + top_date.getMonth() + 1 + '-' + top_date.getDate()
                     }
+
                 },
             },
             mounted() {
