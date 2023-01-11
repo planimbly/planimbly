@@ -379,7 +379,8 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                 if s.get().workplace.id in ei.workplaces:
                     allowed_shift_types[s.get()] = [d for d in range(1, num_days + 1)]
                 else:
-                    logger.log("ADDED", "[WORKPLACE] | [NOT IN WORKPLACE {}] | REMOVED | SHIFT: {} EMP: {:2d}".format(s.get().workplace.name, s.get().name, ei.get().pk))
+                    logger.log("ADDED", "[WORKPLACE] | [NOT IN WORKPLACE {}] | REMOVED | SHIFT: {} | EMP: {:2d}".format(
+                        s.get().workplace.name, s.get().name, ei.get().pk))
 
         # Now we handle negative indefinite assignments
         for nia in ei.negative_indefinite_assignments:
@@ -477,17 +478,20 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                 # model.AddExactlyOne(work[ei.get().pk, term_assignments[d].id, d])
                 # TODO: decide whether it's worth increasing feasibility - maybe consult with client?
                 model.AddExactlyOne(work[ei.get().pk, s, d] for s in [term_assignments[d].id, 0])
-                logger.log("ADDED", "[ASSIGNMENTS] | [POSITIVE TERM ASSIGNMENT] | SHIFT: {} EMP: {:2d} DAY: {:2d}".format(term_assignments[d].id, ei.get().pk, d))
+                logger.log("ADDED", "[ASSIGNMENTS] | [POSITIVE TERM ASSIGNMENT] | SHIFT: {} | EMP: {:2d} | DAY: {:2d}".format(
+                    term_assignments[d].id, ei.get().pk, d))
 
     # Deny shifts with negative term assignments
     for ei in ctx.employees:
         for ta in ei.term_assignments:
             if ta[1] is True:
                 if (ei.get().pk, ta[0].id, ta[2].day) in forbidden_work:
-                    logger.warning("[ASSIGNMENTS] | [NEGATIVE TERM ASSIGNMENT] | SHIFT: {} EMP: {:2d} DAY: {:2d} - conflicting with indef. assignment/absence".format(ta[0].id, ei.get().pk, ta[2].day))
+                    logger.warning("[ASSIGNMENTS] | [NEGATIVE TERM ASSIGNMENT] | SHIFT: {} | EMP: {:2d} | DAY: {:2d} - "
+                                   "conflicting with indef. assignment/absence".format(ta[0].id, ei.get().pk, ta[2].day))
                     continue
                 model.Add(work[ei.get().pk, ta[0].id, ta[2].day] == 0)
-                logger.log("ADDED", "[ASSIGNMENTS] | [NEGATIVE TERM ASSIGNMENT] | REMOVED | SHIFT: {} EMP: {:2d} DAY: {:2d} ".format(ta[0].name, ei.get().pk, ta[2].day))
+                logger.log("ADDED", "[ASSIGNMENTS] | [NEGATIVE TERM ASSIGNMENT] | REMOVED | SHIFT: {} | EMP: {:2d} | DAY: {:2d} ".format(
+                    ta[0].name, ei.get().pk, ta[2].day))
 
     # TODO: this will be used for generating schedule on top of existing schedule (in specific date range)
     # Fixed assignments.
@@ -713,7 +717,8 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                             logger.debug("[WEEKLY CONSTRAINT CORRECTION] WEEK: {:d} | EMP: {:2d} NUM ABSENCES: {:3d}".format(w, ei.get().pk, num_absences))
 
                 variables, coeffs = add_weekly_soft_sum_constraint(model, works, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost,
-                                                                   "weekly_sum_constraint(employee {:2d}, shift {:2d}, week {:d})".format(ei.get().pk, shift, w))
+                                                                   "weekly_sum_constraint(employee {:2d}, shift {:2d}, week {:d})".format(
+                                                                       ei.get().pk, shift, w))
                 obj_int_vars.extend(variables)
                 obj_int_coeffs.extend(coeffs)
 
