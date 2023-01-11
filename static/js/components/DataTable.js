@@ -8,7 +8,11 @@ export default {
         [{
             title: ...,
             editable: false/true,
-
+            property_name: ...,
+            type: ...,
+            allow_filter: true/false,
+            default_filter: asc/desc,
+            highlighted: true,
          }, 
         ...]
         */
@@ -25,6 +29,10 @@ export default {
             default: {
                 start_mobile_view_px: 1450,
                 editable: true,
+                allow_special_edit_mode: true,
+                allow_modal_edit_on_mobile: true,
+                allow_modal_edit_on_desktop: false,
+                always_mobile_mode: false,
             },
         }
 
@@ -32,19 +40,6 @@ export default {
 
     data () {
       return {
-        /*
-        fields_options: [
-            {title: 'Start zmiany', editable: true, property_name: 'hour_start', type: 'time', allow_filter: true, default_filter: 'asc'},
-            {title: 'Koniec zmiany', editable: true, property_name: 'hour_end', type: 'time', allow_filter: true},
-            {title: 'Nazwa', editable: true, property_name: 'name', type: 'text', highlighted: true, allow_filter: true},
-            {title: 'Skrót', editable: true, property_name: 'shift_code', type: 'text', allow_filter: true},
-            {title: 'Kolor', editable: true, property_name: 'color', type: 'color'},
-            {title: 'Zapotrzebowanie', editable: true, property_name: 'demand', type: 'number', allow_filter: true},
-            {title: 'W użyciu', editable: true, property_name: 'is_used', type: 'checkbox', allow_filter: true},
-        ],
-        data_rows: [
-            { "id": 1, "hour_start": "06:00:00", "hour_end": "14:00:00", "name": "M", "shift_code": "AAA", "workplace": 1, "demand": 1, "color": "#BEDAFF", "active_days": "1111111", "is_used": true }, { "id": 2, "hour_start": "14:00:00", "hour_end": "22:00:00", "name": "A", "shift_code": "AAC", "workplace": 1, "demand": 3, "color": "#BEDAFF", "active_days": "1111111", "is_used": true }, { "id": 3, "hour_start": "22:00:00", "hour_end": "06:00:00", "name": "N", "shift_code": "AFA", "workplace": 1, "demand": 1, "color": "#BEDAFF", "active_days": "1111111", "is_used": false } 
-        ],*/
         window_width: 0,
         row_to_edit_mobile: null,
         user_changed_filter_property: null,
@@ -60,8 +55,6 @@ export default {
 
         register_row_click(row){
             if (!this.special_edit_mode){
-                console.log('registered click');
-                console.log(row);
                 this.$emit('click-row', row);
             }  
         },
@@ -73,14 +66,10 @@ export default {
         },
 
         send_rows_to_delete(rows){
-            console.log('will delete following rows: ');
-            console.log(rows);
             this.$emit('rows-sent-to-delete', rows);
         },
 
         send_rows_to_update(rows){
-            console.log('will update following rows: ');
-            console.log(rows);
             this.$emit('rows-sent-to-update', rows);
         },
 
@@ -115,9 +104,7 @@ export default {
         },
 
         set_row_to_edit_mobile(row){
-            console.log('row to edit below');
             this.row_to_edit_mobile = Object.assign({}, row);
-            console.log(this.row_to_edit_mobile);
         },
 
         filter_triangle_to_show(field){
@@ -156,7 +143,6 @@ export default {
                 case 'default':
                 case 'number':
                 case 'checkbox':
-                    console.log('default!!!');
                     sorted_rows = asc_or_desc === 'desc' ?
                         
                         raw_data_rows.sort(function(rowA, rowB){
@@ -169,7 +155,6 @@ export default {
                     break;
 
                 case 'date':
-                    console.log('date!!!');
                     sorted_rows = asc_or_desc === 'desc' ?
                         
                         raw_data_rows.sort(function(rowA, rowB){
@@ -186,7 +171,6 @@ export default {
                     break;
 
                 case 'time':
-                    console.log('time!!!');
                     sorted_rows = asc_or_desc === 'desc' ?
                         
                         raw_data_rows.sort(function(rowA, rowB){
@@ -205,7 +189,6 @@ export default {
                     break;
 
                 case 'text':
-                    console.log('text!!!');
                     sorted_rows = asc_or_desc === 'desc' ?
                         
                         raw_data_rows.sort(function(rowA, rowB){
@@ -219,16 +202,14 @@ export default {
 
                 default:
                     console.log('error message: \n you\'ve tried to sort unhandled data type');
-            } 
-            console.log('sorted');
-            console.log(sorted_rows)
+            }
             return sorted_rows;
         }
     },
 
     computed:{
-        is_view_mobile(){
-            return this.window_width > this.options.start_mobile_view_px ? true : false;
+        is_view_desktop(){
+            return (this.window_width > this.options.start_mobile_view_px) && (!this.options.always_mobile_mode) ? true : false;
         },
         filtered_data_rows(){
             let copied_data_rows = []
@@ -236,7 +217,6 @@ export default {
                 copied_data_rows = this.data_rows.slice();
             }
             if (this.user_changed_filter_property != null && this.user_changed_filter_is_asc != null){
-                console.log('user_filer');
                 return this.sort_rows(copied_data_rows, 
                     this.user_changed_filter_property,
                     this.user_changed_filter_is_asc === true ? 'asc' : 'desc',
@@ -244,8 +224,6 @@ export default {
                 );
             }
             else if (this.fields_options && this.fields_options.find(f => typeof f.default_filter === 'string')) {
-                // this.fields_options.find(f => typeof f.default_filter === 'string').
-                console.log('default_filter');
                 return this.sort_rows(copied_data_rows, 
                     this.fields_options.find(f => typeof f.default_filter === 'string').property_name,
                     this.fields_options.find(f => typeof f.default_filter === 'string').default_filter,
@@ -273,7 +251,7 @@ export default {
     template: `
     <div class="PN-table-wrapper" id="table-ref" ref="table-ref">
         
-        <div v-if="is_view_mobile">
+        <div v-if="is_view_desktop">
             <table class="table styled-table table-hover">
                 <thead>
                 <tr>
@@ -284,21 +262,12 @@ export default {
                         <div v-else-if="filter_triangle_to_show(field) === 'desc'" class="ms-1">&#x25BE</div>
                         </div>
                     </th>
-                    <!--
-                    <th scope="col">Start zmiany</th>
-                    <th scope="col">Koniec zmiany</th>
-                    <th scope="col">Nazwa</th>
-                    <th scope="col">Skrót</th>
-                    <th scope="col">Zapotrzebowanie</th>
-                    <th scope="col">Kolor</th>
-                    <th scope="col">W użyciu</th>
-                    <th scope="col">Zapisz</th>
-                    <th scope="col">Usuń</th> -->
                 </tr>
                 </thead>
 
                 <tbody>
-                    <tr v-for="(row, i) in filtered_data_rows" v-on:click="register_row_click(row)">
+                    <tr v-for="(row, i) in filtered_data_rows" v-on:click="set_row_to_edit_mobile(row); register_row_click(row);" 
+                        v-bind="{'data-bs-toggle': (options.allow_modal_edit_on_desktop ? 'modal' : 'none')}" data-bs-target="#editRowModal" style="cursor: pointer">
                         <td v-for="field in fields_options">
                             <div v-if="field.type === 'checkbox' && row[field.property_name] === true">tak</div>
                             <div v-else-if="field.type === 'checkbox' && row[field.property_name] === false">nie</div>
@@ -308,28 +277,6 @@ export default {
                             <div v-else> [[ row[field.property_name] ]] </div>
                         </td>
                     </tr>
-                <!--
-                <tr v-for="(shiftType, i) in shiftType_list" :key="shiftType.id">
-                    <td><input type="time" class="form-control" v-model="shiftType.hour_start"></td>
-                    <td><input type="time" class="form-control" v-model="shiftType.hour_end"></td>
-                    <td><input type="text" class="form-control" v-model="shiftType.name"></td>
-                    <td><input type="text" class="form-control" v-model="shiftType.shift_code"></td>
-                    <td><input type="number" class="form-control" v-model="shiftType.demand"></td>
-
-                    <td><input type="color" class="form-control form-control-color" v-model="shiftType.color"
-                                id="colorInput"
-                                title="Wybierz kolor zmiany wyświetlany w grafiku"></td>
-                    <td><input type="checkbox" class="form-check-input" value="" v-model="shiftType.is_used"></td>
-                    <td>
-                        <button v-on:click="change_shiftType(i)" type="button"
-                                class="btn btn-primary table-buttons"><i class="material-icons">save</i></button>
-                    </td>
-                    <td>
-                        <button v-on:click="remove_shiftType(shiftType.id)" type="button"
-                                class="btn btn-danger table-buttons"><i class="material-icons">delete</i></button>
-                    </td>
-                </tr>
-                -->
 
                 </tbody>
                 
@@ -337,7 +284,7 @@ export default {
         </div>
         <div v-else>
             <div v-for="(row, i) in filtered_data_rows" class="card position-relative mb-1" v-on:click="set_row_to_edit_mobile(row); register_row_click(row);"
-                data-bs-toggle="modal" data-bs-target="#editRowModal" style="cursor: pointer">
+                v-bind="{'data-bs-toggle': (options.allow_modal_edit_on_mobile ? 'modal' : 'none')}" data-bs-target="#editRowModal" style="cursor: pointer">
                 <div class="card-body text-center">
                     <h5 class="card-title mb-0" v-if="fields_options && fields_options.find(f => f.highlighted === true)"> 
                         [[ row[fields_options.find(f => f.highlighted == true).property_name] ]]
@@ -404,65 +351,7 @@ export default {
                                         </div>
                                     </div>
                                 </div>
-                                <!--
-                                <div class="col-4">
-                                    <label for="shiftStartDate" class="form-label modal-style" required>Start
-                                        zmiany</label>
-                                </div>
-                                <div class="col-8">
-                                    <input type="time" class="form-control" v-model="hour_start"
-                                            id="shiftStartDate" required>
-                                </div>
-                                <div class="col-4">
-                                    <label for="shiftEndDate" class="form-label modal-style" required>Koniec
-                                        zmiany</label>
-                                </div>
-                                <div class="col-8">
-                                    <input type="time" class="form-control" v-model="hour_end" id="shiftEndDate"
-                                            required>
-                                </div>
-                                <div class="col-4">
-                                    <label for="shiftName" class="form-label modal-style" required>Nazwa</label>
-                                </div>
-                                <div class="col-8">
-                                    <input type="text" class="form-control" v-model="name" id="shiftName"
-                                            required>
-                                </div>
-                                <div class="col-4">
-                                    <label for="shiftName" class="form-label modal-style" required>Skrót</label>
-                                </div>
-                                <div class="col-8">
-                                    <input type="text" class="form-control" v-model="shift_code" id="shiftName"
-                                            required>
-                                </div>
 
-
-                                <div class="col-4">
-                                    <label for="demand" class="form-label modal-style">Zapotrzebowanie</label>
-                                </div>
-                                <div class="col-8">
-                                    <input type="number" class="form-control" v-model="demand" id="demand"
-                                            required>
-                                </div>
-
-                                <div class="col-4">
-                                    <label for="color" class="form-label modal-style">Kolor</label>
-                                </div>
-                                <div class="col-8">
-                                    <input type="color" class="form-control" v-model="color" id="color"
-                                            required>
-                                </div>
-
-
-                                <div class="col-4">
-                                    <label for="isShiftUsed" class="form-label modal-style">W użyciu</label>
-                                </div>
-                                <div class="col-8 d-flex align-items-center">
-                                    <input type="checkbox" class="form-check-input" style="margin: 0px;"
-                                            value=""
-                                            v-model="is_used" id="isShiftUsed" checked>
-                                </div>
-                                -->
                             </div>
                         </div>
 

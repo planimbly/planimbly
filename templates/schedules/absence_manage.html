@@ -68,42 +68,17 @@
 
         <div class="row d-flex justify-content-between align-items-center">
             <div class="col d-flex justify-content-start">
-                <h3 class="content-title">Lista nieobecności</h3>
+                <h6 class="content-title">Lista nieobecności</h6>
             </div>
 
             <div class="col d-flex justify-content-end">
                 <button data-bs-target="#createAbsenceModal" data-bs-toggle="modal" data-bs-dismiss="modal" 
-                        class="btn btn-outline-success" style="margin-top: 15px; margin-bottom: 15px">Dodaj nieobecność</button> 
+                        class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj nieobecność</button> 
             </div>
         </div>
-        
-        <table class="table styled-table">
-            <thead>
-            <tr>
-                <th scope="col">Początek</th>
-                <th scope="col">Koniec</th>
-                <th scope="col">Imie i Nazwisko</th>
-                <th scope="col">Typ</th>
-                <th scope="col">Liczba godzin</th>
-                <th scope="col">Usuń</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr v-for="(absence, i) in absence_list" :key="absence.id">
-                <td>[[absence.start]]
-                <td>[[absence.end]]</td>
-                <td>[[absence.employee_obj.first_name]] [[absence.employee_obj.last_name]]</td>
-                <td>[[absence.type]]</td>
-                <td>[[absence.hours_number]]</td>
-                <td>
-                    <button v-on:click="delete_absence(absence.id)" type="button"
-                            class="btn btn-danger table-buttons"><i class="material-icons">delete</i></button>
-                </td>
-            </tr>
-            </tbody>
-        </table>
 
         <data-table 
+        v-on:rows-sent-to-delete="datatable_delete_absences"
         :fields_options="[
         {title: 'Początek', editable: false, property_name: 'start', type: 'date', allow_filter: true, default_filter: 'desc'},
         {title: 'Koniec', editable: false, property_name: 'end', type: 'date',  allow_filter: true},
@@ -113,9 +88,12 @@
         {title: 'Typ', editable: false, property_name: 'type', type: 'text', allow_filter: true},
         {title: 'Liczba godzin', editable: false, property_name: 'hours_number', type: 'number', allow_filter: true},]" 
         :data_rows="absence_list"
-        :options="{
-            start_mobile_view_px: 1450,
-            editable: false,
+        :options="{start_mobile_view_px: 1450, 
+            editable: false, 
+            allow_special_edit_mode: false,
+            allow_modal_edit_on_mobile: true,
+            allow_modal_edit_on_desktop: true,
+            always_mobile_mode: false,
         }">
         </data-table>
     </div>
@@ -200,29 +178,26 @@
                             }
                         );
                 },
-                delete_absence(absence_id) {
-                    swal({
-                        title: "Potwierdź usunięcie nieobecności",
-                        icon: "warning",
-                        buttons: true,
-                        dangerMode: true,
-                    })
-                        .then((willAdd) => {
-                            if (willAdd) {
-                                axios
-                                .delete(this.absence_url + absence_id + '/',
-                                    {id: absence_id}
-                                )
-                                .then(response => {
-                                        this.fetch_data()
-                                    }
-                                )
-                                .catch(error => {
-                                        this.response = error.response.data
-                                    }
-                                );
-                            }
-                        });  
+                datatable_delete_absences(rows){
+                    this.request_delete_loop(rows).then(
+                        this.fetch_data
+                    )
+                },
+                async request_delete_loop(rows){
+                    for (let i=0; i<rows.length; i++){
+
+                        const current_url = this.absence_url + rows[i].id + '/';
+                        await axios
+                            .delete(current_url,
+                                {
+                                    id: rows[i].id
+                                }
+                            ).catch(
+                                error => {
+                                    this.response = error.response.data
+                                }
+                            )
+                    }
                 },
             },
             computed: {},
