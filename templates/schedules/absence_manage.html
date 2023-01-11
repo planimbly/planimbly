@@ -28,17 +28,17 @@
                         {% csrf_token %}
                         <div class="modal-body">
                             <div class="form-floating" style="margin-bottom: 10px">
-                                <input type="date" class="form-control" v-model="start" id="inputDateStart" placeholder="Początek nieobecności" required>
+                                <input type="date" class="form-control" v-model="start" id="inputDateStart" placeholder="Początek nieobecności" :min="date_bottom_limit" :max="date_top_limit" required>
                                 <label for="inputDateStart">Początek nieobecności</label>
                             </div>
                             <div class="form-floating" style="margin-bottom: 10px">
-                                <input type="date" class="form-control" v-model="end" id="inputDateEnd" placeholder="Koniec nieobecności" required>
+                                <input type="date" class="form-control" v-model="end" id="inputDateEnd" placeholder="Koniec nieobecności" :max="date_top_limit" :min="start" required>
                                 <label for="inputDateEnd">Koniec nieobecności</label>
                             </div>
 
                             <div class="form-floating" style="margin-bottom: 10px">
                                 <input type="number" class="form-control" v-model="hours_number" id="inputHours" placeholder="Koniec nieobecności" required>
-                                <label for="inputHours">Liczba godzin</label>
+                                <label for="inputHours">Liczba godzin odejmowanych od etatu</label>
                             </div>
                             
                             <select class="form-select" v-model="type" style="margin-bottom: 10px" required>
@@ -53,6 +53,10 @@
                                     [[employee.first_name]] [[employee.last_name]]
                                 </option>
                             </select>
+
+                            <label v-for="(field, index) in response" style="color: #FF0000; margin-top: 20px">
+                                [[ field.join('') ]]
+                            </label>
                         </div>
                         
                         <div class="modal-footer">
@@ -121,9 +125,26 @@
                     end: '',
                     type: '',
                     hours_number: '',
+                    date_bottom_limit: new Date(),
+                    date_top_limit: new Date(),
+                    response: null,
                 }
             },
             methods: {
+                dates_compute(){
+                    let this_year = new Date().getFullYear()
+                    let bottom_date = new Date()
+                    let top_date = new Date()
+                    bottom_date.setFullYear(this_year - 1)
+                    top_date.setFullYear(this_year + 1)
+                    if (bottom_date.getDate() < 10){
+                        this.date_bottom_limit = bottom_date.getFullYear() + '-' + bottom_date.getMonth() + 1 + '-' + '0' + bottom_date.getDate()
+                        this.date_top_limit = top_date.getFullYear() + '-' + top_date.getMonth() + 1 + '-' + '0' + top_date.getDate()
+                    } else {
+                        this.date_bottom_limit = bottom_date.getFullYear() + '-' + bottom_date.getMonth() + 1 + '-' + bottom_date.getDate()
+                        this.date_top_limit = top_date.getFullYear() + '-' + top_date.getMonth() + 1 + '-' + top_date.getDate()
+                    }
+                },
                 create_absence() {
                     swal({
                         title: "Potwierdź dodanie nieobecności",
@@ -133,6 +154,12 @@
                     })
                         .then((willAdd) => {
                             if (willAdd) {
+                                if(this.employee_id == null){
+                                    this.response = { employee: ["Nie został wybrany pracownik"] }
+                                }
+                                if(this.type == null){
+                                    this.response = { employee: ["Nie został wybrany typ nieobecności"] }
+                                }
                                 axios
                                 .post(this.absence_url,
                                     {
@@ -149,6 +176,7 @@
                                 )
                                 .catch(error => {
                                         this.response = error.response.data
+                                        console.log(this.response)
                                     }
                                 )
                             }
@@ -170,7 +198,6 @@
                         .get(this.employee_url)
                         .then(response => {
                                 this.employee_list = response.data;
-                                console.log(this.employee_list)
                             }
                         )
                         .catch(error => {
@@ -203,6 +230,7 @@
             computed: {},
             mounted() {
                 this.fetch_data()
+                this.dates_compute()
             },
         }).mount('#vue-app');
 

@@ -55,6 +55,11 @@
                                     <input type="text" class="form-control" v-model="name" id="inputName">
                                 </div>
                             </div>
+                        
+                            <label v-for="(field, index) in response" style="color: #FF0000; margin-top: 20px">
+                                [[ field.join('') ]]
+                            </label>
+                        
                         </div>
 
                         <div class="modal-footer">
@@ -62,10 +67,6 @@
                             </button>
                         </div>
                     </form>
-
-                    <p v-for="(field, index) in response">
-                        [[ index ]] : [[ field.join('') ]]
-                    </p>
                 </div>
             </div>
         </div>
