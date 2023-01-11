@@ -448,7 +448,6 @@ class ScheduleUnitGetApiView(APIView):
             days_num = calendar.monthrange(int(year), int(month))[1]
 
             workplace_days = {}
-            days = {}
             statistics = {}
 
             for workplace in workplace_list:
