@@ -423,12 +423,12 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     for ei in ctx.employees:
         for s in ctx.shift_types:
             for d in range(-6, num_days + 1):
-                work[ei.get().pk, s.id, d] = model.NewBoolVar("work{:2d}_{:d}_{:2d}".format(ei.get().pk, s.id, d))
+                work[ei.get().pk, s.id, d] = model.NewBoolVar("work{:d}_{:d}_{:d}".format(ei.get().pk, s.id, d))
                 if d not in ei.allowed_shift_types[s.get()] and d > 0:
                     forbidden_work.append((ei.get().pk, s.id, d))
         # for s in ei.allowed_shift_types.keys():
         #     for d in ei.allowed_shift_types[s]:
-        #         work[ei.get().pk, s.id, d] = model.NewBoolVar("work{:2d}_{:d}_{:2d}".format(ei.get().pk, s.id, d))
+        #         work[ei.get().pk, s.id, d] = model.NewBoolVar("work{:d}_{:d}_{:d}".format(ei.get().pk, s.id, d))
 
     friday_before = saturday_before = 999
     if shifts_before:
@@ -441,7 +441,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
             elif sb.weekday() == 5:
                 saturday_before = -6 + i
             for s in d_shifts:
-                work[s.employee.pk, s.shift_type.id, -6 + i] = model.NewBoolVar("work{:2d}_{:d}_{:2d}".format(s.employee.pk, s.shift_type.id, -6 + i))
+                work[s.employee.pk, s.shift_type.id, -6 + i] = model.NewBoolVar("work{:d}_{:d}_{:d}".format(s.employee.pk, s.shift_type.id, -6 + i))
                 model.Add(work[s.employee.pk, s.shift_type.id, -6 + i] == 1)
                 # print(s.employee.pk, s.shift_type.id, -6 + i)
                 model.AddExactlyOne(work[s.employee.pk, s.shift_type.id, -6 + i])
@@ -528,7 +528,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
 
             variables, coeffs = add_soft_sequence_constraint(
                 model, works, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost,
-                "shift_constraint(employee {:2d}, shift {:2d})".format(ei.get().pk, shift))
+                "shift_constraint(employee {:d}, shift {:d})".format(ei.get().pk, shift))
             obj_bool_vars.extend(variables)
             obj_bool_coeffs.extend(coeffs)
 
@@ -717,7 +717,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                             logger.debug("[WEEKLY CONSTRAINT CORRECTION] WEEK: {:d} | EMP: {:2d} NUM ABSENCES: {:3d}".format(w, ei.get().pk, num_absences))
 
                 variables, coeffs = add_weekly_soft_sum_constraint(model, works, hard_min, soft_min, min_cost, soft_max, hard_max, max_cost,
-                                                                   "weekly_sum_constraint(employee {:2d}, shift {:2d}, week {:d})".format(
+                                                                   "weekly_sum_constraint(employee {:d}, shift {:d}, week {:d})".format(
                                                                        ei.get().pk, shift, w))
                 obj_int_vars.extend(variables)
                 obj_int_coeffs.extend(coeffs)
@@ -841,7 +841,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                 if cost == 0:
                     model.AddBoolOr(transition)
                 else:
-                    trans_var = model.NewBoolVar("transition(employee {:2d}, day {:2d})".format(ei.get().pk, d))
+                    trans_var = model.NewBoolVar("transition(employee={:d}, day={:d})".format(ei.get().pk, d))
                     transition.append(trans_var)
                     model.AddBoolOr(transition)
                     obj_bool_vars.append(trans_var)
@@ -861,7 +861,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                 model.Add(worked == sum(works))
                 over_penalty = 100
                 if over_penalty > 0:
-                    name = "excess_demand(shift {:2d}, week {:d}, day {:2d})".format(s.id, w, d[0])
+                    name = "excess_demand(shift={:d}, week={:d}, day={:d})".format(s.id, w, d[0])
                     excess = model.NewIntVar(0, len(ctx.employees) - demand, name)
                     model.Add(excess == worked - demand)
                     obj_int_vars.append(excess)
