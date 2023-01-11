@@ -13,7 +13,7 @@ from rest_framework.views import APIView
 
 import scripts.run_algorithm
 from apps.accounts.models import Employee
-from apps.organizations.models import Workplace, Unit, Organization, WorkplaceClosing
+from apps.organizations.models import Workplace, Unit, Organization, WorkplaceClosing, Message
 from apps.schedules.models import ShiftType, Shift, Schedule, Preference, Absence, Assignment, JobTime, FreeDay, \
     AlgorithmTask
 from apps.schedules.serializers import ShiftTypeSerializer, PreferenceSerializer, AbsenceSerializer, \
@@ -31,8 +31,6 @@ def free_days(year, month):
     return free_days
 
 
-# Function copied from:
-# https://stackoverflow.com/questions/1806278/convert-fraction-to-float
 def convert_to_float(frac_str):
     try:
         return float(frac_str)
@@ -120,9 +118,9 @@ class ScheduleCreateApiView(APIView):
         year = self.request.data.get('year')
         month = self.request.data.get('month')
         workplace_list = self.request.data.get('workplace_list')
-
+        org_id = request.user.user_org_id
         if settings.USE_HUEY:
-            run_algorithm(year, month, request.user.id, workplace_list)
+            run_algorithm(year, month, org_id, workplace_list)
 
         else:
             if not year or not month or not workplace_list:
@@ -216,16 +214,20 @@ class ScheduleCreateApiView(APIView):
                 for shift in data:
                     shift.save()
             else:
-                for workplace in workplace_query:
-                    old_schedule = Schedule.objects.filter(year=year).filter(month=month).filter(
-                        workplace=workplace).first()
-                    if old_schedule is not None:
-                        old_schedule.message = "Nie udało się wygenerować nowego grafiku"
-                        old_schedule.save()
-                    else:
-                        schedule = schedule_dict[workplace.id]
-                        schedule.message = "Nie udało się wygenerować nowego grafiku"
-                        schedule.save()
+                org = Organization.objects.get(id=org_id)
+                message = Message(organization=org, content="Nie udało się wygenerować nowego grafiku",
+                                  type='SCHEDULE')
+                message.save()
+            '''for workplace in workplace_query:
+                old_schedule = Schedule.objects.filter(year=year).filter(month=month).filter(
+                    workplace=workplace).first()
+                if old_schedule is not None:
+                    old_schedule.message = "Nie udało się wygenerować nowego grafiku"
+                    old_schedule.save()
+                else:
+                    schedule = schedule_dict[workplace.id]
+                    schedule.message = "Nie udało się wygenerować nowego grafiku"
+                    schedule.save()'''
 
         return Response()
 
@@ -398,8 +400,12 @@ class ScheduleGetApiView(APIView):
                         }
                     }
                 ))
+            message = Message.objects.filter(organization=request.user.user_org).filter(type='SCHEDULE')
+            content = None
+            if message.exists() is True:
+                content = message.first().content
+                message.delete()
 
-            schedule = Schedule.objects.filter(year=year).filter(month=month).filter(workplace_id=workplace_pk).first()
             response = {
                 'unit_id': workplace.workplace_unit.id,
                 'workplace_id': workplace.id,
@@ -409,7 +415,7 @@ class ScheduleGetApiView(APIView):
                 'statistics': statistics,
                 'free_days': free_days(int(year), int(month)),
                 'jobtime': jobtime,
-                'message': schedule.message if schedule is not None else None
+                'message': content
             }
             return Response(data=response)
         else:

@@ -7,12 +7,12 @@ from huey.contrib.djhuey import db_task
 
 import scripts.run_algorithm
 from apps.accounts.models import Employee
-from apps.organizations.models import Workplace, WorkplaceClosing
+from apps.organizations.models import Workplace, WorkplaceClosing, Message, Organization
 from apps.schedules.models import ShiftType, Schedule, Preference, Absence, Assignment, JobTime, AlgorithmTask, Shift
 
 
 @db_task()
-def run_algorithm(year, month, user_id, workplace_list):
+def run_algorithm(year, month, org_id, workplace_list):
     workplace_query = Workplace.objects.filter(id__in=workplace_list)
     schedule_dict = dict()
 
@@ -101,7 +101,10 @@ def run_algorithm(year, month, user_id, workplace_list):
         for shift in data:
             shift.save()
     else:
-        for workplace in workplace_query:
+        org = Organization.objects.get(id=org_id)
+        message = Message(organization=org, content="Nie udało się wygenerować nowego grafiku", type='SCHEDULE')
+        message.save()
+        '''for workplace in workplace_query:
             old_schedule = Schedule.objects.filter(year=year).filter(month=month).filter(
                 workplace=workplace).first()
             if old_schedule is not None:
@@ -110,7 +113,7 @@ def run_algorithm(year, month, user_id, workplace_list):
             else:
                 schedule = schedule_dict[workplace.id]
                 schedule.message = "Nie udało się wygenerować nowego grafiku"
-                schedule.save()
+                schedule.save()'''
     return
 
 
