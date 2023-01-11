@@ -1,0 +1,20 @@
+.PN-table-wrapper{
+    margin: 1px;
+}
+
+.PN-color-display-wrapper{
+    text-align: center;
+    display: inline-flex;
+    
+}
+
+.PN-color-display{
+    width: 30px;
+    border-radius: 5px;
+    border-color: black;
+    border-width: 1px;
+}
+
+.PN-hover-card:hover{
+    background-color: rgb(228, 228, 228);
+}

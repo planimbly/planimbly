@@ -8,8 +8,9 @@ export default {
       employee_id: Number,
       show_for_workplace: Boolean,
       schedule: Object,
-      available_workers: Object,
-      available_shift_types: Object
+      available_workers: Array,
+      available_shift_types: Object,
+      absences: Array,
     },
     emits: ['call-rest-api'],
     data () {
@@ -24,17 +25,6 @@ export default {
     },
     
     methods:{
-      /* DEPRECATED ZONE */
-      abbreviate_name(firstName, surname){
-        if (typeof firstName == "string" && typeof surname == "string") {
-          return firstName.charAt(0) + surname.charAt(0);
-        } else {
-          return 'Error'
-        }
-      },
-      print(string){
-        console.log(string);
-      },
 
       /* MOUSE HOVER AWAY BEHAVIOUR*/
       scroll_tile_content_up(){
@@ -201,13 +191,76 @@ export default {
 
       set_new_tile_date(day){
         this.clickedTileDate = day.day;
+      },
+
+      get_absent_employees(date){
+        return this.absences.filter(absence => {
+          return (new Date(absence.start) <= date) && (date <= new Date(absence.end))
+        });
       }
       
     },
 
     computed:{
       available_workers_filtered(){
+        //y.filter(number => number !== id);
+        // GET EMPLOYEES, WHO ARE NOT ABSENT AND ARE INCLUDED IN GIVEN WORKPLACE
+        if (this.available_workers !== null){
+          let present_employees_included_in_workplace = this.available_workers.filter(worker => {
+            return !this.get_absent_employees(this.clickedTileDay.day).find(abs_emp => abs_emp.employee === worker.id) &&
+                    worker.user_workplace.find(workplace => workplace.id === this.workplace_id)
+                  
+          }).sort(function(workerA, workerB){
+            return workerA.order_number - workerB.order_number
+          });
+          
+          for (const empl of present_employees_included_in_workplace) {
+            empl['filtered_type'] = 'present_in_workplace'; 
+          }
 
+          let present_employees_included_in_unit = this.available_workers.filter(worker => {
+            return !this.get_absent_employees(this.clickedTileDay.day).find(abs_emp => abs_emp.employee === worker.id) &&
+                    !worker.user_workplace.find(workplace => workplace.id === this.workplace_id) &&
+                    worker.user_unit.find(unit => unit.id === this.unit_id);
+                  
+          }).sort(function(workerA, workerB){
+            return workerA.order_number - workerB.order_number
+          }); 
+
+          for (const empl of present_employees_included_in_unit) {
+            empl['filtered_type'] = 'present_in_unit'; 
+          }
+
+          let present_employees_not_included_in_unit = this.available_workers.filter(worker => {
+            return !this.get_absent_employees(this.clickedTileDay.day).find(abs_emp => abs_emp.employee === worker.id) &&
+                    !worker.user_workplace.find(workplace => workplace.id === this.workplace_id) &&
+                    !worker.user_unit.find(unit => unit.id === this.unit_id);
+                  
+          }).sort(function(workerA, workerB){
+            return workerA.order_number - workerB.order_number
+          }); 
+
+          for (const empl of present_employees_not_included_in_unit) {
+            empl['filtered_type'] = 'present_other_unit'; 
+          }
+          
+          let absent_employees = this.available_workers.filter(worker => {
+            return this.get_absent_employees(this.clickedTileDay.day).find(abs_emp => abs_emp.employee === worker.id);
+                      
+          }).sort(function(workerA, workerB){
+            return workerA.order_number - workerB.order_number
+          }); 
+
+          for (const empl of absent_employees) {
+            empl['filtered_type'] = 'absent'; 
+          }
+          
+          return present_employees_included_in_workplace.concat(
+            present_employees_included_in_unit, 
+            present_employees_not_included_in_unit, 
+            absent_employees);
+        }
+        return [];
       },
 
       available_shift_types_filtered(){
@@ -428,10 +481,18 @@ export default {
                 </div>
                 <div class="modal-body">
                       <div class="list-group">
-                            <div v-for="worker in available_workers" @click="update_employee_for_existing_shift(worker.id)" 
-                            class="list-group-item list-group-item-action" data-bs-target="#changeDayScheduleModal" data-bs-toggle="modal" data-bs-dismiss="modal" style="cursor: pointer">
-                                <div class="fw-bold">[[worker.first_name]] [[worker.last_name]]</div> [[worker.username]]
-                            </div>                       
+                            <template v-for="worker in available_workers_filtered">
+                              <div  @click="update_employee_for_existing_shift(worker.id)" v-if="worker.filtered_type !== 'absent'"
+                              class="list-group-item list-group-item-action" data-bs-target="#changeDayScheduleModal" data-bs-toggle="modal" data-bs-dismiss="modal" style="cursor: pointer">
+                                  <div class="fw-bold">[[worker.first_name]] [[worker.last_name]]</div> [[worker.username]] 
+                                  <div v-if="worker.filtered_type === 'present_other_unit'"><span class="badge bg-danger">Nie należy do tej jednostki</span></div>
+                                  <div v-else-if="worker.filtered_type === 'present_in_unit'"><span class="badge bg-warning text-dark">Nie należy do tego działu</span></div>
+                              </div>
+                              <div v-else 
+                              class="list-group-item list-group-item-action disabled" style="cursor: pointer; background-color: rgb(244, 244, 244);">
+                                <div class="fw-bold">[[worker.first_name]] [[worker.last_name]]</div> [[worker.username]] <div><span class="badge bg-dark">Nieobecny</span></div>
+                              </div> 
+                          </template> 
                       </div>
                 </div>
             </div>
@@ -447,10 +508,18 @@ export default {
                 </div>
                 <div class="modal-body">
                       <div class="list-group">
-                            <div v-for="worker in available_workers" @click="add_new_employee_for_existing_shift(worker.id)" 
+                          <template v-for="worker in available_workers_filtered">
+                            <div  @click="add_new_employee_for_existing_shift(worker.id)" v-if="worker.filtered_type !== 'absent'"
                             class="list-group-item list-group-item-action" data-bs-target="#changeDayScheduleModal" data-bs-toggle="modal" data-bs-dismiss="modal" style="cursor: pointer">
-                                <div class="fw-bold">[[worker.first_name]] [[worker.last_name]]</div> [[worker.username]]
-                            </div>                       
+                                <div class="fw-bold">[[worker.first_name]] [[worker.last_name]]</div> [[worker.username]] 
+                                <div v-if="worker.filtered_type === 'present_other_unit'"><span class="badge bg-danger">Nie należy do tej jednostki</span></div>
+                                <div v-else-if="worker.filtered_type === 'present_in_unit'"><span class="badge bg-warning text-dark">Nie należy do tego działu</span></div>
+                            </div>
+                            <div v-else 
+                            class="list-group-item list-group-item-action disabled" style="cursor: pointer; background-color: rgb(244, 244, 244);">
+                              <div class="fw-bold">[[worker.first_name]] [[worker.last_name]]</div> [[worker.username]] <div><span class="badge bg-dark">Nieobecny</span></div>
+                            </div> 
+                          </template>                      
                       </div>
                 </div>
             </div>
@@ -468,11 +537,11 @@ export default {
                       <div class="list-group">
                             <div v-for="shift_type in available_shift_types">
                               <div v-if="is_shift_type_already_in_use(shift_type.id)" class="list-group-item list-group-item-action disabled" style="cursor: pointer">
-                                  <div class="fw-bold">[[shift_type.name]]: ([[shift_type.id]]) </div>  [[shift_type.hour_start]] - [[shift_type.hour_end]]
+                                  <div class="fw-bold">[[shift_type.name]] </div>  [[shift_type.hour_start]] - [[shift_type.hour_end]]
                               </div>  
                               <div v-else @click="addNewShift_ShiftTypeID = shift_type.id" 
                               class="list-group-item list-group-item-action" data-bs-target="#pickEmployeesForNewShiftModal" data-bs-toggle="modal" data-bs-dismiss="modal" style="cursor: pointer">
-                                  <div class="fw-bold">[[shift_type.name]]: ([[shift_type.id]]) </div>  [[shift_type.hour_start]] - [[shift_type.hour_end]]
+                                  <div class="fw-bold">[[shift_type.name]] </div>  [[shift_type.hour_start]] - [[shift_type.hour_end]]
                               </div> 
                                 
                             </div>                    
@@ -495,12 +564,21 @@ export default {
                 </div>
                 <div class="modal-body">
                     <div class="list-group">
-                      <div v-for="worker in available_workers">
-                          <div v-if="is_id_in_array_NewShiftEmployeesID(worker.id)" @click="delete_from_array_NewShiftEmployeesID(worker.id)" class="list-group-item list-group-item-action active" style="cursor: pointer">
+                      <div v-for="worker in available_workers_filtered">
+                          <div v-if="is_id_in_array_NewShiftEmployeesID(worker.id)" @click="delete_from_array_NewShiftEmployeesID(worker.id)" 
+                            class="list-group-item list-group-item-action" style="cursor: pointer; background-color: rgb(228, 228, 228);">
                             <div class="fw-bold">[[worker.first_name]] [[worker.last_name]]</div> [[worker.username]]
+                            <div v-if="worker.filtered_type === 'present_other_unit'"><span class="badge bg-danger">Nie należy do tej jednostki</span></div>
+                            <div v-else-if="worker.filtered_type === 'present_in_unit'"><span class="badge bg-warning text-dark">Nie należy do tego działu</span></div>
+                          </div>
+                          <div v-else-if="worker.filtered_type === 'absent'" 
+                            class="list-group-item list-group-item-action disabled" style="cursor: pointer; background-color: rgb(244, 244, 244);">
+                            <div class="fw-bold">[[worker.first_name]] [[worker.last_name]]</div> [[worker.username]] <div><span class="badge bg-dark">Nieobecny</span></div>
                           </div>
                           <div v-else @click="append_to_array_NewShiftEmployeesID(worker.id)" class = "list-group-item list-group-item-action" style="cursor: pointer">
-                            <div class="fw-bold">[[worker.first_name]] [[worker.last_name]]</div> [[worker.username]]
+                            <div class="fw-bold">[[worker.first_name]] [[worker.last_name]]</div> [[worker.username]] 
+                            <div v-if="worker.filtered_type === 'present_other_unit'"><span class="badge bg-danger">Nie należy do tej jednostki</span></div>
+                            <div v-else-if="worker.filtered_type === 'present_in_unit'"><span class="badge bg-warning text-dark">Nie należy do tego działu</span></div>
                           </div>
                       </div>                       
                     </div>

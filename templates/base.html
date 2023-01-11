@@ -11,7 +11,7 @@
           integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
     {#  style  #}
     <link rel="stylesheet" href="/static/css/uam-nav-sidebar.css">
-    
+    <link rel="stylesheet" href="/static/css/data-table.css">
     {# favicon #}
     <link rel="icon" type="image/svg+xml" href="/static/img/Logo-Favicon.svg">
     {#    font(s)    #}
@@ -42,7 +42,7 @@
 {% block navsidebar %}
 
     <div id="app" v-cloak>
-        <nav class="navbar">
+        <nav class="navbar" style="z-index: 1;">
             <div v-on:click="changeSidebarState" class="material-icons navbar-style" title="Burger - 🍔 🤤 " id="burger"
                  style="font-size: 24px;">menu
             </div>
@@ -73,7 +73,7 @@
         </nav>
 
         <div class="main">
-            <div class="sidebar" id="sidebar" v-bind:style="`margin-left: ${moveSidebar};`">
+            <div class="sidebar" id="sidebar" v-bind:style="`margin-left: ${moveSidebar};`" style="z-index: 1;">
                 <ul class="sidebar-list">
                     {% block sidebar-items %}
                             <div v-on:click="move_to('{% url 'units_manage' %}')" class="sidebar-item {% if request.resolver_match.view_name == 'units_manage' %}active{% endif %}">
