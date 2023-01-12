@@ -40,6 +40,7 @@ jobs:
             python -m pip install -r requirements.txt
             python manage.py migrate --no-input
             python manage.py collectstatic --no-input
+            python manage.py create_groups
             sudo /bin/systemctl restart redis-server.service
             systemctl status redis-server.service
             sudo /bin/systemctl restart huey.service
