@@ -32,13 +32,26 @@ h5 {
     align-items: center;
 }
 
+.emp_option_info_box {
+    justify-content: space-between;
+}
+
 .emp_option_list_box {
     justify-content: flex-start;
     column-gap: 10px;
 }
 
-.emp_option_big_box, .emp_option_small_box, .emp_option_wide_box, .emp_option_table_box, .emp_option_list_box, .emp_tool_box{
+.emp_option_content_box {
+    justify-content: flex-start;
+    column-gap: 30px;
+}
+
+.emp_option_big_box, .emp_option_small_box, .emp_option_wide_box, .emp_option_table_box, .emp_option_list_box, .emp_tool_box, .emp_option_content_box, .emp_option_info_box  {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
+}
+
+.list_box_style{
+    max-width: 800px;
 }
