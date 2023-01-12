@@ -109,6 +109,9 @@
                     axios
                         .get(this.base_url)
                         .then(response => (this.unit_list = response.data))
+                        .then(
+                            this.response = null
+                        )
                 },
                 add_unit() {
                     swal({
@@ -126,7 +129,7 @@
                                         }
                                     )
                                     .then(
-                                        this.fetch_data
+                                        this.fetch_data()
                                     )
                                     .catch(error => {
                                             this.response = error.response.data

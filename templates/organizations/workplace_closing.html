@@ -20,30 +20,38 @@
                 <h6 class="content-title">Wyłączenia działów</h6>
             </div>
             <div class="row align-items-center mb-1">
-            <div class="col-auto mb-1">
-                <label class="col-form-label" for="unitSelect">Jednostka:</label>
-            </div>
-            <div class="col-auto mb-1">
-                <select id="unitSelect" class="form-select" v-model="selected_unit" v-on:change="workplace_list_fetch">
-                    <option :value="null" disabled hidden>Wybierz z listy</option>
-                    <option v-for="unit in unit_list" :value="unit.id">
-                        [[ unit.name ]]
-                    </option>
-                </select>
-            </div>
-            
-            <div class="col-auto mb-1">
-                <label class="col-form-label" for="workplaceSelect">Dział:</label>
-            </div>
-            <div class="col-auto mb-1">
-                <select id="workplaceSelect" class="form-select" v-model="selected_workplace"
-                        v-on:change="current_closing_compute">
-                    <option :value="null" disabled hidden>Wybierz z listy</option>
-                    <option v-for="workplace in workplaces_list" :value="workplace.id">
-                        [[ workplace.name ]]
-                    </option>
-                </select>
-            </div>
+                <div class="col-auto mb-1">
+                    <div class="title_box">
+                        <div>
+                            <label class="col-form-label" for="unitSelect">Jednostka:</label>
+                        </div>
+                        <div>
+                            <select id="unitSelect" class="form-select" v-model="selected_unit" v-on:change="workplace_list_fetch">
+                                <option :value="null" disabled hidden>Wybierz z listy</option>
+                                <option v-for="unit in unit_list" :value="unit.id">
+                                    [[ unit.name ]]
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-auto mb-1">
+                    <div class="title_box">
+                        <div>
+                            <label class="col-form-label" for="workplaceSelect">Dział:</label>
+                        </div>
+                        <div>
+                            <select id="workplaceSelect" class="form-select" v-model="selected_workplace"
+                                    v-on:change="current_closing_compute">
+                                <option :value="null" disabled hidden>Wybierz z listy</option>
+                                <option v-for="workplace in workplaces_list" :value="workplace.id">
+                                    [[ workplace.name ]]
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -51,10 +59,10 @@
             
             <table>
                 <tbody>
-                    <td><h5 style="margin-top: 35px">Wyłączenia</h5></td>
+                    <td><h6 style="margin-top: 35px">Wyłączenia:</h6></td>
                     <td>
                         <tooltip text="Moduł wyłączeń służy do wykluczania działów z generowania grafiku w wybranych przez użytkowników dniach." bottom="50%">
-                            <div class="material-icons" style="font-size: 0.93rem; color: #616161; margin-top: 30px;">help</div>
+                            <div class="material-icons" style="font-size: 0.93rem; color: #616161; margin-top: 33px;">help</div>
                         </tooltip>
                     </td>
                 </tbody>
@@ -182,9 +190,11 @@
                                         workplace: this.selected_workplace
                                     }
                                 )
+                                .then(
+                                    this.response = null
+                                )
                                 .then(() => {
                                     this.fetch_data()
-                                    console.log(this.inputDateEnd)
                                     this.current_closing_compute
                                 })
                                 .catch(error => {this.response = error.response.data})
