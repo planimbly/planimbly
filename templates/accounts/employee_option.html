@@ -54,9 +54,13 @@
         
     </form>
 
-    <div class="emp_option_wide_box">
+    <div class="emp_option_info_box list_box_style">
         <div>
-            <h5>Jednostki</h5>
+            <div class="emp_option_table_box">
+                <h5>Jednostki</h5>
+                <button data-bs-target="#pickUnitForEmployee" data-bs-toggle="modal" data-bs-dismiss="modal" 
+                    class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj</button>
+            </div>
             <div class="list-group">
                 <div v-for="unit in employee_info.user_unit" :key="unit.id" class="list-group-item list-group-item-action position-static">
                     <div class="emp_option_table_box">
@@ -66,12 +70,14 @@
                     </div>
                 </div>  
             </div> 
-            <button data-bs-target="#pickUnitForEmployee" data-bs-toggle="modal" data-bs-dismiss="modal" 
-                    class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj</button>                 
         </div>
 
         <div>
-            <h5>Działy</h5>
+            <div class="emp_option_table_box">
+                <h5>Działy</h5>
+                <button data-bs-target="#pickWorkplaceForEmployee" data-bs-toggle="modal" data-bs-dismiss="modal" 
+                    class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj</button>
+            </div>
             <div class="list-group">
                 <div v-for="workplace in employee_info.user_workplace" :key="workplace.id" class="list-group-item list-group-item-action position-static">
                     <div class="emp_option_table_box">
@@ -82,78 +88,98 @@
                     </div>
                 </div>
             </div>
-            <button data-bs-target="#pickWorkplaceForEmployee" data-bs-toggle="modal" data-bs-dismiss="modal" 
-                    class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj</button> 
         </div>
+    </div>
         
-        <div>
+    <div class="list_box_style">
+        <div class="emp_option_table_box">
             <div class="emp_tool_box">
                 <div>
                     <tooltip text="Kliknij aby uzyskać informację o preferencjach zmianowych.">
-                        <button data-bs-target="#PreferenceInfoModal" data-bs-toggle="modal" data-bs-dismiss="modal" class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0); font-size: 0.93rem; color: #616161; margin-top: 6px;;">help</button>
+                        <button data-bs-target="#PreferenceInfoModal" data-bs-toggle="modal" data-bs-dismiss="modal" class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0); font-size: 0.93rem; color: #616161; margin-top: 5px;;">help</button>
                     </tooltip>
                 </div>
                 <div><h5>Preferencje zmianowe</h5></div>
             </div>
-            <div class="list-group">
-                <div v-for="preference in preferences_list" :key="preference.id" class="list-group-item list-group-item-action position-static">
-                    <div class="emp_option_table_box">
-                        <div>[[ return_unit_name_for_workplace(preference.shift_type_obj.workplace) ]] - [[ return_workplace_name(preference.shift_type_obj.workplace) ]] - [[ preference.shift_type_obj.name ]]: [[ preference.shift_type_obj.hour_start.toString().slice(0, 5) ]] - [[ preference.shift_type_obj.hour_end.toString().slice(0, 5) ]]: [[ st_list_to_text(st_numbers_to_list(preference.active_days)) ]]</div>
-                        <button v-on:click="remove_preference(preference.id)" class="material-icons" 
-                                style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
+            <button data-bs-target="#addPreferenceModal" data-bs-toggle="modal" data-bs-dismiss="modal" 
+                class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj</button>
+        </div>
+        <div class="list-group">
+            <div v-for="preference in preferences_list" :key="preference.id" class="list-group-item list-group-item-action position-static">
+                <div class="emp_option_table_box">
+                    <div class="emp_option_content_box">
+                        <div>[[ return_unit_name_for_workplace(preference.shift_type_obj.workplace) ]] </div>
+                        <div>[[ return_workplace_name(preference.shift_type_obj.workplace) ]]</div>
+                        <div>[[ preference.shift_type_obj.name ]]</div>
+                        <div>[[ preference.shift_type_obj.hour_start.toString().slice(0, 5) ]] - [[ preference.shift_type_obj.hour_end.toString().slice(0, 5) ]]</div>
+                        <div>[[ st_list_to_text(st_numbers_to_list(preference.active_days)) ]]</div>
                     </div>
+                    <button v-on:click="remove_preference(preference.id)" class="material-icons" 
+                            style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
                 </div>
             </div>
-            <button data-bs-target="#addPreferenceModal" data-bs-toggle="modal" data-bs-dismiss="modal" 
-                    class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj</button> 
         </div>
+    </div>
 
-        {% comment %} [[ preference.shift_type_obj.hour_start.toString().slice(0, 5) ]] {% endcomment %}
+    {% comment %} [[ preference.shift_type_obj.hour_start.toString().slice(0, 5) ]] {% endcomment %}
 
-        <div>
+    <div class="list_box_style">
+        <div class="emp_option_table_box">
             <div class="emp_tool_box">
                 <div>
                     <tooltip text="Kliknij aby uzyskać informację o przypisaniach.">
-                        <button data-bs-target="#AssignmentInfoModal" data-bs-toggle="modal" data-bs-dismiss="modal" class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0); font-size: 0.93rem; color: #616161; margin-top: 6px;;">help</button>
+                        <button data-bs-target="#AssignmentInfoModal" data-bs-toggle="modal" data-bs-dismiss="modal" class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0); font-size: 0.93rem; color: #616161; margin-top: 5px;;">help</button>
                     </tooltip>
                 </div>
                 <div><h5>Przypisania</h5></div>
             </div>
-            <div class="list-group">
-                <div v-for="assignment in good_assignment_list" :key="assignment.id" class="list-group-item list-group-item-action position-static">
-                    <div class="emp_option_table_box">
-                        <div>[[ return_unit_name_for_workplace(assignment.shift_type_obj.workplace) ]] - [[ return_workplace_name(assignment.shift_type_obj.workplace) ]] - [[ assignment.shift_type_obj.name ]]: [[ return_assignment_data(assignment) ]]</div>
-                        <button v-on:click="remove_assignment(assignment.id)" class="material-icons" 
-                                style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
+            <button data-bs-target="#addAssignmentModal" data-bs-toggle="modal" data-bs-dismiss="modal" 
+            class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj</button>
+        </div>
+        <div class="list-group">
+            <div v-for="assignment in good_assignment_list" :key="assignment.id" class="list-group-item list-group-item-action position-static">
+                <div class="emp_option_table_box">
+                    <div class="emp_option_content_box">
+                        <div>[[ return_unit_name_for_workplace(assignment.shift_type_obj.workplace) ]] </div>
+                        <div>[[ return_workplace_name(assignment.shift_type_obj.workplace) ]]</div>
+                        <div>[[ assignment.shift_type_obj.name ]]</div>
+                        <div>[[ return_assignment_data(assignment) ]]</div>
                     </div>
+                    <button v-on:click="remove_assignment(assignment.id)" class="material-icons" 
+                            style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
                 </div>
             </div>
-            <button data-bs-target="#addAssignmentModal" data-bs-toggle="modal" data-bs-dismiss="modal" 
-                    class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj</button> 
         </div>
+ 
+    </div>
 
-        <div>
+    <div class="list_box_style" style="margin-bottom: 60px">
+        <div class='emp_option_table_box'>
             <div class="emp_tool_box">
                 <div>
                     <tooltip text="Kliknij aby uzyskać informację o wykluczeniach">
-                        <button data-bs-target="#BadAssignmentInfoModal" data-bs-toggle="modal" data-bs-dismiss="modal" class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0); font-size: 0.93rem; color: #616161; margin-top: 6px;;">help</button>
+                        <button data-bs-target="#BadAssignmentInfoModal" data-bs-toggle="modal" data-bs-dismiss="modal" class="material-icons" style="border: none; background-color: rgba(0, 0, 255, 0); font-size: 0.93rem; color: #616161; margin-top: 5px;;">help</button>
                     </tooltip>
                 </div>
                 <div><h5>Wykluczenia</h5></div>
             </div>
-            <div class="list-group">
-                <div v-for="assignment in bad_assignment_list" :key="assignment.id" class="list-group-item list-group-item-action position-static">
-                    <div class="emp_option_table_box">
-                        <div>[[ return_unit_name_for_workplace(assignment.shift_type_obj.workplace) ]] - [[ return_workplace_name(assignment.shift_type_obj.workplace) ]] - [[ assignment.shift_type_obj.name ]]: [[ return_assignment_data(assignment) ]]</div>
-                        <button v-on:click="remove_assignment(assignment.id)" class="material-icons" 
-                                style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
+            <button data-bs-target="#addBadAssignmentModal" data-bs-toggle="modal" data-bs-dismiss="modal" 
+                class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj</button> 
+        </div>
+        <div class="list-group">
+            <div v-for="assignment in bad_assignment_list" :key="assignment.id" class="list-group-item list-group-item-action position-static">
+                <div class="emp_option_table_box">
+                    <div class="emp_option_content_box">
+                        <div>[[ return_unit_name_for_workplace(assignment.shift_type_obj.workplace) ]] </div>
+                        <div>[[ return_workplace_name(assignment.shift_type_obj.workplace) ]]</div>
+                        <div>[[ assignment.shift_type_obj.name ]]</div>
+                        <div>[[ return_assignment_data(assignment) ]]</div>
                     </div>
+                    <button v-on:click="remove_assignment(assignment.id)" class="material-icons" 
+                            style="border: none; background-color: rgba(0, 0, 255, 0);">delete_outline</button>
                 </div>
             </div>
-            <button data-bs-target="#addBadAssignmentModal" data-bs-toggle="modal" data-bs-dismiss="modal" 
-                    class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj</button> 
         </div>
-
     </div>
 
     <div class="modal fade" id="pickUnitForEmployee" tabindex="-1">
