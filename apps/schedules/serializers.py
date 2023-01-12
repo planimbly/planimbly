@@ -38,7 +38,7 @@ class ShiftTypeSerializer(serializers.ModelSerializer):
             datetime.date.min, data['hour_start'])
         shift_len = shift_len.seconds / 3600
         if shift_len != 8.0 and data['is_used'] is True:
-            raise serializers.ValidationError("Zmiana nie może być aktywna oraz nie trwać 8 godzin")
+            raise serializers.ValidationError("Aktywne zmiany muszą być ośmiogodzinne!")
         return data
 
 
