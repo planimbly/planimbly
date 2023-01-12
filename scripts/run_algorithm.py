@@ -824,7 +824,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     # Minimum one free weekend per employee
     for ei in ctx.employees:
         works = [[work[ei.get().pk, 0, d[0]], work[ei.get().pk, 0, d[0] + 1]] for d in flatten(get_month_by_weeks(year, month))
-                 if d[1] == 5 and ((ei.get().pk, 0, d[0]) not in forbidden_work and (ei.get().pk, 0, d[0] + 1) not in forbidden_work)]
+                 if d[1] == 5 and ((ei.get().pk, 0, d[0]) not in forbidden_work and (ei.get().pk, 0, d[0] + 1) not in forbidden_work) and d[0] + 1 <= num_days]
 
         for w in works:
             model.AddBoolAnd(w[0]).OnlyEnforceIf(w[1])
