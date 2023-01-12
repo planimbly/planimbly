@@ -108,6 +108,9 @@
                 fetch_data() {
                     axios
                         .get(this.base_url)
+                        .then(
+                            this.response = null
+                        )
                         .then(response => (this.unit_list = response.data))
                 },
                 add_unit() {

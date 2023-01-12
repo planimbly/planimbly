@@ -157,6 +157,9 @@
                                             }
                                         )
                                         .then(
+                                            this.response = null
+                                        )
+                                        .then(
                                             this.fetch_data
                                         )
                                         .catch(error => {

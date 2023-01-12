@@ -135,7 +135,7 @@
                                     <label for="color" class="form-label modal-style">Kolor</label>
                                 </div>
                                 <div class="col-8">
-                                    <input type="color" class="form-control" v-model="color" id="color"
+                                    <input type="color" class="form-control-color" v-model="color" id="color"
                                             required>
                                 </div>
 
@@ -151,7 +151,16 @@
                                 </div> {% endcomment %}
 
                                 <div class="col-4">
-                                    <label for="isShiftUsed" class="form-label modal-style">W użyciu</label>
+                                    <table>
+                                        <tbody>
+                                            <td><label for="shiftName" class="form-label modal-style">W użyciu</label></td>
+                                            <td>
+                                                <tooltip text="Parametr określający czy dana zmiana będzie uwzględniana w generowaniu grafiku." margin="-93px">
+                                                    <div class="material-icons" style="font-size: 0.93rem; color: #616161; margin-top: 5px;">help</div>
+                                                </tooltip>
+                                            </td>
+                                        </tbody>
+                                    </table>
                                 </div>
                                 <div class="col-8 d-flex align-items-center">
                                     <input type="checkbox" class="form-check-input" style="margin: 0px;"
@@ -185,7 +194,7 @@
         {title: 'Nazwa', editable: true, property_name: 'name', type: 'text', highlighted: true, allow_filter: true},
         {title: 'Skrót', editable: true, property_name: 'shift_code', type: 'text', allow_filter: true},
         {title: 'Kolor', editable: true, property_name: 'color', type: 'color'},
-        {title: 'Zapotrzebowanie', editable: true, property_name: 'demand', type: 'number', allow_filter: true},
+        {title: 'Liczba osób na zmianie', editable: true, property_name: 'demand', type: 'number', allow_filter: true},
         {title: 'W użyciu', editable: true, property_name: 'is_used', type: 'checkbox', allow_filter: true},]" 
         :data_rows="shiftType_list"
         :options="{start_mobile_view_px: 1450, 
@@ -224,7 +233,7 @@
                         name: '',
                         active_days: '',
                         demand: '',
-                        color: '',
+                        color: '#ffffff',
                         is_used: true,
                         shift_code: null,
                         shiftType_list: [],
@@ -316,6 +325,9 @@
                                                 active_days: this.st_list_to_numbers(this.daylist_add),
                                                 is_used: this.is_used
                                             }
+                                        )
+                                        .then(
+                                            this.response = null
                                         )
                                         .then(
                                             this.fetch_data

@@ -171,12 +171,11 @@
                                     }
                                 )
                                 .then(response => {
-                                        this.fetch_data()
+                                        this.fetch_data
                                     }
                                 )
                                 .catch(error => {
                                         this.response = error.response.data
-                                        console.log(this.response)
                                     }
                                 )
                             }
@@ -190,6 +189,9 @@
 
                             }
                         )
+                        .then(
+                            this.response = null
+                        )
                         .catch(error => {
                                 this.response = error.response.data
                             }
@@ -199,6 +201,9 @@
                         .then(response => {
                                 this.employee_list = response.data;
                             }
+                        )
+                        .then(
+                            this.response = null
                         )
                         .catch(error => {
                             this.response = error.response.data

@@ -422,6 +422,107 @@ class ScheduleGetApiView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
+class ScheduleUnitGetApiView(APIView):
+    permission_classes = [Issupervisor]
+
+    def get(self, request, unit_pk):
+        # 127.0.0.1:8000/schedules/api/1/schedule_unit_get?year=2023&month=1
+        year = self.request.GET.get('year')
+        month = self.request.GET.get('month')
+        date_format = '%Y-%m-%d'
+        if year and month:
+            unit = Unit.objects.get(id=unit_pk)
+            workplace_list = Workplace.objects.filter(workplace_unit_id=unit_pk)
+            workplace_list_pk = list(workplace_list.values_list(flat=True))
+
+            shifts = Shift.objects.filter(schedule__workplace_id__in=workplace_list_pk).filter(
+                schedule__month=month).filter(
+                schedule__year=year).order_by('date')
+            shifts_statistic = Shift.objects.filter(schedule__workplace__workplace_unit_id=unit_pk).filter(
+                schedule__month=month).filter(schedule__year=year).order_by('employee__order_number',
+                                                                            'shift_type__hour_start')
+            shifts_types = list(Shift.objects.filter(schedule__workplace__workplace_unit_id=unit_pk).filter(
+                schedule__month=month).filter(schedule__year=year).values_list('shift_type__name',
+                                                                               flat=True).distinct())
+
+            days_num = calendar.monthrange(int(year), int(month))[1]
+
+            workplace_days = {}
+            statistics = {}
+
+            for workplace in workplace_list:
+                workplace_days[workplace.id] = {}
+                for x in range(1, days_num + 1):
+                    date = datetime.date(int(year), int(month), x).strftime(date_format)
+                    workplace_days[workplace.id].update({date: []})
+
+            jobtime = JobTime.objects.filter(year=int(year)).values_list(
+                calendar.month_name[int(month)].lower(), flat=True).first()
+            if jobtime is None:
+                jobtime = 160
+
+            for shift in shifts_statistic:
+                shift_len = datetime.datetime.combine(datetime.date.min, shift.shift_type.hour_end) - \
+                            datetime.datetime.combine(datetime.date.min, shift.shift_type.hour_start)
+                statistics.setdefault(shift.employee.id, {
+                    'hours': 0,
+                    'order_number': shift.employee.order_number,
+                    'name': shift.employee.first_name + ' ' + shift.employee.last_name,
+                    'jobtime': convert_to_float(shift.employee.job_time) * jobtime,
+                    'shift_type': {},
+                    'absence': {}
+                })
+                statistics[shift.employee.id]['hours'] += shift_len.seconds / 3600
+
+                if not statistics[shift.employee.id].get('shift_type'):
+                    for shift_type in shifts_types:
+                        statistics[shift.employee.id]['shift_type'][shift_type] = 0
+
+                statistics[shift.employee.id]['shift_type'][shift.shift_type.name] += 1
+
+                if not statistics[shift.employee.id].get(Absence.ABSENCE_TYPE[0][0]):
+                    first_day = datetime.date(int(year), int(month), 1)
+                    last_day = datetime.date(int(year), int(month), days_num)
+                    for ab_type in Absence.ABSENCE_TYPE:
+                        h_sum = Absence.objects.filter(employee=shift.employee).filter(start__lte=last_day).filter(
+                            end__gte=first_day).filter(type=ab_type[0]).aggregate(Sum('hours_number'))[
+                            'hours_number__sum']
+                        statistics[shift.employee.id][ab_type[0]] = h_sum
+
+            for shift in shifts:
+                print(workplace_days[shift.schedule.workplace.id])
+                workplace_days[shift.schedule.workplace.id][shift.date.strftime(date_format)].append((
+                    {
+                        'id': shift.id,
+                        'shift_type_id': shift.shift_type.id,
+                        'shift_type_color': shift.shift_type.color,
+                        'shift_code': shift.shift_type.shift_code,
+                        'time_start': shift.shift_type.hour_start,
+                        'time_end': shift.shift_type.hour_end,
+                        'name': shift.shift_type.name,
+                        'worker': {
+                            'id': shift.employee.id,
+                            'first_name': shift.employee.first_name,
+                            'last_name': shift.employee.last_name,
+                            'order_number': shift.employee.order_number,
+                        }
+                    }
+                ))
+            response = {
+                'unit_id': unit.id,
+                # 'workplace_id': workplace.id,
+                'unit_name': unit.name,
+                # 'workplace_name': workplace.name,
+                'workplace_days': workplace_days,
+                'statistics': statistics,
+                'free_days': free_days(int(year), int(month)),
+                'jobtime': jobtime,
+            }
+            return Response(data=response)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
 class ShiftManageApiView(APIView):
     permission_classes = [Issupervisor]
 
