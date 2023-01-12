@@ -56,7 +56,7 @@
                                                                    v-model="year_object.december" required></div>
 
                     <input type="submit" value="Zapisz zmiany" class="btn btn-outline-primary"
-                           style="margin-bottom: 50px">
+                           style="margin-bottom: 25px">
                 </form>
             </div>
 
@@ -75,7 +75,11 @@
                     <input type="submit" value="Dodaj" class="btn btn-outline-primary" style="height: 72px">
                 </form>
 
-                <div class="list-group" style="margin-left: 5px; margin-right: 5px">
+                <label v-for="(field, index) in response" style="color: #FF0000; margin: 5px 0">
+                    [[ field.join('') ]]
+                </label>
+
+                <div class="list-group" style="margin-right: 5px; margin-top: 25px">
                     <div v-for="freeday in freeday_list_for_year" :key="freeday.id"
                          class="list-group-item list-group-item-action position-static">
                         <div class="freeday_table_box">
@@ -112,17 +116,9 @@
                     user_org: {{ user.user_org_id }},
                     year_cal: new Date().getFullYear(),
                     available_years: [
-                        new Date().getFullYear() - 5,
-                        new Date().getFullYear() - 4,
-                        new Date().getFullYear() - 3,
-                        new Date().getFullYear() - 2,
                         new Date().getFullYear() - 1,
                         new Date().getFullYear(),
                         new Date().getFullYear() + 1,
-                        new Date().getFullYear() + 2,
-                        new Date().getFullYear() + 3,
-                        new Date().getFullYear() + 4,
-                        new Date().getFullYear() + 5,
                     ],
                 }
             },
@@ -132,8 +128,10 @@
                         .get(this.jobtime_manage_url)
                         .then(response => {
                                 this.jobtime_list = response.data;
-                                console.log(this.jobtime_list)
                             }
+                        )
+                        .then(
+                            this.response = null
                         )
                         .catch(error => {
                                 this.response = error.response.data
@@ -143,8 +141,10 @@
                         .get(this.freeday_url)
                         .then(response => {
                                 this.freeday_list = response.data;
-                                console.log(this.freeday_list)
                             }
+                        )
+                        .then(
+                            this.response = null
                         )
                         .catch(error => {
                                 this.response = error.response.data
@@ -208,13 +208,6 @@
                                     })
                                     .catch(error => {
                                         this.response = error.response.data
-                                        swal({
-                                            toast: true,
-                                            icon: "error",
-                                            title: "Błąd przy dodawaniu dnia wolnego! - Istnieje już dzień wolny z tą datą.",
-                                                position: "top",
-                                                button: true,
-                                            })
                                         }
                                     )
                             }
