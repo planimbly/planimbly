@@ -172,6 +172,14 @@
                 move_to(place){
                     window.location.href = place
                 },
+                hideSidebarWhenMobileView() {
+                    if (window.innerWidth <= 1100) {
+                        this.isSidebarHidden = true;
+                    }
+                }
+            },
+            mounted(){
+                this.hideSidebarWhenMobileView();
             },
 
         }).mount('#app');
