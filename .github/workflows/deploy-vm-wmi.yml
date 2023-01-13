@@ -1,4 +1,4 @@
-name: deploy-vm-vpn
+name: deploy-vm-wmi
 
 on:
   workflow_run:
