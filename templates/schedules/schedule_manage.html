@@ -569,6 +569,8 @@
                                 console.log(this.fetched_schedule);
                                 this.inflate_checked_workplace();
                                 this.statistics = this.sort_object_of_objects(this.statistics, 'order_number');
+                                this.fetching_schedule = false;
+
                             }
                         )
                         .then(() => {
@@ -617,7 +619,6 @@
                         .then(response => {this.workdays_for_each_employee = response.data;});
                     this.fetch_schedule_for_each_workplace().then(result => {
                         this.schedule_for_each_workplace = result;
-                        this.fetching_schedule = false;
                     }).then(() => {
                         this.check_report_workplace_availability(this.schedule_for_each_workplace);
                     });
