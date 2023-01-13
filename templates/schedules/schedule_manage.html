@@ -33,6 +33,7 @@
         {% comment %}<div class="col d-flex justify-content-start">
             <h3 class="content-title">Grafiki</h3>
         </div>{% endcomment %} 
+        <loading v-model:active="fetching_schedule" :can-cancel="false" :loader="'dots'" :color="'#002d69'"></loading>
         <div class="row m-2"> 
             <div class="col mb-1">
                 <select class="form-select" v-model="month_cal" v-on:change="fetch_data">
@@ -377,6 +378,7 @@
                 WorkCalendar,
                 ScheduleReport,
                 tooltip,
+                VueLoading
             },
             data() {
                 return {
@@ -412,6 +414,7 @@
                     use_huey_for_scheduling: '{{ use_huey }}',
                     absence_list: [],
                     absence_url: '{% url 'absence-list' %}',
+                    fetching_schedule: true,
                     month_labels: [
                         {id: 1, name: 'Styczeń'},
                         {id: 2, name: 'Luty'},
@@ -532,7 +535,6 @@
                     }
                 },
                 create_schedule() {
-                    console.log("checked_workpalce below");
                     console.log(this.checked_workplace);
                     this.loading = true
                     axios
@@ -555,7 +557,9 @@
                         )
                 },
                 fetch_data() {
+                    this.fetching_schedule = true;
                     this.checked_workplace = [];
+                    
                     axios
                         .get(this.base_url, {params: {'year': this.year_cal, 'month': this.month_cal}})
                         .then(response => {
@@ -591,7 +595,6 @@
                         .get(this.absence_url)
                         .then(response => {
                                 this.absence_list = response.data;
-
                             }
                         )
                         .catch(error => {
@@ -603,7 +606,10 @@
                         });
 
                     this.copy_year_month_to_modals();
-                    this.fetch_report_data(); 
+                    this.fetch_report_data();
+
+                    
+                    
                 },
                 fetch_report_data(){
                     axios
@@ -611,6 +617,7 @@
                         .then(response => {this.workdays_for_each_employee = response.data;});
                     this.fetch_schedule_for_each_workplace().then(result => {
                         this.schedule_for_each_workplace = result;
+                        this.fetching_schedule = false;
                     }).then(() => {
                         this.check_report_workplace_availability(this.schedule_for_each_workplace);
                     });
@@ -799,7 +806,7 @@
                 }
                 this.fetch_data()
             },
-        }).mount('#vue-app');
+        }).use(VueLoading.LoadingPlugin).component('loading', VueLoading.Component).mount('#vue-app');
 
         </script>
     {% endif %}
