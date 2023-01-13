@@ -1,0 +1,39 @@
+name: deploy-vm-gcp
+
+on:
+  workflow_run:
+    workflows: [tag-release]
+    types: [completed]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Deploy to GCP
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.GCP_SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd ~/repos/planimbly-prod/planimbly
+            git checkout release
+            git status
+            git pull
+            source venv/bin/activate
+            python -m pip install -r requirements.txt
+            python manage.py migrate --no-input
+            python manage.py collectstatic --no-input
+            python manage.py create_groups
+            sudo /bin/systemctl restart redis-server.service
+            systemctl status redis-server.service
+            sudo /bin/systemctl restart huey.service
+            systemctl status huey.service
+            sudo /bin/systemctl restart planimbly.service
+            systemctl status planimbly.service
+            sudo /bin/systemctl restart nginx.service
+            systemctl status nginx.service
+
