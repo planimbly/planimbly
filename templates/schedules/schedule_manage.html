@@ -97,7 +97,7 @@
                 :absences="absence_list">
         </work-calendar>
 
-        <div>
+        <div v-show="statistics != null && statistics.length > 0">
             <h5 style="margin-top: 25px; margin-top: 20px;">Statystyki dla jednostki</h5>
 
             <div class="table-responsive">
