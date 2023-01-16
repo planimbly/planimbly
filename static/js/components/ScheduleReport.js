@@ -102,7 +102,7 @@ export default {
       */
       get_working_days_employee(employee_id, workdays_for_empl){
         let counter = 0;
-        if (Object.keys(workdays_for_empl.employees).length != 0) {
+        if (Object.keys(workdays_for_empl.employees).length != 0 && workdays_for_empl.employees[employee_id] != null) {
           
           for (const day of Object.keys(workdays_for_empl.employees[employee_id].days)){
             counter += Object.keys(workdays_for_empl.employees[employee_id].days[day]).length > 0 ? 1 : 0;
@@ -220,7 +220,8 @@ export default {
       */
       weekends_holidays(){
         let weekends_holidays_arr = [];
-        if (Object.keys(this.workdays_for_each_employee.employees).length != 0) {
+        if (Object.keys(this.workdays_for_each_employee.employees).length != 0 &&
+        this.workdays_for_each_employee.employees[this.all_included_employees[0][0]] != null) {
           
           for (const day of Object.keys(this.workdays_for_each_employee.employees[this.all_included_employees[0][0]].days)){
             const week_day = new Date(day + 'T01:00').getDay();
@@ -386,7 +387,7 @@ export default {
                 <b>[[employee_info[1].indicator]]</b>. [[employee_info[1].first_name]] [[employee_info[1].last_name]] [[employee_info[1].additional_info]]
               </div>
 
-              <div v-for="(workday, workdate) in workdays_for_each_employee.employees[employee_info[0]].days"> 
+              <div v-if="workdays_for_each_employee.employees[employee_info[0]] != null" v-for="(workday, workdate) in workdays_for_each_employee.employees[employee_info[0]].days"> 
                 <div class="PN-employee-content" :style="{ 'background-color': weekends_holidays.includes(workdate) ? '#C2C2C2' : 'inherit'}" >
                   <div v-if="is_employee_day_absence(workdate, employee_info[0], workdays_for_each_employee)" class="PN-container-flex-center-div">
                     <div class="material-icons md-14">person_off</div>

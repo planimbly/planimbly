@@ -33,6 +33,7 @@
         {% comment %}<div class="col d-flex justify-content-start">
             <h3 class="content-title">Grafiki</h3>
         </div>{% endcomment %} 
+        <loading v-model:active="fetching_schedule" :can-cancel="false" :loader="'dots'" :color="'#002d69'"></loading>
         <div class="row m-2"> 
             <div class="col mb-1">
                 <select class="form-select" v-model="month_cal" v-on:change="fetch_data">
@@ -49,7 +50,10 @@
                 </select>
             </div>
             <div class="col mb-1">
+                
+
                 <select class="form-select" v-model="selected_unit" v-on:change="change_workplace">
+                    
                     <option v-for="unit in select_unit" :value="unit.id">
                         [[ unit.name ]]
                     </option>
@@ -65,12 +69,15 @@
 
             <div class="col d-flex justify-content-end" style="padding-right: 0px">
                 <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal"
-                        data-bs-target="#generateReportModal" v-if="available_workplace_report.length > 0">
+                        data-bs-target="#generateReportModal" v-if="this.available_workplace_report.length > 0 && fetching_report_schedule === false">
                     Wygeneruj raport
                 </button>
                 
                 <tooltip v-else text="Nie wykryto grafiku dla danego miesiąca..." elementid="NoScheduleButton"> 
                     <button id="NoScheduleButton" type="button" class="btn btn-outline-primary" disabled style="z-index: -1;">
+                        <loading v-model:active="fetching_report_schedule" 
+                        :can-cancel="false" :loader="'spinner'" :color="'#002d69'" 
+                        :is-full-page="false" :height="25" :width="25" :opacity='0.9'></loading>
                         Wygeneruj raport
                     </button> 
                 </tooltip>
@@ -96,7 +103,7 @@
                 :absences="absence_list">
         </work-calendar>
 
-        <div>
+        <div v-show="statistics != null && statistics.length > 0">
             <h5 style="margin-top: 25px; margin-top: 20px;">Statystyki dla jednostki</h5>
 
             <div class="table-responsive">
@@ -377,6 +384,7 @@
                 WorkCalendar,
                 ScheduleReport,
                 tooltip,
+                VueLoading
             },
             data() {
                 return {
@@ -412,6 +420,9 @@
                     use_huey_for_scheduling: '{{ use_huey }}',
                     absence_list: [],
                     absence_url: '{% url 'absence-list' %}',
+                    fetching_schedule: true,
+                    fetching_report_schedule: true,
+
                     month_labels: [
                         {id: 1, name: 'Styczeń'},
                         {id: 2, name: 'Luty'},
@@ -532,7 +543,6 @@
                     }
                 },
                 create_schedule() {
-                    console.log("checked_workpalce below");
                     console.log(this.checked_workplace);
                     this.loading = true
                     axios
@@ -555,15 +565,23 @@
                         )
                 },
                 fetch_data() {
+                    this.fetching_schedule = true;
+                    this.fetching_report_schedule = true;
                     this.checked_workplace = [];
+                    this.checked_workplace_report = [];
+                    this.available_workplace_report = [];
+                    
                     axios
                         .get(this.base_url, {params: {'year': this.year_cal, 'month': this.month_cal}})
                         .then(response => {
+                            console.log('started fetching schedule')
                                 this.shifttype_name_list = []
                                 this.fetched_schedule = response.data;
                                 this.statistics = response.data['statistics'];
                                 this.inflate_checked_workplace();
                                 this.statistics = this.sort_object_of_objects(this.statistics, 'order_number');
+                                this.fetching_schedule = false;
+
                             }
                         )
                         .then(() => {
@@ -590,7 +608,6 @@
                         .get(this.absence_url)
                         .then(response => {
                                 this.absence_list = response.data;
-
                             }
                         )
                         .catch(error => {
@@ -602,14 +619,19 @@
                         });
 
                     this.copy_year_month_to_modals();
-                    this.fetch_report_data(); 
+                    this.fetch_report_data();
+
                 },
                 fetch_report_data(){
                     axios
                         .get('{% url 'schedule_report_get' 123456789 %}'.replace(/123456789/, this.selected_unit), {params: {'year': this.year_report, 'month': this.month_report}})
                         .then(response => {this.workdays_for_each_employee = response.data;});
                     this.fetch_schedule_for_each_workplace().then(result => {
+                        // here we should check if year & month & unit are the same as chosen by the user
+                        // and only then run following lines:
+                        console.log('started fetching report')
                         this.schedule_for_each_workplace = result;
+                        this.fetching_report_schedule = false;
                     }).then(() => {
                         this.check_report_workplace_availability(this.schedule_for_each_workplace);
                     });
@@ -640,7 +662,11 @@
                         });
 
                         this.checked_workplace_report = this.available_workplace_report;
+                        if (this.checked_workplace.length > 0) {
+                            return true;
+                        }
                     }
+                    return false;
                 },
                 fill_schedule_for_chosen_workplace(schedule_for_workplace, checked_workplaces){
                     this.schedule_for_chosen_workplace = schedule_for_workplace.filter(schedule => checked_workplaces.includes(schedule.schedule.workplace_id));
@@ -816,7 +842,7 @@
                 }
                 this.fetch_data()
             },
-        }).mount('#vue-app');
+        }).use(VueLoading.LoadingPlugin).component('loading', VueLoading.Component).mount('#vue-app');
 
         </script>
     {% endif %}
