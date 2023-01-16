@@ -53,7 +53,7 @@ class PreferenceSerializer(serializers.ModelSerializer):
     def validate(self, data):
         """Check if user in shift_type workplace"""
         if data['shift_type'].workplace not in data['employee'].user_workplace.all():
-            raise serializers.ValidationError("User is not assigned to workplace")
+            raise serializers.ValidationError("Użytkownik nie jest przypisany do jednostki")
         return data
 
     def to_representation(self, instance):
