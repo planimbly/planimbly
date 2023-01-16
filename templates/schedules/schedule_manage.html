@@ -578,7 +578,6 @@
                                 this.shifttype_name_list = []
                                 this.fetched_schedule = response.data;
                                 this.statistics = response.data['statistics'];
-                                console.log(this.fetched_schedule);
                                 this.inflate_checked_workplace();
                                 this.statistics = this.sort_object_of_objects(this.statistics, 'order_number');
                                 this.fetching_schedule = false;
@@ -685,32 +684,50 @@
                     for (let i=0; i<this.current_workplace.length; i++){
                         
                         const shiftType_base_url = '{% url 'shiftType-list' 123456789 %}'.replace(/123456789/, this.current_workplace[i].id);
-                           
+
                         await axios.get(shiftType_base_url).then(response => {
-                            shiftTypes_to_workplace.push({workplace: this.current_workplace[i], shiftTypes: response.data});
+                            shiftTypes_to_workplace.push({
+                                workplace: this.current_workplace[i],
+                                shiftTypes: response.data
+                            });
                         });
-                            
+
                     }
                     return shiftTypes_to_workplace;
                 },
-                async fetch_schedule_for_each_workplace(){
-                    const schedules_to_workplace = [];
+                async fetch_schedule_for_each_workplace() {
+                    /*const schedules_to_workplace = [];
+
                     for (let i=0; i<this.current_workplace.length; i++){
 
-                        const reportSchedules_base_url = '{% url 'schedule_get' 123456789 %}'.replace(/123456789/, this.current_workplace[i].id);
+                        const reportSchedules_base_url = '
+                    {% url 'schedule_get' 123456789 %}'.replace(/123456789/, this.current_workplace[i].id);
 
                         await axios.get(reportSchedules_base_url, {params: {'year': this.year_report, 'month': this.month_report}}).then(response => {
                             schedules_to_workplace.push({workplace: this.current_workplace[i], schedule: response.data});
                         });
                     }
-                    return schedules_to_workplace;
+                    console.log(schedules_to_workplace)*/
+
+                    var schedules_to_workplace2;
+                    const reportUnitSchedules_base_url = '{% url 'schedule_unit_get' 123456789 %}'.replace(/123456789/, this.selected_unit);
+                    await axios.get(reportUnitSchedules_base_url, {
+                        params: {
+                            'year': this.year_report,
+                            'month': this.month_report
+                        }
+                    }).then(response => {
+                        schedules_to_workplace2 = response.data
+                    });
+
+                    return schedules_to_workplace2;
                 },
-                active_days_to_string_abbr_array(active_days_numeric){
-                    const abbr_to_day=["Pn", "Wt", "Śr", "Cz", "Pt", "Sb", "Nd"];
+                active_days_to_string_abbr_array(active_days_numeric) {
+                    const abbr_to_day = ["Pn", "Wt", "Śr", "Cz", "Pt", "Sb", "Nd"];
                     let abbreviations = [];
 
                     if (typeof active_days_numeric == "string" && active_days_numeric.length === 7) {
-                        for(let day=0; day < active_days_numeric.length; day++){
+                        for (let day = 0; day < active_days_numeric.length; day++) {
                             if (active_days_numeric.charAt(day) == '1') {
                                 abbreviations.push(abbr_to_day[day]);
                             }
