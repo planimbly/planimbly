@@ -249,7 +249,7 @@ class ScheduleReportGetApiView(APIView):
                 for x in range(1, days_num + 1):
                     date = datetime.date(int(year), int(month), x).strftime(date_format)
                     days.update({date: []})
-                shifts = Shift.objects.filter(employee__pk=employee.pk).filter(
+                shifts = Shift.objects.select_related('shift_type__workplace').filter(employee__pk=employee.pk).filter(
                     schedule__workplace__workplace_unit__pk=unit_pk).filter(
                     schedule__month=month).filter(schedule__year=year).order_by('date')
                 for shift in shifts:
@@ -332,9 +332,11 @@ class ScheduleGetApiView(APIView):
         if year and month:
             workplace = Workplace.objects.get(id=workplace_pk)
             unit = workplace.workplace_unit
-            shifts = Shift.objects.filter(schedule__workplace=workplace).filter(schedule__month=month).filter(
+            shifts = Shift.objects.select_related('employee').select_related('shift_type').filter(
+                schedule__workplace=workplace).filter(schedule__month=month).filter(
                 schedule__year=year).order_by('date')
-            shifts_statistic = Shift.objects.filter(schedule__workplace__workplace_unit=unit).filter(
+            shifts_statistic = Shift.objects.select_related('employee').select_related('shift_type').filter(
+                schedule__workplace__workplace_unit=unit).filter(
                 schedule__month=month).filter(schedule__year=year).order_by('employee__order_number',
                                                                             'shift_type__hour_start')
             shifts_types = list(Shift.objects.filter(schedule__workplace__workplace_unit=unit).filter(
@@ -353,7 +355,6 @@ class ScheduleGetApiView(APIView):
                 calendar.month_name[int(month)].lower(), flat=True).first()
             if jobtime is None:
                 jobtime = 160
-
             for shift in shifts_statistic:
                 shift_len = datetime.datetime.combine(datetime.date.min, shift.shift_type.hour_end) - \
                             datetime.datetime.combine(datetime.date.min, shift.shift_type.hour_start)
@@ -373,15 +374,15 @@ class ScheduleGetApiView(APIView):
 
                 statistics[shift.employee.id]['shift_type'][shift.shift_type.name] += 1
 
-                if not statistics[shift.employee.id].get(Absence.ABSENCE_TYPE[0][0]):
+                if Absence.ABSENCE_TYPE[0][0] not in statistics[shift.employee.id]:
                     first_day = datetime.date(int(year), int(month), 1)
                     last_day = datetime.date(int(year), int(month), days_num)
                     for ab_type in Absence.ABSENCE_TYPE:
+                        # TODO ZMIENIJSZY LICZBĘ QUERY Z ~30 do 1
                         h_sum = Absence.objects.filter(employee=shift.employee).filter(start__lte=last_day).filter(
                             end__gte=first_day).filter(type=ab_type[0]).aggregate(Sum('hours_number'))[
                             'hours_number__sum']
                         statistics[shift.employee.id][ab_type[0]] = h_sum
-
             for shift in shifts:
                 days[shift.date.strftime(date_format)].append((
                     {
@@ -431,14 +432,15 @@ class ScheduleUnitGetApiView(APIView):
         month = self.request.GET.get('month')
         date_format = '%Y-%m-%d'
         if year and month:
-            unit = Unit.objects.get(id=unit_pk)
             workplace_list = Workplace.objects.filter(workplace_unit_id=unit_pk)
             workplace_list_pk = list(workplace_list.values_list(flat=True))
 
-            shifts = Shift.objects.filter(schedule__workplace_id__in=workplace_list_pk).filter(
+            shifts = Shift.objects.select_related('employee').select_related('shift_type').select_related(
+                'schedule__workplace').filter(schedule__workplace_id__in=workplace_list_pk).filter(
                 schedule__month=month).filter(
                 schedule__year=year).order_by('date')
-            shifts_statistic = Shift.objects.filter(schedule__workplace__workplace_unit_id=unit_pk).filter(
+            shifts_statistic = Shift.objects.select_related('employee').select_related('shift_type').filter(
+                schedule__workplace__workplace_unit_id=unit_pk).filter(
                 schedule__month=month).filter(schedule__year=year).order_by('employee__order_number',
                                                                             'shift_type__hour_start')
             shifts_types = list(Shift.objects.filter(schedule__workplace__workplace_unit_id=unit_pk).filter(
@@ -451,10 +453,10 @@ class ScheduleUnitGetApiView(APIView):
             statistics = {}
 
             for workplace in workplace_list:
-                workplace_days[workplace.id] = {}
+                workplace_days[workplace.id] = {'days': {}}
                 for x in range(1, days_num + 1):
                     date = datetime.date(int(year), int(month), x).strftime(date_format)
-                    workplace_days[workplace.id].update({date: []})
+                    workplace_days[workplace.id]['days'].update({date: []})
 
             jobtime = JobTime.objects.filter(year=int(year)).values_list(
                 calendar.month_name[int(month)].lower(), flat=True).first()
@@ -480,18 +482,18 @@ class ScheduleUnitGetApiView(APIView):
 
                 statistics[shift.employee.id]['shift_type'][shift.shift_type.name] += 1
 
-                if not statistics[shift.employee.id].get(Absence.ABSENCE_TYPE[0][0]):
+                if Absence.ABSENCE_TYPE[0][0] not in statistics[shift.employee.id]:
                     first_day = datetime.date(int(year), int(month), 1)
                     last_day = datetime.date(int(year), int(month), days_num)
                     for ab_type in Absence.ABSENCE_TYPE:
+                        # TODO ZMIENIJSZY LICZBĘ QUERY Z ~30 do 1
                         h_sum = Absence.objects.filter(employee=shift.employee).filter(start__lte=last_day).filter(
                             end__gte=first_day).filter(type=ab_type[0]).aggregate(Sum('hours_number'))[
                             'hours_number__sum']
                         statistics[shift.employee.id][ab_type[0]] = h_sum
 
             for shift in shifts:
-                print(workplace_days[shift.schedule.workplace.id])
-                workplace_days[shift.schedule.workplace.id][shift.date.strftime(date_format)].append((
+                workplace_days[shift.schedule.workplace.id]['days'][shift.date.strftime(date_format)].append((
                     {
                         'id': shift.id,
                         'shift_type_id': shift.shift_type.id,
@@ -508,7 +510,22 @@ class ScheduleUnitGetApiView(APIView):
                         }
                     }
                 ))
-            response = {
+            respone_table = []
+            for workplace, value in workplace_days.items():
+                workplace_obj = workplace_list.filter(id=workplace).first()
+                data = {
+                    'unit_id': workplace_obj.workplace_unit.id,
+                    'workplace_id': workplace_obj.id,
+                    'unit_name': workplace_obj.workplace_unit.name,
+                    'workplace_name': workplace_obj.name,
+                    'days': value.get('days'),
+                    'statistics': statistics,
+                    'free_days': free_days(int(year), int(month)),
+                    'jobtime': jobtime,
+                }
+                respone_table.append(
+                    {'schedule': data, 'workplace': {'id': workplace_obj.id, 'name': workplace_obj.name}, 'date': {'month': month, 'year': year}})
+            '''response = {
                 'unit_id': unit.id,
                 # 'workplace_id': workplace.id,
                 'unit_name': unit.name,
@@ -517,8 +534,8 @@ class ScheduleUnitGetApiView(APIView):
                 'statistics': statistics,
                 'free_days': free_days(int(year), int(month)),
                 'jobtime': jobtime,
-            }
-            return Response(data=response)
+            }'''
+            return Response(data=respone_table)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
