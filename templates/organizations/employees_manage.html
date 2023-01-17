@@ -15,6 +15,8 @@
 {% block content %}
 
     <div id="vue-app" v-cloak>
+        <loading v-model:active="fetching_data_in_progress" :can-cancel="false" :loader="'dots'" :color="'#002d69'"></loading>
+
         <div class="row d-flex justify-content-between align-items-center mb-2">
             <div class="col d-flex justify-content-start">
                 <h6 class="content-title">Lista pracowników</h6>
@@ -157,7 +159,7 @@
         var vue_app = createApp({
             delimiters: ["[[", "]]"],
             components: {
-                DataTable
+                DataTable,
             },
             data() {
                 return {
@@ -179,6 +181,7 @@
                         {jobtime_fraction: '3/4', jobtime_hours: 120, jobtime_name: 'Trzy czwarte etatu'},
                         {jobtime_fraction: '1', jobtime_hours: 160, jobtime_name: 'Cały etat'},
                     ],
+                    fetching_data_in_progress: true,
                 }
             },
             methods: {
@@ -189,9 +192,10 @@
                     return '{% url 'employee_option' 123456789 %}'.replace(/123456789/, id);
                 },
                 fetch_data() {
+                    this.fetching_data_in_progress = true;
                     axios
                         .get(this.base_url)
-                        .then(response => (this.employee_list = response.data))
+                        .then(response => {this.employee_list = response.data; this.fetching_data_in_progress = false;})
                         .then(
                             this.response = null
                         )
@@ -308,6 +312,6 @@
             mounted() {
                 this.fetch_data()
             }
-        }).mount('#vue-app');
+        }).use(VueLoading.LoadingPlugin).component('loading', VueLoading.Component).mount('#vue-app');
     </script>
 {% endblock vue-content %}

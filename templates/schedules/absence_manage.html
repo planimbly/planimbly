@@ -14,6 +14,7 @@
 
 {% block content %}
     <div id="vue-app" v-cloak>
+        <loading v-model:active="fetching_data_in_progress" :can-cancel="false" :loader="'dots'" :color="'#002d69'"></loading>
 
         <div class="modal fade" id="createAbsenceModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-scrollable">
@@ -112,7 +113,7 @@
         createApp({
             delimiters: ["[[", "]]"],
             components: {
-                DataTable
+                DataTable,
             },
             data() {
                 return {
@@ -128,6 +129,7 @@
                     date_bottom_limit: new Date(),
                     date_top_limit: new Date(),
                     response: null,
+                    fetching_data_in_progress: true,
                 }
             },
             methods: {
@@ -181,11 +183,12 @@
                         });  
                 },
                 fetch_data() {
+                    this.fetching_data_in_progress = true;
                     axios
                         .get(this.absence_url)
                         .then(response => {
                                 this.absence_list = response.data;
-
+                                this.fetching_data_in_progress = false;
                             }
                         )
                         .then(
@@ -236,7 +239,7 @@
                 this.fetch_data()
                 this.dates_compute()
             },
-        }).mount('#vue-app');
+        }).use(VueLoading.LoadingPlugin).component('loading', VueLoading.Component).mount('#vue-app');
 
     </script>
 {% endblock vue-content %}

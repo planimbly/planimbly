@@ -30,6 +30,7 @@
 
     {% if is_any_workplace %}
     <div id="vue-app" v-cloak>
+        <loading v-model:active="fetching_data_in_progress" :can-cancel="false" :loader="'dots'" :color="'#002d69'"></loading>
         [[ calculate_daylist ]]
         <div class="row d-flex justify-content-between align-items-center">
             <div class="col d-flex justify-content-start">
@@ -244,6 +245,7 @@
                         selected_workplace: '',
                         daylist: [],
                         daylist_add: this.st_numbers_to_list('1111111'),
+                        fetching_data_in_progress: true,
                     }
                 },
                 computed: {
@@ -291,11 +293,12 @@
                         this.fetch_data()
                     },
                     fetch_data() {
+                        this.fetching_data_in_progress = true;
                         axios
                             .get(this.base_url)
                             .then(response => {
                                 this.shiftType_list = response.data
-                                //console.log(this.shiftType_list)
+                                this.fetching_data_in_progress = false;
                             })
                             .catch(error => {
                                     this.response = error.response.data
@@ -445,7 +448,7 @@
                     this.selected_workplace = this.select_workplace[this.selected_unit][0]['id']
                     this.fetch_data()
                 }
-            }).mount('#vue-app');
+            }).use(VueLoading.LoadingPlugin).component('loading', VueLoading.Component).mount('#vue-app');
         </script>
     {% endif %}
 {% endblock vue-content %}
