@@ -524,7 +524,7 @@ class ScheduleUnitGetApiView(APIView):
                     'jobtime': jobtime,
                 }
                 respone_table.append(
-                    {'schedule': data, 'workplace': {'id': workplace_obj.id, 'name': workplace_obj.name}})
+                    {'schedule': data, 'workplace': {'id': workplace_obj.id, 'name': workplace_obj.name}, 'date': {'month': month, 'year': year}})
             '''response = {
                 'unit_id': unit.id,
                 # 'workplace_id': workplace.id,
