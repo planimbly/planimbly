@@ -847,6 +847,16 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                     obj_bool_vars.append(trans_var)
                     obj_bool_coeffs.append(cost)
 
+    for ei in ctx.employees:
+        for d in range(-4, num_days - 6):
+            works = [work[ei.get().pk, 0, day] for day in range(d, d + 7)]
+
+            variables, coeffs = add_weekly_soft_sum_constraint(
+                model, works, 1, 2, 5, 7, 7, 0,
+                "shift_constraint(employee {:d}, shift {:d})".format(ei.get().pk, 0))
+            obj_bool_vars.extend(variables)
+            obj_bool_coeffs.extend(coeffs)
+
     # Cover constraints
     for s in ctx.shift_types[1:]:
         for w, week in enumerate(ctx.month_by_billing_weeks):
@@ -1125,7 +1135,7 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
                                       shifts_before,
                                       year, month,
                                       job_time,
-                                      params='max_time_in_seconds:90.0', output_proto=None)
+                                      params='max_time_in_seconds:300.0', output_proto=None)
     except Exception as e:
         logger.exception("Something went wrong! {}".format(e))
 
