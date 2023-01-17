@@ -450,7 +450,6 @@
             methods: {
                 on_generation_start_schedule() {
                     if (this.is_huey_used_for_scheduling()) {
-                        console.log('huey used');
                         window.location.href = '{% url 'schedule_generating' %}'
                     }
                 },
@@ -543,7 +542,6 @@
                     }
                 },
                 create_schedule() {
-                    console.log(this.checked_workplace);
                     this.loading = true
                     axios
                         .post(this.create_schedule_url,
@@ -574,7 +572,6 @@
                     axios
                         .get(this.base_url, {params: {'year': this.year_cal, 'month': this.month_cal}})
                         .then(response => {
-                            console.log('started fetching schedule')
                                 this.shifttype_name_list = []
                                 this.fetched_schedule = response.data;
                                 this.statistics = response.data['statistics'];
@@ -627,9 +624,6 @@
                         .get('{% url 'schedule_report_get' 123456789 %}'.replace(/123456789/, this.selected_unit), {params: {'year': this.year_report, 'month': this.month_report}})
                         .then(response => {this.workdays_for_each_employee = response.data;});
                     this.fetch_schedule_for_each_workplace().then(result => {
-                        // here we should check if year & month & unit are the same as chosen by the user
-                        // and only then run following lines:
-                        console.log('started fetching report')
                         this.schedule_for_each_workplace = result;
                         this.fetching_report_schedule = false;
                     }).then(() => {
@@ -696,19 +690,6 @@
                     return shiftTypes_to_workplace;
                 },
                 async fetch_schedule_for_each_workplace() {
-                    /*const schedules_to_workplace = [];
-
-                    for (let i=0; i<this.current_workplace.length; i++){
-
-                        const reportSchedules_base_url = '
-                    {% url 'schedule_get' 123456789 %}'.replace(/123456789/, this.current_workplace[i].id);
-
-                        await axios.get(reportSchedules_base_url, {params: {'year': this.year_report, 'month': this.month_report}}).then(response => {
-                            schedules_to_workplace.push({workplace: this.current_workplace[i], schedule: response.data});
-                        });
-                    }
-                    console.log(schedules_to_workplace)*/
-
                     var schedules_to_workplace2;
                     const reportUnitSchedules_base_url = '{% url 'schedule_unit_get' 123456789 %}'.replace(/123456789/, this.selected_unit);
                     await axios.get(reportUnitSchedules_base_url, {
@@ -717,7 +698,14 @@
                             'month': this.month_report
                         }
                     }).then(response => {
-                        schedules_to_workplace2 = response.data
+                        if (response.data[0].date.month == this.month_cal && response.data[0].date.year == this.year_cal &&
+                             response.data[0].schedule.unit_id === this.selected_unit) {
+
+                            schedules_to_workplace2 = response.data;
+                        } else {
+                            schedules_to_workplace2 = [];
+                        }
+                        
                     });
 
                     return schedules_to_workplace2;
@@ -742,17 +730,14 @@
                 callApiManualChange(method, specific_shift_id, employee_id, shift_type_id, workplace_id, date_python_format){
                     switch (method) {
                         case 'put':
-                            console.log('PUT: Shift: '+specific_shift_id+' Employee: '+employee_id);
                             this.putApiShiftManage(specific_shift_id, employee_id);
                             break;
                         
                         case 'delete':
-                            console.log('DELETE: Shift: '+specific_shift_id);
                             this.deleteApiShiftManage(specific_shift_id);
                             break;
                         
                         case 'post':
-                            console.log('POST: Shift_type: '+shift_type_id+' Employee: '+employee_id +' Date: '+date_python_format +' Workplace: '+workplace_id);
                             this.postApiShiftManage(shift_type_id, employee_id, date_python_format, workplace_id);
                             break;
 
