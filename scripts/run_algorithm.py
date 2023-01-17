@@ -847,8 +847,9 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                     obj_bool_vars.append(trans_var)
                     obj_bool_coeffs.append(cost)
 
+    # At least one (optimally two) days of rest within 7 days range
     for ei in ctx.employees:
-        for d in range(-4, num_days - 6):
+        for d in range(-6, num_days - 6):
             works = [work[ei.get().pk, 0, day] for day in range(d, d + 7)]
 
             variables, coeffs = add_weekly_soft_sum_constraint(
