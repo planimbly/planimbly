@@ -166,13 +166,13 @@ class EmployeeInfo:
 
     def calculate_job_time(self, jt) -> int:
         match self.employee.job_time:
-            case '1':
+            case "1":
                 return jt
-            case '1/2':
+            case "1/2":
                 return jt // 2
-            case '1/4':
+            case "1/4":
                 return jt // 4
-            case '3/4':
+            case "3/4":
                 return jt * 3 // 4
             case _:
                 logger.error(f"Something is wrong with calculating job time for employee {self.employee.pk}!")
