@@ -1136,7 +1136,7 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
                                       shifts_before,
                                       year, month,
                                       job_time,
-                                      params='max_time_in_seconds:300.0', output_proto=None)
+                                      params="max_time_in_seconds:300.0", output_proto=None)
     except Exception as e:
         logger.exception(f"Something went wrong! {e}")
 
