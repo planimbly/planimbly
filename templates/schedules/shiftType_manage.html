@@ -48,11 +48,11 @@
                         </option>
                     </select>
                 </div>
-            
-                <div class="col-auto mb-1">
+                
+                <div class="col-auto mb-1" v-if="selected_workplace">
                     <label class="col-form-label" for="workplaceSelect">Dział:</label>
                 </div>
-                <div class="col-auto mb-1">
+                <div class="col-auto mb-1" v-if="selected_workplace">
                     <select id="workplaceSelect" class="form-select" v-model="selected_workplace"
                             v-on:change="fetch_data">
                         <option v-for="workplace in current_workplace" :value="workplace.id">
@@ -61,7 +61,7 @@
                     </select>
                 </div>
             
-                <div class="col d-flex justify-content-end">
+                <div class="col d-flex justify-content-end" v-if="selected_workplace">
                     <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal"
                             data-bs-target="#addShiftModal">
                         Dodaj zmianę
@@ -186,7 +186,7 @@
         </div>
 
 
-        <data-table 
+        <data-table v-if="selected_workplace"
         v-on:rows-sent-to-delete="datatable_delete_shifttypes"
         v-on:rows-sent-to-update="datatable_update_shifttypes"
         :fields_options="[
@@ -206,6 +206,9 @@
             always_mobile_mode: false,
         }">
         </data-table>
+        <div v-else>
+            <span>Brak działów w jednostce</span>
+        </div>
 
     </div>
     {% else %}
@@ -251,9 +254,6 @@
                 computed: {
                     base_url: {
                         get() {
-                            {% comment %}let url = '{% url 'shiftType' 1234 %}'.replace(/1234/, this.selected_workplace){% endcomment %}
-                            {#let url = 'http://{{ request.get_host }}/' + 'schedules/api/' + this.selected_workplace + '/shiftType/'#}
-                            {#return url#}
                             return '{% url 'shiftType-list' 123456789 %}'.replace(/123456789/, this.selected_workplace);
                         }
                     },
@@ -286,14 +286,17 @@
                     },
                     change_workplace() {
                         try {
-                            this.selected_workplace = this.select_workplace[this.selected_unit][0]['id']
+                            this.shiftType_list = [];
+                            this.selected_workplace = this.select_workplace[this.selected_unit][0]['id'];
+                            this.fetch_data();
                         } catch {
-
+                            this.selected_workplace = '';
                         }
-                        this.fetch_data()
+                        
                     },
                     fetch_data() {
                         this.fetching_data_in_progress = true;
+                        this.shiftType_list = [];
                         axios
                             .get(this.base_url)
                             .then(response => {
@@ -445,8 +448,12 @@
                     },
                 },
                 mounted() {
-                    this.selected_workplace = this.select_workplace[this.selected_unit][0]['id']
-                    this.fetch_data()
+                    try {
+                        this.selected_workplace = this.select_workplace[this.selected_unit][0]['id'];
+                        this.fetch_data();
+                    } catch {
+                        this.selected_workplace = '';
+                    }
                 }
             }).use(VueLoading.LoadingPlugin).component('loading', VueLoading.Component).mount('#vue-app');
         </script>
