@@ -1034,7 +1034,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                         if (ei.get().pk, s.id, d[0]) in forbidden_work:
                             continue
                         if solver.BooleanValue(work[ei.get().pk, s.id, d[0]]):
-                            sched += f"{s.name[0]} "
+                            sched += f"{s.name[0]:>2} "
                 sched += "   "
 
             logger.success(f"employee {ei.get().pk:2d}: {sched} | JT: {ei.job_time:4d} | WT: {work_time[ei.get().pk]:4d} | "
@@ -1043,7 +1043,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         logger.success("")
         logger.success(f"{' ' * (7 + num_days * 3 + len(ctx.month_by_billing_weeks) * 3)}TOTALS | JT: {ctx.total_job_time:4d} | "
                        f"WT: {ctx.total_work_time:4d} | JT RATIO: {ctx.job_time_multiplier:.3f}")
-        logger.success(f"{' ' * 143} | OT RATIO: {ctx.overtime_multiplier:.3f}")
+        logger.success(f"{' ' * (35 + num_days * 3 + len(ctx.month_by_billing_weeks) * 3)} | OT RATIO: {ctx.overtime_multiplier:.3f}")
 
     # We only return a list of shift objects
     def output_inflate():
