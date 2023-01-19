@@ -13,7 +13,7 @@
 
 {% block content %}
 <div id="vue-app" v-cloak>
-    <div class="row m-2"> 
+    <div class="row m-2" style="max-width: 700px"> 
         <div class="col mb-1" style="padding-left: 0px">
             <select class="form-select" v-model="month_cal" v-on:change="fetch_data">
                 <option v-for="label in month_labels" :value="label.id">
