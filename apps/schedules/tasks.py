@@ -12,7 +12,7 @@ from apps.schedules.models import ShiftType, Schedule, Preference, Absence, Assi
 
 
 @db_task()
-def run_algorithm(year, month, org_id, workplace_list):
+def run_algorithm(year, month, org_id, workplace_list, username):
     workplace_query = Workplace.objects.filter(id__in=workplace_list)
     schedule_dict = dict()
 
@@ -88,7 +88,7 @@ def run_algorithm(year, month, org_id, workplace_list):
     response = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month,
                                                     emp_for_workplaces, emp_preferences, emp_absences,
                                                     emp_assignments, jobtime, work_for_workplace_closing,
-                                                    shifts_before, shifts_after)
+                                                    shifts_before, shifts_after, username)
     if response.get('status'):
         for workplace in workplace_query:
             old_schedule = Schedule.objects.filter(year=year).filter(month=month).filter(

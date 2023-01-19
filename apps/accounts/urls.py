@@ -41,7 +41,6 @@ urlpatterns = [
          auth_views.PasswordResetCompleteView.as_view(template_name='accounts/password_reset_complete.html'),
          name='password_reset_complete'),
     path('employee_option/<int:pk>/', EmployeeOptionView.as_view(), name='employee_option'),
-
     # API urls
     path('api/', include(router.urls)),
 
