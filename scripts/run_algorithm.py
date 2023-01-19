@@ -434,7 +434,9 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
         #     for d in ei.allowed_shift_types[s]:
         #         work[ei.get().pk, s.id, d] = model.NewBoolVar("work{:d}_{:d}_{:d}".format(ei.get().pk, s.id, d))
 
+    worked_month_before = []
     friday_before = saturday_before = 999
+    # Add shifts to the model if employee has worked in last week of previous month
     if shifts_before:
         for i, sb in enumerate(shifts_before):
             if len(shifts_before.keys()) < 1:
@@ -446,9 +448,22 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                 saturday_before = -6 + i
             for s in d_shifts:
                 work[s.employee.pk, s.shift_type.id, -6 + i] = model.NewBoolVar(f"work{s.employee.pk}_{s.shift_type.id}_{-6 + i}")
-                model.Add(work[s.employee.pk, s.shift_type.id, -6 + i] == 1)
-                # print(s.employee.pk, s.shift_type.id, -6 + i)
                 model.AddExactlyOne(work[s.employee.pk, s.shift_type.id, -6 + i])
+                worked_month_before.append((s.employee.pk, s.shift_type.id, -6 + i))
+
+    # Add free shift to the model if employee hasn't worked month before
+    for ei in ctx.employees:
+        for d in range(-6, 1):
+            worked = False
+            for st in ctx.shift_types[1:]:
+                if (ei.get().pk, st.get().id, d) in worked_month_before:
+                    worked = True
+                    break
+            if not worked:
+                model.AddExactlyOne(work[ei.get().pk, 0, d])
+                worked_month_before.append((ei.get().pk, 0, d))
+
+    worked_month_before = sorted(sorted(worked_month_before, key=lambda x: x[2]), key=lambda x: x[0])
 
     # Linear terms of the objective in a minimization context.
     obj_int_vars = []
@@ -847,14 +862,30 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
 
     # Guarantee at least one (optimally two) days of rest within 7 days range
     for ei in ctx.employees:
-        for d in range(-6, num_days - 5):
-            works = [work[ei.get().pk, 0, day] for day in range(d, d + 7)]
+        # Account for the last week of previous month
+        wmb = [w for w in worked_month_before if w[0] == ei.get().pk]
+        wmb = sorted(wmb, key=lambda x: x[2], reverse=True)
+        wmb.pop()
 
-            variables, coeffs = add_weekly_soft_sum_constraint(
-                model, works, 1, 2, 5, 7, 7, 0,
-                f"rest_constraint(employee {ei.get().pk:d}, days {[day for day in range(d, d + 7)]})")
-            obj_bool_vars.extend(variables)
-            obj_bool_coeffs.extend(coeffs)
+        possible_free_shifts = [i for i in range(1, 8)]
+
+        for w in wmb:
+            if w[1] == 0:
+                break
+            else:
+                possible_free_shifts.pop()
+        # print(ei.get().pk, wmb, possible_free_shifts)
+        works = [work[ei.get().pk, 0, d] for d in possible_free_shifts]
+
+        model.AddBoolOr(works)
+
+        # Current month
+        works = [work[ei.get().pk, 0, day].Not() for day in range(1, num_days + 1)]
+
+        variables, coeffs = add_soft_sequence_constraint(
+                model, works, 1, 2, 5, 5, 6, 5, f"sequence_rest_constraint(employee {ei.get().pk:d}))")
+        obj_bool_vars.extend(variables)
+        obj_bool_coeffs.extend(coeffs)
 
     # Cover constraints
     for s in ctx.shift_types[1:]:
