@@ -15,13 +15,20 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from environs import Env
 
-from apps.schedules.views import ScheduleManageView
+from apps.accounts.views import RedirectUrlView
+
+env = Env()
+env.read_env()
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('apps.accounts.urls')),
     path('organizations/', include('apps.organizations.urls')),
     path('schedules/', include('apps.schedules.urls')),
-    path('', ScheduleManageView.as_view(), name='home'),
+    path('', RedirectUrlView.as_view(), name='redirect_url'),
 ]
+
+if env.bool("DEBUG_TOOLBAR", default=False):
+    urlpatterns.insert(len(urlpatterns) - 1, path('__debug__/', include('debug_toolbar.urls')))

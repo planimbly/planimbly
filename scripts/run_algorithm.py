@@ -1080,7 +1080,7 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
 
 
 def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workplaces, emp_preferences, emp_absences,
-                   emp_assignments, job_time, work_for_workplace_closing, shifts_before, shifts_after):
+                   emp_assignments, job_time, work_for_workplace_closing, shifts_before, shifts_after, username):
     # Starting logger
     logger.remove()
 

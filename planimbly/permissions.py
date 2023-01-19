@@ -19,7 +19,6 @@ class Isemployee(permissions.BasePermission):
 
 
 class GroupRequiredMixin(object):
-
     group_required = None
 
     def dispatch(self, request, *args, **kwargs):
