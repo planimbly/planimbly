@@ -47,5 +47,5 @@ class RedirectUrlView(LoginRequiredMixin, View):
         if request.user.groups.filter(name='employee').exists():
             return redirect('employee_schedule')
         if request.user.groups.filter(name='supervisor').exists():
-            return redirect('employees_manage')
+            return redirect('schedule_manage')
         return HttpResponseNotFound()
