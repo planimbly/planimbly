@@ -92,10 +92,6 @@
                                 <div class="material-icons">archive</div>
                                 <div><a class="del-def-style-a">Działy</a></div>
                             </div>
-                            <div v-on:click="move_to('{% url 'schedule_manage' %}')" class="sidebar-item {% if request.resolver_match.view_name == 'schedule_manage' or request.resolver_match.view_name == 'home' %}active{% endif %}">
-                                <div class="material-icons">event</div>
-                                <div><a  class="del-def-style-a">Grafiki</a></div>
-                            </div>
                             <div v-on:click="move_to('{% url 'shiftType_manage' %}')" class="sidebar-item {% if request.resolver_match.view_name == 'shiftType_manage' %}active{% endif %}">
                                 <div class="material-icons">book</div>
                                 <div><a class="del-def-style-a">Zmiany</a></div>
@@ -115,6 +111,10 @@
                             <div v-on:click="move_to('{% url 'workplace_closing' %}')" class="sidebar-item {% if request.resolver_match.view_name == 'workplace_closing' %}active{% endif %}">
                                 <div class="material-icons">alarm</div>
                                 <div><a class="del-def-style-a">Wyłączenia działów</a></div>
+                            </div>
+                            <div v-on:click="move_to('{% url 'schedule_manage' %}')" class="sidebar-item {% if request.resolver_match.view_name == 'schedule_manage' or request.resolver_match.view_name == 'home' %}active{% endif %}">
+                                <div class="material-icons">event</div>
+                                <div><a  class="del-def-style-a">Grafiki</a></div>
                             </div>
                     {% endblock sidebar-items %}
                 </ul>
