@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponseNotFound
 from django.shortcuts import redirect
 from django.views import View
 from django.views.generic import TemplateView
@@ -47,3 +48,4 @@ class RedirectUrlView(LoginRequiredMixin, View):
             return redirect('employee_schedule')
         if request.user.groups.filter(name='supervisor').exists():
             return redirect('employees_manage')
+        return HttpResponseNotFound()
