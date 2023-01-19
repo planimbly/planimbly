@@ -166,6 +166,21 @@
                         this.fetch_data
                     )
                 },
+                show_bad_response(){
+                    let message = ''    
+                    for (const key in this.response) {
+                        if (this.response.hasOwnProperty(key)) {
+                            message = message + this.response[key] + ' '
+                        }
+                    }
+                    swal({
+                        toast: true,
+                        icon: "error",
+                        title: message,
+                        position: "top",
+                        button: true,
+                    })
+                },
                 async request_put_loop(rows){
                     for (let i=0; i<rows.length; i++){
 
@@ -178,6 +193,7 @@
                             ).catch(
                                 error => {
                                     this.response = error.response.data
+                                    this.show_bad_response()
                                 }
                             )
                     }

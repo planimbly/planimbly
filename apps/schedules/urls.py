@@ -21,7 +21,7 @@ urlpatterns = [
     path('absence_manage/', AbsenceManageView.as_view(), name="absence_manage"),
     path('jobtime_manage/', JobTimeManageView.as_view(), name="jobtime_manage"),
     path('schedule_generating/', ScheduleGeneratingView.as_view(), name="schedule_generating"),
-    path('employee_schedule', EmployeeScheduleView.as_view(), name="employee_schedule"),
+    path('employee_schedule/', EmployeeScheduleView.as_view(), name="employee_schedule"),
     # API urls
     path('api/check_algorithm/', CheckAlgorithmView.as_view(), name="check_algorithm"),
     path('api/schedule_create/', ScheduleCreateApiView.as_view(), name='schedule_create'),

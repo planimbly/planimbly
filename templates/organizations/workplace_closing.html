@@ -67,8 +67,8 @@
                     </td>
                 </tbody>
             </table>
-            <div class="list-group">
-                <div v-for="closure in current_closing_list" :key="closure.id" class="list-group-item list-group-item-action position-static w-50">
+            <div class="list-group" style="max-width: 500px">
+                <div v-for="closure in current_closing_list" :key="closure.id" class="list-group-item list-group-item-action position-static">
                     <div class="closure_table_box">
                         <div>[[ closure.workplace_obj.name ]]: [[ closure.start ]] - [[ closure.end ]]</div>
                         <button v-on:click="remove_closing(closure.id)" class="material-icons" 
@@ -89,9 +89,8 @@
                           <h5 class="modal-title">Dodawanie wyłączeń działów</h5>
                           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    
-                    <form id="closing_form" v-on:submit.prevent="add_closing">
-                        <div class="modal-body">
+                    <div class="modal-body">
+                        <form id="closing_form" v-on:submit.prevent="add_closing">
                             <div class="form-floating" style="margin-bottom: 10px">
                                 <input type="date" class="form-control" v-model="inputDateStart" id="inputDateStart" placeholder="Data rozpoczęcia wyłączenia" 
                                         :min="date_bottom_limit" :max="date_top_limit" required>
@@ -103,14 +102,14 @@
                                         :min="inputDateStart" :max="date_top_limit" required>
                                 <label for="inputDateEnd">Data końca wyłączenia</label>
                             </div>
-                            <label v-for="(field, index) in response" style="color: #FF0000; margin-top: 20px">
-                                [[ field.join('') ]]
-                            </label>
-                        </div>
-                        <div class="modal-footer">
-                            <input type="submit" value="Zapisz" class="btn btn-outline-success">
-                        </div>
-                    </form>
+                        </form>
+                        <label v-for="(field, index) in response" style="color: #FF0000; margin-top: 20px">
+                            [[ field.join('') ]]
+                        </label>
+                    </div>
+                    <div class="modal-footer">
+                        <input type="submit" value="Zapisz" class="btn btn-outline-success">
+                    </div>
                 </div>
             </div>
         </div>

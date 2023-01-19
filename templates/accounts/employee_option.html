@@ -29,17 +29,17 @@
     <form id="schedule_form" v-on:submit.prevent="post_emp_data">
         <div class="emp_option_big_box">
             <div>
-                <div class="emp_option_small_box"><h5>Imię</h5><input type="text" class="w-50 form-control" v-model="employee_info.first_name" required></div>
-                <div class="emp_option_small_box"><h5>Nazwisko</h5><input type="text" class="w-50 form-control" v-model="employee_info.last_name" required></div>
-                <div class="emp_option_small_box"><h5>Nazwa Użytkownika</h5><input type="text" class="w-50 form-control" v-model="employee_info.username" diasabled readonly></div>
-                <div class="emp_option_small_box"><h5>Liczba porządkowa</h5><input type="text" class="w-50 form-control" v-model="employee_info.order_number"></div>
+                <div class="emp_option_small_box"><h5>Imię</h5><input type="text" class="input_style form-control" v-model="employee_info.first_name" required></div>
+                <div class="emp_option_small_box"><h5>Nazwisko</h5><input type="text" class="input_style form-control" v-model="employee_info.last_name" required></div>
+                <div class="emp_option_small_box"><h5>Nazwa Użytkownika</h5><input type="text" class="input_style form-control" v-model="employee_info.username" diasabled readonly></div>
+                <div class="emp_option_small_box"><h5>Liczba porządkowa</h5><input type="text" class="input_style form-control" v-model="employee_info.order_number"></div>
             </div>
             <div>
-                <div class="emp_option_small_box"><h5>ID</h5><input type="text" class="w-50 form-control" v-model="employee_info.id" diasabled readonly></div>
-                <div class="emp_option_small_box"><h5>E-mail</h5><input type="text" class="w-50 form-control" v-model="employee_info.email" required></div>
+                <div class="emp_option_small_box"><h5>ID</h5><input type="text" class="input_style form-control" v-model="employee_info.id" diasabled readonly></div>
+                <div class="emp_option_small_box"><h5>E-mail</h5><input type="text" class="input_style form-control" v-model="employee_info.email" required></div>
                 <div class="emp_option_small_box">
                     <h5>Etat</h5>
-                    <select id="jobtimeSelect" class="w-50 form-select" v-model="selected_jobtime">
+                    <select id="jobtimeSelect" class="input_style form-select" v-model="selected_jobtime">
                         <option :value="null" disabled hidden>[[ employee_info.job_time ]]</option>
                         <option v-for="jobtime in jobtime_list" :value="jobtime">
                             <div class="fw-bold">[[ jobtime.jobtime_fraction ]]</div>
@@ -56,7 +56,7 @@
 
     <div class="emp_option_info_box list_box_style">
         <div>
-            <div class="emp_option_table_box">
+            <div class="emp_option_tables_box">
                 <h5>Jednostki</h5>
                 <button data-bs-target="#pickUnitForEmployee" data-bs-toggle="modal" data-bs-dismiss="modal" 
                     class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj</button>
@@ -73,7 +73,7 @@
         </div>
 
         <div>
-            <div class="emp_option_table_box">
+            <div class="emp_option_tables_box">
                 <h5>Działy</h5>
                 <button data-bs-target="#pickWorkplaceForEmployee" data-bs-toggle="modal" data-bs-dismiss="modal" 
                     class="btn btn-outline-primary" style="margin-top: 15px; margin-bottom: 15px">Dodaj</button>
@@ -92,7 +92,7 @@
     </div>
         
     <div class="list_box_style">
-        <div class="emp_option_table_box">
+        <div class="emp_option_tables_box">
             <div class="emp_tool_box">
                 <div>
                     <tooltip text="Kliknij aby uzyskać informację o preferencjach zmianowych.">
@@ -124,7 +124,7 @@
     {% comment %} [[ preference.shift_type_obj.hour_start.toString().slice(0, 5) ]] {% endcomment %}
 
     <div class="list_box_style">
-        <div class="emp_option_table_box">
+        <div class="emp_option_tables_box">
             <div class="emp_tool_box">
                 <div>
                     <tooltip text="Kliknij aby uzyskać informację o przypisaniach.">
@@ -154,7 +154,7 @@
     </div>
 
     <div class="list_box_style" style="margin-bottom: 60px">
-        <div class='emp_option_table_box'>
+        <div class='emp_option_tables_box'>
             <div class="emp_tool_box">
                 <div>
                     <tooltip text="Kliknij aby uzyskać informację o wykluczeniach">

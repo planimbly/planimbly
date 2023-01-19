@@ -24,10 +24,9 @@
                           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     
-                        
-                    <form id="schedule_form" v-on:submit.prevent="create_absence">
-                        {% csrf_token %}
-                        <div class="modal-body">
+                    <div class="modal-body">
+                        <form id="schedule_form" v-on:submit.prevent="create_absence">
+                            {% csrf_token %}
                             <div class="form-floating" style="margin-bottom: 10px">
                                 <input type="date" class="form-control" v-model="start" id="inputDateStart" placeholder="Początek nieobecności" :min="date_bottom_limit" :max="date_top_limit" required>
                                 <label for="inputDateStart">Początek nieobecności</label>
@@ -54,16 +53,15 @@
                                     [[employee.first_name]] [[employee.last_name]]
                                 </option>
                             </select>
+                        </form>
 
-                            <label v-for="(field, index) in response" style="color: #FF0000; margin-top: 20px">
-                                [[ field.join('') ]]
-                            </label>
-                        </div>
-                        
-                        <div class="modal-footer">
-                            <input type="submit" value="Zapisz" class="btn btn-outline-success" style="align: right">
-                        </div>
-                    </form>
+                        <label v-for="(field, index) in response" style="color: #FF0000; margin-top: 20px">
+                            [[ field.join('') ]]
+                        </label>
+                    </div>
+                    <div class="modal-footer">
+                        <input type="submit" value="Zapisz" class="btn btn-outline-success" style="align: right">
+                    </div>
                 </div>
             </div>
         </div>
