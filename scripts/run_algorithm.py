@@ -1072,8 +1072,8 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
                            f"RATIO: {work_time[ei.get().pk] / ei.job_time:.2f}")
 
         logger.success("")
-        logger.success(f"MONTH: {month:2d} | YEAR: {year:4d}{' ' * (7 - 22 + num_days * 3 + len(ctx.month_by_billing_weeks) * 3)}TOTALS | JT: {ctx.total_job_time:4d} | "
-                       f"WT: {ctx.total_work_time:4d} | JT RATIO: {ctx.job_time_multiplier:.3f}")
+        logger.success(f"MONTH: {month:2d} | YEAR: {year:4d}{' ' * (7 - 22 + num_days * 3 + len(ctx.month_by_billing_weeks) * 3)}TOTALS | "
+                       f"JT: {ctx.total_job_time:4d} | WT: {ctx.total_work_time:4d} | JT RATIO: {ctx.job_time_multiplier:.3f}")
         logger.success(f"{' ' * (35 + num_days * 3 + len(ctx.month_by_billing_weeks) * 3)} | OT RATIO: {ctx.overtime_multiplier:.3f}")
 
     # We only return a list of shift objects
