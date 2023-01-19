@@ -1127,8 +1127,7 @@ def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workpla
     logger.add("./scripts/logs/console/console_{time}.log", level="INFO", format="<level>{level} | {message}</level>", backtrace=True, diagnose=True)
     logger.add(sys.stdout, format="<level>{level} | {message}</level>", level="INFO", backtrace=True, diagnose=True)
 
-    logger.success("Logging started...")
-    # logger.success(f"Generating started by {username}")
+    logger.success(f"Generating started by {username}...")
     logger.info(f"Month: {month} | Year: {year}")
 
     # Calendar data
