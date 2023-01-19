@@ -74,7 +74,7 @@
                                         <input type="number" class="form-control" v-model="order_number"
                                                id="inpuorder_number"
                                                placeholder="Liczba porządkowa" required>
-                                        <label for="order_number">Liczba porządkowa</label>
+                                        <label for="order_number" style="white-space: nowrap;">Liczba porządkowa</label>
                                     </div>
                                 </div>
                                 <div class="col-6">
@@ -107,7 +107,7 @@
                                 </div>
                                 <div class="col-6">
                                     <div class="form-floating">
-                                        <select id="jobtimeSelect" class="form-select" v-model="selected_jobtime" style="padding-top: .625rem" required>
+                                        <select id="jobtimeSelect" class="form-select" v-model="selected_jobtime" style="padding-top: .625rem; min-width: 100px" required>
                                             <option :value="null" disabled hidden>Wymiar etatu</option>
                                             <option v-for="jobtime in jobtime_list" :value="jobtime">
                                                 <div class="fw-bold">[[ jobtime.jobtime_fraction ]]</div>

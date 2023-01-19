@@ -12,8 +12,131 @@
 {% endblock head %}
 
 {% block content %}
-    <p>AA</p>
+<div id="vue-app" v-cloak>
+    <div class="row m-2"> 
+        <div class="col mb-1" style="padding-left: 0px">
+            <select class="form-select" v-model="month_cal" v-on:change="fetch_data">
+                <option v-for="label in month_labels" :value="label.id">
+                    [[ label.name ]]
+                </option>
+            </select>
+        </div>
+        <div class="col mb-1">
+            <select class="form-select" v-model="year_cal" v-on:change="fetch_data">
+                <option v-for="av_year in available_years" :value="av_year">
+                    [[ av_year ]]
+                </option>
+            </select>
+        </div>
+    </div>
+    <div style="margin-left: 10px">
+        <h5 style="margin-top: 25px; margin-top: 20px;">Plan pracownika</h5>
+        <div class="table-responsive" style="max-width: 700px">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th scope="col">Dzień</th>
+                    <th scope="col">Nazwa Zmiany</th>
+                    <th scope="col">Początek zmiany</th>
+                    <th scope="col">Koniec zmiany</th>
+                </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(field, index) in schedule_list">
+                        <td>[[ index ]]</td>
+                        <td>[[ get_info(field).day ]]</td>
+                        <td>[[ get_info(field).start ]]</td>
+                        <td>[[ get_info(field).end ]]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 {% endblock content %}
 
 {% block vue-content %}
+<script type="module">
+    const {createApp} = Vue
+    createApp({
+        delimiters: ["[[", "]]"],
+        data() {
+            return {
+                year_cal: new Date().getFullYear(),
+                month_cal: new Date().getMonth() + 1,
+                month_labels: [
+                {id: 1, name: 'Styczeń'},
+                {id: 2, name: 'Luty'},
+                {id: 3, name: 'Marzec'},
+                {id: 4, name: 'Kwiecień'},
+                {id: 5, name: 'Maj'},
+                {id: 6, name: 'Czerwiec'},
+                {id: 7, name: 'Lipiec'},
+                {id: 8, name: 'Sierpień'},
+                {id: 9, name: 'Wrzesień'},
+                {id: 10, name: 'Październik'},
+                {id: 11, name: 'Listopad'},
+                {id: 12, name: 'Grudzień'},
+                ],
+                available_years: [
+                    new Date().getFullYear() - 3,
+                    new Date().getFullYear() - 2,
+                    new Date().getFullYear() - 1,
+                    new Date().getFullYear(),
+                    new Date().getFullYear() + 1,
+                    new Date().getFullYear() + 2,
+                ],
+                schedule_list: null,
+                emp_pk:{{ user.pk }}
+            }
+        },
+        methods: {
+            fetch_data() {
+                axios
+                    .get(this.base_url, {params: {'year': this.year_cal, 'month': this.month_cal}})
+                    .then(response => {
+                            this.schedule_list = response.data;
+                            this.schedule_list = this.schedule_list.days
+                            console.log(this.schedule_list)
+
+                        }
+                    )
+                    .then(
+                        this.response = null
+                    )
+                    .catch(error => {
+                            this.response = error.response.data
+                        }
+                    );
+            },
+            get_info(day_data){
+                if (day_data.length != 0){
+                    day_data = day_data[0]
+                    console.log(day_data)
+                    return {
+                        day: day_data['name'],
+                        start: day_data['time_start'],
+                        end: day_data['time_end'],
+                    }
+                } else {
+                    return {
+                        day: 'Dzień wolny',
+                        start: null,
+                        end: null,
+                    }
+                }
+            },
+        },
+        computed: {
+            base_url: {
+                get() {
+                    return '{% url 'schedule_employee_get' 123456789 %}'.replace(/123456789/, this.emp_pk);
+                }
+            },
+        },
+        mounted() {
+            this.fetch_data()
+        },
+    }).use(VueLoading.LoadingPlugin).component('loading', VueLoading.Component).mount('#vue-app');
+</script>
 {% endblock vue-content %}

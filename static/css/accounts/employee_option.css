@@ -28,6 +28,14 @@ h5 {
 }
 
 .emp_option_table_box {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.emp_option_tables_box {
     justify-content: space-between;
     align-items: center;
 }
@@ -46,7 +54,7 @@ h5 {
     column-gap: 30px;
 }
 
-.emp_option_big_box, .emp_option_small_box, .emp_option_wide_box, .emp_option_table_box, .emp_option_list_box, .emp_tool_box, .emp_option_content_box, .emp_option_info_box  {
+.emp_option_big_box, .emp_option_small_box, .emp_option_wide_box, .emp_option_list_box, .emp_tool_box, .emp_option_content_box, .emp_option_info_box, .emp_option_tables_box  {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
@@ -54,4 +62,8 @@ h5 {
 
 .list_box_style{
     max-width: 800px;
+}
+
+.input_style{
+    max-width: 300px
 }
