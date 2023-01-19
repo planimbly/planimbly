@@ -1,4 +1,5 @@
 {% load static %}
+{% load group_extra %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -44,11 +45,15 @@
 {% block navsidebar %}
 
     <div id="app" v-cloak>
+
         <nav class="navbar" style="z-index: 1;">
-            <div v-on:click="changeSidebarState" class="material-icons navbar-style" title="Burger - 🍔 🤤 " id="burger"
-                 style="font-size: 24px;">menu
-            </div>
-            <a href="{% url 'home' %}">
+            {% if request.user|has_group:"supervisor" %}
+                <div v-on:click="changeSidebarState" class="material-icons navbar-style" title="Burger - 🍔 🤤 "
+                     id="burger"
+                     style="font-size: 24px;">menu
+                </div>
+            {% endif %}
+            <a href="{% url 'redirect_url' %}">
                 <img src="{% static 'img/Logo-Main-Big2.svg' %}" alt="Nav logo" class="medium-logo-nav">
             </a>
             <img v-if="envStage==='TEST'" src="{% static 'img/TestLabelFrame.svg' %}" alt="Test environment logo">
@@ -81,20 +86,19 @@
         </nav>
 
         <div class="main">
-            <div class="sidebar" id="sidebar" v-bind:style="`margin-left: ${moveSidebar};`" style="z-index: 1;">
-                <ul class="sidebar-list">
-                    {% block sidebar-items %}
-                            <div v-on:click="move_to('{% url 'units_manage' %}')" class="sidebar-item {% if request.resolver_match.view_name == 'units_manage' %}active{% endif %}">
+            {% if request.user|has_group:"supervisor" %}
+                <div class="sidebar" id="sidebar" v-bind:style="`margin-left: ${moveSidebar};`" style="z-index: 1;">
+                    <ul class="sidebar-list">
+                        {% block sidebar-items %}
+                            <div v-on:click="move_to('{% url 'units_manage' %}')"
+                                 class="sidebar-item {% if request.resolver_match.view_name == 'units_manage' %}active{% endif %}">
                                 <div class="material-icons">home</div>
                                 <div><a class="del-def-style-a">Jednostki</a></div>
                             </div>
-                            <div v-on:click="move_to('{% url 'workplace_manage' %}')" class="sidebar-item {% if request.resolver_match.view_name == 'workplace_manage' %}active{% endif %}">
+                            <div v-on:click="move_to('{% url 'workplace_manage' %}')"
+                                 class="sidebar-item {% if request.resolver_match.view_name == 'workplace_manage' %}active{% endif %}">
                                 <div class="material-icons">archive</div>
                                 <div><a class="del-def-style-a">Działy</a></div>
-                            </div>
-                            <div v-on:click="move_to('{% url 'schedule_manage' %}')" class="sidebar-item {% if request.resolver_match.view_name == 'schedule_manage' or request.resolver_match.view_name == 'home' %}active{% endif %}">
-                                <div class="material-icons">event</div>
-                                <div><a  class="del-def-style-a">Grafiki</a></div>
                             </div>
                             <div v-on:click="move_to('{% url 'shiftType_manage' %}')" class="sidebar-item {% if request.resolver_match.view_name == 'shiftType_manage' %}active{% endif %}">
                                 <div class="material-icons">book</div>
@@ -116,10 +120,14 @@
                                 <div class="material-icons">alarm</div>
                                 <div><a class="del-def-style-a">Wyłączenia działów</a></div>
                             </div>
+                            <div v-on:click="move_to('{% url 'schedule_manage' %}')" class="sidebar-item {% if request.resolver_match.view_name == 'schedule_manage' or request.resolver_match.view_name == 'home' %}active{% endif %}">
+                                <div class="material-icons">event</div>
+                                <div><a  class="del-def-style-a">Grafiki</a></div>
+                            </div>
                     {% endblock sidebar-items %}
                 </ul>
             </div>
-
+            {% endif %}
             <div class="proper-main margin-remove" v-bind:style="`margin-left: ${moveMainWithSidebar};`">
                 <div v-pre>
                     <div class="container-fluid">

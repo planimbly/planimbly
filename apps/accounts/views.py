@@ -1,4 +1,8 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponseNotFound
+from django.shortcuts import redirect
+from django.views import View
 from django.views.generic import TemplateView
 from rest_framework import viewsets
 
@@ -36,3 +40,12 @@ class EmployeeViewSet(viewsets.ModelViewSet):
 
 class EmployeeOptionView(GroupRequiredMixin, TemplateView):
     template_name = 'accounts/employee_option.html'
+
+
+class RedirectUrlView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        if request.user.groups.filter(name='employee').exists():
+            return redirect('employee_schedule')
+        if request.user.groups.filter(name='supervisor').exists():
+            return redirect('employees_manage')
+        return HttpResponseNotFound()
