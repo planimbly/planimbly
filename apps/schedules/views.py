@@ -153,7 +153,8 @@ class ScheduleCreateApiView(APIView):
                     user_workplace__in=Workplace.objects.filter(id__in=[work_id])).exclude(is_supervisor=True).exclude(
                     groups__name='supervisor').exclude(is_superuser=True).distinct().order_by('id')
 
-            employee_list = Employee.objects.filter(user_workplace__in=workplace_query).distinct().order_by('id')
+            employee_list = Employee.objects.filter(user_workplace__in=workplace_query).exclude(is_supervisor=True).exclude(
+                    groups__name='supervisor').exclude(is_superuser=True).distinct().order_by('id')
             preferences = Preference.objects.filter(employee__in=employee_list)
 
             # Sprawdzamy pierwszą datę w miesiącu i ostatnią
