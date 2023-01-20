@@ -102,13 +102,12 @@
                                         :min="inputDateStart" :max="date_top_limit" required>
                                 <label for="inputDateEnd">Data końca wyłączenia</label>
                             </div>
+
+                            <input type="submit" value="Zapisz" class="btn btn-outline-success">
                         </form>
                         <label v-for="(field, index) in response" style="color: #FF0000; margin-top: 20px">
                             [[ field.join('') ]]
                         </label>
-                    </div>
-                    <div class="modal-footer">
-                        <input type="submit" value="Zapisz" class="btn btn-outline-success">
                     </div>
                 </div>
             </div>
