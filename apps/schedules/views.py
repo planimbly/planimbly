@@ -110,7 +110,14 @@ class ScheduleManageView(GroupRequiredMixin, TemplateView):
         return context
 
 
+class EmployeeScheduleView(GroupRequiredMixin, TemplateView):
+    template_name = 'schedules/employee_schedule.html'
+    group_required = ['employee']
+
+
 # API VIEWS
+
+
 class ScheduleCreateApiView(APIView):
     permission_classes = [Issupervisor]
 
@@ -119,8 +126,9 @@ class ScheduleCreateApiView(APIView):
         month = self.request.data.get('month')
         workplace_list = self.request.data.get('workplace_list')
         org_id = request.user.user_org_id
+        username = request.user.username
         if settings.USE_HUEY:
-            run_algorithm(year, month, org_id, workplace_list)
+            run_algorithm(year, month, org_id, workplace_list, username)
 
         else:
             if not year or not month or not workplace_list:
@@ -145,7 +153,8 @@ class ScheduleCreateApiView(APIView):
                     user_workplace__in=Workplace.objects.filter(id__in=[work_id])).exclude(is_supervisor=True).exclude(
                     groups__name='supervisor').exclude(is_superuser=True).distinct().order_by('id')
 
-            employee_list = Employee.objects.filter(user_workplace__in=workplace_query).distinct().order_by('id')
+            employee_list = Employee.objects.filter(user_workplace__in=workplace_query).exclude(is_supervisor=True).exclude(
+                    groups__name='supervisor').exclude(is_superuser=True).distinct().order_by('id')
             preferences = Preference.objects.filter(employee__in=employee_list)
 
             # Sprawdzamy pierwszą datę w miesiącu i ostatnią
@@ -201,7 +210,7 @@ class ScheduleCreateApiView(APIView):
             response = scripts.run_algorithm.main_algorithm(schedule_dict, employee_list, shiftType_list, year, month,
                                                             emp_for_workplaces, emp_preferences, emp_absences,
                                                             emp_assignments, jobtime, work_for_workplace_closing,
-                                                            shifts_before, shifts_after)
+                                                            shifts_before, shifts_after, username)
             if response.get('status'):
                 for workplace in workplace_query:
                     old_schedule = Schedule.objects.filter(year=year).filter(month=month).filter(
@@ -524,7 +533,8 @@ class ScheduleUnitGetApiView(APIView):
                     'jobtime': jobtime,
                 }
                 respone_table.append(
-                    {'schedule': data, 'workplace': {'id': workplace_obj.id, 'name': workplace_obj.name}, 'date': {'month': month, 'year': year}})
+                    {'schedule': data, 'workplace': {'id': workplace_obj.id, 'name': workplace_obj.name},
+                     'date': {'month': month, 'year': year}})
             '''response = {
                 'unit_id': unit.id,
                 # 'workplace_id': workplace.id,

@@ -305,7 +305,7 @@
                                 </div>
                                 <div class="col-6 overflow-hidden">
                                     {% comment %} <input type="number" class="form-control" v-model="month" required> {% endcomment %}
-                                    <select class="form-select overflow-hidden" v-model="month">
+                                    <select class="form-select overflow-hidden" v-model="month" style="min-width: 100px;">
                                         <option v-for="label in month_labels" :value="label.id">
                                             [[ label.name ]]
                                         </option>

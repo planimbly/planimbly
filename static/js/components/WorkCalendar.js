@@ -463,9 +463,9 @@ export default {
                       </li>
                   </ul> 
                  <button @click="nullify_NewShift" type="button" data-bs-target="#addNewShiftTypeModal"
-                  data-bs-toggle="modal" data-bs-dismiss="modal" class="btn btn-primary">Dodaj zmianę</button> 
+                  data-bs-toggle="modal" data-bs-dismiss="modal" class="btn btn-primary" style="margin-right: 10px; margin-bottom: 10px">Dodaj zmianę</button> 
                   
-                 <button @click="delete_all_shifts_in_day(clickedTileDay.shifts)" type="button" data-bs-dismiss="modal" class="btn btn-outline-danger" style="margin-left: 10px">Usuń cały dzień</button>   
+                 <button @click="delete_all_shifts_in_day(clickedTileDay.shifts)" type="button" data-bs-dismiss="modal" class="btn btn-outline-danger" style="margin-bottom: 10px">Usuń cały dzień</button>   
                 </div>
                 
             </div>

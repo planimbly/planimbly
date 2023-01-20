@@ -1,5 +1,9 @@
 import calendar
+import time
 from math import floor, ceil
+
+from loguru import logger
+from ortools.sat.python import cp_model
 
 
 def get_month_by_weeks(year: int, month: int):
@@ -49,18 +53,22 @@ def flatten(t: list):
     return [item for sublist in t for item in sublist]
 
 
-def get_letter_for_weekday(day: int):
+def get_letters_for_weekday(day: int):
     match day:
         case 0:
-            return 'M'
-        case 1 | 3:
-            return 'T'
+            return "Mo"
+        case 1:
+            return "Tu"
         case 2:
-            return 'W'
+            return "We"
+        case 3:
+            return "Th"
         case 4:
-            return 'F'
-        case 5 | 6:
-            return 'S'
+            return "Fr"
+        case 5:
+            return "Sa"
+        case 6:
+            return "Su"
         case _:
             return None
 
@@ -71,3 +79,18 @@ def floor_to_multiple(number, multiple: int):
 
 def ceil_to_multiple(number, multiple: int):
     return multiple * ceil(number / multiple)
+
+
+class SolutionsLoggerPrinter(cp_model.ObjectiveSolutionPrinter):
+    def __init__(self):
+        cp_model.ObjectiveSolutionPrinter.__init__(self)
+        super().__init__()
+        self.__solution_count = 0
+        self.__start_time = time.time()
+
+    def on_solution_callback(self):
+        """Called on each new solution."""
+        current_time = time.time()
+        obj = self.ObjectiveValue()
+        logger.log("MODEL", f"Solution {self.__solution_count} | Time = {current_time - self.__start_time:.2f} s | Objective = {int(obj)}")
+        self.__solution_count += 1
