@@ -53,10 +53,12 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_extensions',
     'huey.contrib.djhuey',
+    'django_prometheus',
 
 ]
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -67,6 +69,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
     'planimbly.middleware.DenyAccesHueyMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 ROOT_URLCONF = 'planimbly.urls'
