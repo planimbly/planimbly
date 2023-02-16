@@ -1,3 +1,4 @@
+import psutil
 from time import sleep
 from huey import RedisHuey
 from redis import StrictRedis
@@ -28,8 +29,14 @@ class HueyExporter:
             self.huey_state_gauge.set(0)
 
     def huey_up(self) -> bool:
-        if self.huey.is_alive():
-            return True
+        for process in psutil.process_iter(['cmdline']):
+            try:
+                cmdline = process.info['cmdline']
+            except (psutil.AccessDenied, psutil.ZombieProcess):
+                continue
+
+            if cmdline and 'python' in cmdline[0] and 'manage.py' in cmdline and 'run_huey' in cmdline:
+                return True
         return False
 
     def redis_up(self) -> bool:
@@ -37,11 +44,15 @@ class HueyExporter:
             redis_instance = StrictRedis(host=self.redis_host, port=self.redis_port)
             redis_instance.ping()
             return True
-        except:
+        except Exception:
             return False
-        
+
     def collect_metrics(self) -> None:
-        self.queue_length_gauge.set(self.huey.pending_count())
+        try:
+            self.queue_length_gauge.set(self.huey.pending_count())
+        except Exception:
+            self.queue_length_gauge.set(0)
+
         self.set_redis_state_gauge(self.redis_up())
         self.set_huey_state_gauge(self.huey_up())
 
@@ -52,6 +63,7 @@ class HueyExporter:
 
     def start_exporter(self) -> None:
         start_http_server(self.metrics_port)
+        print('Started huey exporter server. Listening on: http://{}:{}'.format('127.0.0.1', self.metrics_port))
         self.metric_collection_loop()
 
 
