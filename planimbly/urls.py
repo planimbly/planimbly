@@ -28,6 +28,7 @@ urlpatterns = [
     path('organizations/', include('apps.organizations.urls')),
     path('schedules/', include('apps.schedules.urls')),
     path('', RedirectUrlView.as_view(), name='redirect_url'),
+    path('', include('django_prometheus.urls')),  # /metrics
 ]
 
 if env.bool("DEBUG_TOOLBAR", default=False):
