@@ -53,10 +53,12 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_extensions',
     'huey.contrib.djhuey',
+    'django_prometheus',
 
 ]
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -67,6 +69,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
     'planimbly.middleware.DenyAccesHueyMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 ROOT_URLCONF = 'planimbly.urls'
@@ -205,7 +208,8 @@ if DEBUG:
 
 # HUEY config
 USE_HUEY = env.bool("USE_HUEY", default=False)
-pool = ConnectionPool(host='localhost', port=6379, max_connections=20)
+REDIS_HOST = env.str("REDIS_HOST", default='localhost')
+pool = ConnectionPool(host=REDIS_HOST, port=6379, max_connections=20)
 HUEY = RedisHuey('planimbly', connection_pool=pool)
 
 # Log 500 Error

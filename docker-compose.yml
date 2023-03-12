@@ -19,6 +19,7 @@ services:
       dockerfile: Dockerfile.dev
     command: >
       sh -c "python manage.py migrate &&
+             python manage.py create_groups &&
              python manage.py runserver 0.0.0.0:8000"
     ports:
       - "8000:8000"
@@ -30,6 +31,37 @@ services:
       db:
         condition: service_healthy
 
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning
+    volumes:
+      - cache:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  huey:
+    build: 
+      context: .
+      dockerfile: Dockerfile.dev
+    command: python manage.py run_huey
+    env_file:
+      - .env
+    ports:
+      - "8088:8088"
+    volumes:
+      - .:/code
+    depends_on:
+      redis:
+        condition: service_healthy
+
 volumes:
+  cache:
+    driver: local
   db_data:
   

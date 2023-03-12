@@ -1,0 +1,9 @@
+[Unit]
+Description=Planimbly huey exporter
+
+[Service]
+User=server
+Group=server
+WorkingDirectory=/home/server/repos/planimbly-prod/planimbly
+EnvironmentFile=/home/server/repos/planimbly-prod/planimbly/.env
+ExecStart=/home/server/repos/planimbly-prod/planimbly/venv/bin/python3.10 scripts/huey_exporter.py
