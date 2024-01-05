@@ -13,11 +13,22 @@ export default {
       type: String,
       required: false
     },
+    inputData: {
+      type: String,
+      required: false
+    },
   },
   data(){
     return {
       cWidth: null,
+      response: null,
+      ifdata: false,
     }
+  },
+  methods:{
+    calculateLength(){
+      return this.text.length
+    },
   },
   template: `
   <div class="PN-tooltip-container">
@@ -26,6 +37,11 @@ export default {
       <span class="PN-text">
         [[ text ]]
       </span>
+    </div>
+
+
+    <div v-if="ifdata" id="field">
+      <input :value="inputData" @input="$emit('update:inputData', $event.target.value)">
     </div>
   </div>`
 }
