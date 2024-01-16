@@ -1,5 +1,5 @@
-import { expect, test, vi } from 'vitest'
-import { createWrapperError, mount } from '@vue/test-utils'
+import { expect, test } from 'vitest'
+import { mount } from '@vue/test-utils'
 import tooltip from '../../../static/js/components/tooltip.js'
 
 test('test rendering a tooltip component and passing data', () => {

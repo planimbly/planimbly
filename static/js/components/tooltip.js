@@ -39,7 +39,6 @@ export default {
       </span>
     </div>
 
-
     <div v-if="ifdata" id="field">
       <input :value="inputData" @input="$emit('update:inputData', $event.target.value)">
     </div>
