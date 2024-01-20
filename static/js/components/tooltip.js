@@ -22,7 +22,7 @@ export default {
     return {
       cWidth: null,
       response: null,
-      ifdata: false,
+      add_data: false,
     }
   },
   methods:{
@@ -39,7 +39,7 @@ export default {
       </span>
     </div>
 
-    <div v-if="ifdata" id="field">
+    <div v-if="add_data" id="field">
       <input :value="inputData" @input="$emit('update:inputData', $event.target.value)">
     </div>
   </div>`

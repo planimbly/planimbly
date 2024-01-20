@@ -51,6 +51,7 @@ describe('template spec', () => {
 
   it('check responsiveness', () => {
     cy.visit('/schedules/schedule_manage/')
+    cy.viewport(600, 1900)
     cy.get('.calendar-big').should('have.css', 'flex-direction', 'column');
     cy.viewport(1920, 900)
     cy.get('.calendar-big').should('have.css', 'display', 'grid');
