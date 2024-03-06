@@ -55,3 +55,8 @@ frontend_tests/unit/templates/
 scripts/logs/
 
 backup.sql
+
+fixtures
+link_scripts
+
+*db.sqlite*

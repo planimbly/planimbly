@@ -7,6 +7,7 @@ from apps.schedules.models import ShiftType
 from scripts.helpers import get_month_by_weeks, get_month_by_billing_weeks, get_letters_for_weekday
 
 
+# TODO :TEST TU RACZEJ TYLKO JEDNOSTKOWE
 class ShiftTypeInfo:
     """
     A class used to keep enhanced information about shifts.
@@ -164,7 +165,7 @@ class EmployeeInfo:
         self.desired_job_time = self.calculate_job_time(jt)
         self.job_time = max(0, self.desired_job_time - self.absent_time)
 
-    def calculate_job_time(self, jt) -> int:
+    def calculate_job_time(self, jt) -> int:  # TODO: TEST JEDNOSTKOWY
         match self.employee.job_time:
             case "1":
                 return jt
@@ -514,6 +515,7 @@ class Context:
         return total_minutes // 60
 
     # TODO: Consider weekend constraints and every other constraint regarding free shifts here, for now we only account for absences
+    # TODO: TEST czy max_work_time jest przynajmniej równy total_work_time, jeżeli nie to wiadomo że jest grafik infeasible
     def calculate_max_work_time(self):
         """ Calculates maximum allowed work time for each employee
 
