@@ -30,6 +30,9 @@ jobs:
       - name: linter
         run: |
           flake8
+      - name: collect static
+        run: |
+          python3 manage.py collectstatic
       - name: coverage reporting
         run: |
           coverage run -ma --source=./scripts pytest scripts

@@ -1103,7 +1103,9 @@ def solve_shift_scheduling(emp_for_workplaces, emp_preferences, emp_absences, em
     logger.log("MODEL", "")
     # logger.info("{}".format(solver.SufficientAssumptionsForInfeasibility()))
 
-    return {"data": output_inflate(), "status": True if (status == cp_model.OPTIMAL or status == cp_model.FEASIBLE) else False}
+    return {"data": output_inflate(),
+            "status": True if (status == cp_model.OPTIMAL or status == cp_model.FEASIBLE) else False,
+            'status_full': solver.StatusName(status)}
 
 
 def main_algorithm(schedule_dict, emp, shift_types, year, month, emp_for_workplaces, emp_preferences, emp_absences,
